@@ -1030,10 +1030,10 @@ document.querySelector('#contactInformation').innerHTML = `<template>
 					<div class="w3-card">
 						<h5 @click="publisherDetail($event.target, publisher)" style="padding:10px 15px;margin:0">{{ publisher.name }}</h5>
 						<div class="w3-container main" style="padding:0 15px">
-							<p><i v-if="publisher.contactInformation.phoneNumber !== null" @click="call(publisher.contactInformation.phoneNumber)" title="Call" class="fas fa-phone"></i> {{ publisher.contactInformation.phoneNumber }}</p>
-							<p><i v-if="publisher.contactInformation.address !== null" title="Address" class="fas fa-home"></i> {{ publisher.contactInformation.address }}</p>
-							<p><i v-if="publisher.emergencyContactInformation.name !== null" title="Emergency Contact" class="fas fa-user"></i> {{ publisher.emergencyContactInformation.name }}</p>
-							<p><i v-if="publisher.emergencyContactInformation.phoneNumber !== null"  @click="call(publisher.emergencyContactInformation.phoneNumber)"  title="Emergency Number" class="fas fa-address-book"></i> {{ publisher.emergencyContactInformation.phoneNumber }}</p>
+							<p v-if="publisher.contactInformation.phoneNumber !== null" v-for="(number) in getEachNumber(publisher.contactInformation.phoneNumber)" @click="call(number)" title="Call Number"><i class="fas fa-phone"></i> {{ number }}</p>
+							<p v-if="publisher.contactInformation.address !== null" title="Address"><i class="fas fa-home"></i> {{ publisher.contactInformation.address }}</p>
+							<p v-if="publisher.emergencyContactInformation.name !== null" title="Emergency Contact"><i class="fas fa-user"></i> {{ publisher.emergencyContactInformation.name }}</p>
+							<p v-if="publisher.emergencyContactInformation.phoneNumber !== null" v-for="(number) in getEachNumber(publisher.emergencyContactInformation.phoneNumber)" @click="call(number)" title="Call Emergency Number"><i class="fas fa-address-book"></i> {{ number }}</p>
 						</div>
 						<div class="detail" style="display:none; padding:0 15px 15px 15px">
 							<p><label>Phone Number: <input class="contactInformation w3-input" type="tel" :value="publisher.contactInformation.phoneNumber" @change="handleInputChange($event.target, publisher, 'phoneNumber')"></label></p>
@@ -1073,6 +1073,13 @@ function contactInformation() {
             },
         },
         methods: {
+			getEachNumber(number) {
+				if (number == null) {
+					return []
+				} else {
+					return number.split('; ')
+				}
+			},
 			groupPublishers(group) {
                 return allPublishersVue.publishers.filter(elem=>elem.fieldServiceGroup == group)
             },
