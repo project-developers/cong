@@ -1,0 +1,21 @@
+{
+    "name": "Cong",
+    "short_name": "Cong",
+    "description": "This app helps handle cong records.",
+    "icons": [
+        {
+            "src": "icons/icon-152.png",
+            "sizes": "168x168",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ],
+    "start_url": "https://project-developers.github.io/cong/",
+    "display": "standalone",
+    "theme_color": "#B12A34",
+    "background_color": "#B12A34"
+}

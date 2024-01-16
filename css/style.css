@@ -1,0 +1,61 @@
+body,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: "Raleway", sans-serif
+}
+
+body,
+html {
+    height: 100%;
+    line-height: 1.8;
+}
+
+/* Full height image header */
+.bgimg-1 {
+    background-position: center;
+    background-size: cover;
+    min-height: 100%;
+}
+
+.w3-bar .w3-button {
+    padding: 16px;
+}
+
+nav ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+nav ul li {
+  display: inline-block;
+  margin-right: 20px;
+}
+
+nav ul li ul {
+  display: none;
+  position: absolute;
+  background-color: #444;
+  padding: 10px;
+}
+
+nav ul li:hover > ul {
+  display: block;
+}
+
+table {
+  font-size: 13px; /* Adjust the font size as needed */
+  border-collapse: collapse;
+  width: 100%;
+}
+
+th, td {
+  border: 1px solid #ddd;
+  padding: 4px;
+  text-align: left;
+  white-space: normal;
+}
