@@ -263,7 +263,7 @@ document.querySelector('#navigation').innerHTML = `<template>
 			<input 
 				class="w3-bar-item w3-search"
 				v-model="searchTerms" 
-				placeholder="Search Publishers" 
+				placeholder="Search . . ." 
 				type="text" 
 			>
 		</div>
@@ -282,7 +282,7 @@ document.querySelector('#navigation').innerHTML = `<template>
 			style="width:150px"
 			class="w3-bar-item w3-search"
 			v-model="searchTerms" 
-			placeholder="Search Publishers" 
+			placeholder="Search . . ." 
 			type="text" 
 		>
 	</div>
@@ -359,7 +359,7 @@ function processNavigation() {
 				gotoView('configurationVue')
 			},
 			signOut() {
-				location.href = "https://project-developers.github.io/hexa/"
+				location.href = "/cong/"
 			},
 			clearFilter() {
 				
@@ -460,7 +460,7 @@ function processNavigation2() {
 			},
 			signOut() {
 				w3_close()
-				location.href = "https://project-developers.github.io/hexa/"
+				location.href = "/cong/"
 			},
 			logged() {
                 return logged
@@ -2045,7 +2045,7 @@ function processConfiguration() {
 				location.reload()
 			},
 			signOut() {
-				location.href = 'https://project-developers.github.io/hexa/'
+				location.href = '/cong/'
 			},
             exportData() {
                 var a = document.createElement("a");
