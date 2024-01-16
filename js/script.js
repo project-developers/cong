@@ -1561,7 +1561,7 @@ document.querySelector('#attendance').innerHTML = `<template>
 				<div style="padding-bottom:10px" class="w3-card">
 					<div class="w3-container main">
 						<h3>{{ meeting.name }} Meeting</h3>
-						<p v-for="(attendance) in meeting.attendance">{{ attendance.name.replace('Week', ' Week') }}: <input :class="attendance.name" type="number" min="0" max="9999" style="width: 50px;" :value="attendance.count" @change="handleInputChange(attendance, $event.target)"></p>
+						<p v-for="(attendance) in meeting.attendance">{{ attendance.name.replace('Week', ' Week') }}: <input :class="attendance.name" type="number" min="0" max="9999" style="width: 60px;" :value="attendance.count" @change="handleInputChange(attendance, $event.target)"></p>
 						<hr style="margin:0; padding:0">
 						<h5>Total Attendance: <strong>{{ totalAttendance(meeting) }}</strong></h5>
 						<h5>Average Attendance: <strong>{{ averageAttendance(meeting) }}</strong></h5>
@@ -1587,8 +1587,8 @@ document.querySelector('#attendance').innerHTML = `<template>
 							<tr v-for="(month, count) in months" :key="month.abbr + '|' + count + '|' + serviceYear">
 								<td>{{ month.fullName }}</td>
 								<td><input class="numberOfMeetings" type="number" min="0" max="5" style="width: 30px;" :value="meeting[serviceYear][month.abbr].numberOfMeetings" @change="handleRecordInputChange(meeting[serviceYear][month.abbr], $event.target)"></td>
-								<td><input class="totalAttendance" type="number" min="0" max="9999" style="width: 50px;" :value="meeting[serviceYear][month.abbr].totalAttendance" @change="handleRecordInputChange(meeting[serviceYear][month.abbr], $event.target)"></td>
-								<td><input class="averageAttendanceEachWeek" type="number" min="0" max="9999" style="width: 50px;" :value="meeting[serviceYear][month.abbr].averageAttendanceEachWeek" @change="handleRecordInputChange(meeting[serviceYear][month.abbr], $event.target)"></td>
+								<td><input class="totalAttendance" type="number" min="0" max="9999" style="width: 60px;" :value="meeting[serviceYear][month.abbr].totalAttendance" @change="handleRecordInputChange(meeting[serviceYear][month.abbr], $event.target)"></td>
+								<td><input class="averageAttendanceEachWeek" type="number" min="0" max="9999" style="width: 60px;" :value="meeting[serviceYear][month.abbr].averageAttendanceEachWeek" @change="handleRecordInputChange(meeting[serviceYear][month.abbr], $event.target)"></td>
 							</tr>
 						</tbody>
 					</table>
@@ -1673,7 +1673,7 @@ function processAttendance() {
 				if (total == null || count == null) {
 					return
 				} else {
-					return total / count
+					return Number((total / count).toFixed(2))
 				}
 				//var average = meeting[`${serviceYear}`][`${month}`].totalAttendance / meeting[`${serviceYear}`][`${month}`].numberOfMeetings
 				//return average == 0 || average == undefined || average == Infinity ? '' : average
@@ -1691,13 +1691,13 @@ function processAttendance() {
 					return accumulator + currentValue.count;
 				}, 0);
 				
-				const average = sum / numbersArray.length;
+				var average = Number((sum / numbersArray.length).toFixed(2));
 
 				this.meetingAttendanceRecord.meetings.filter(elem=>elem.name.startsWith(attendance.name))[0].currentServiceYear[`${this.month.abbr}`].numberOfMeetings = numbersArray.length 
 				this.meetingAttendanceRecord.meetings.filter(elem=>elem.name.startsWith(attendance.name))[0].currentServiceYear[`${this.month.abbr}`].totalAttendance = sum
 				this.meetingAttendanceRecord.meetings.filter(elem=>elem.name.startsWith(attendance.name))[0].currentServiceYear[`${this.month.abbr}`].averageAttendanceEachWeek = average
 				
-				return Number(average.toFixed(2));
+				return average;
 			  },
 			totalAttendance(attendance) {
 				const numbersArray = attendance.attendance.filter(elem=>elem.count !== null)
