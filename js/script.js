@@ -1927,6 +1927,7 @@ document.querySelector('#configuration').innerHTML = `<template>
 						<p>
 							<button class="w3-button w3-black" @click="saveConfiguration($event.target)"><i class="fas fa-save"> </i> Save</button>
 							<button class="w3-button w3-black" @click="resetConfiguration($event.target)">Reset</button>
+							<button class="w3-button w3-black" @click="backupData($event.target)">Backup</button>
 						</p>
 						<p>
 							<button class="w3-button w3-black" @click="saveFile()"><i class="fas fa-save"> </i> Save File</button>
@@ -2046,6 +2047,23 @@ function processConfiguration() {
 			},
 			signOut() {
 				location.href = '/cong/'
+			},
+			backupData() {
+				this.exportData()
+				var recipient = ''//group.OverseerMail//'someone@example.com';
+				var subject = 'Congregation Data Backup - ' + new Date();
+				var body = `Dear Brothers:
+Please find attached Congregation Data Backup.
+Backup date: ${new Date()}.
+Thanks a lot
+
+`
+				
+				var mailtoLink = 'mailto:' + encodeURIComponent(recipient) +
+								'?subject=' + encodeURIComponent(subject) +
+								'&body=' + encodeURIComponent(body);
+
+				window.location.href = mailtoLink;
 			},
             exportData() {
                 var a = document.createElement("a");
