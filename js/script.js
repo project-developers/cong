@@ -84,7 +84,7 @@ loginButton.addEventListener("click", (e) => {
 var currentUser = { "name": "currentUser", "username": null, "password": null, "accesses": [] }
 
 var navigationVue, navigationVue2, allPublishersVue, congregationVue, configurationVue, branchReportVue, contactInformationVue, fieldServiceGroupsVue, monthlyReportVue, missingReportVue;
-var allButtons = [{"title": "CONG", "function": "congregationVue"}, {"title": "PUBLISHERS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "REPORTS", "function": "missingReportVue"}, {"title": "MONTHLY", "function": "monthlyReportVue"}, {"title": "MISSING", "function": "missingReportVue"}, {"title": "BRANCH REPORT", "function": "branchReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "SETTINGS", "function": "configurationVue"}]
+var allButtons = [{"title": "CONG", "function": "congregationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "REPORTS", "function": "missingReportVue"}, {"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "REPORTS", "function": "missingReportVue"}, {"title": "BRANCH", "function": "branchReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "SETTINGS", "function": "configurationVue"}]
 //var CongregationData = JSON.parse(localStorage.getItem('CongregationData'));
 
 function createWorker(script, fn) {
@@ -106,7 +106,7 @@ var configured, reset, resetCount = 0;
 
 var currentMonth = `${new Date().getFullYear()}-${(new Date().getMonth() + 1).toString().padStart(2, '0')}`;
 
-var reportButtons = [{"title": "MONTHLY", "function": "monthlyReportVue"}, {"title": "MISSING", "function": "missingReportVue"}, {"title": "BRANCH REPORT", "function": "branchReportVue"}]
+var reportButtons = [{"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "REPORTS", "function": "missingReportVue"}, {"title": "BRANCH", "function": "branchReportVue"}]
 
 DBWorker.onmessage = async function (msg) {
     var msgData = msg.data;
@@ -156,14 +156,16 @@ DBWorker.onmessage = async function (msg) {
 						//attendanceVue.currentMonth = result.attendance[0]
 						//attendanceVue.meetingAttendanceRecord = result.attendance[1]
 
-						navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "PUBLISHERS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "REPORTS", "function": "missingReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}]
-						//navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "PUBLISHERS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "REPORTS", "function": "missingReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}]
+						//navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "REPORTS", "function": "missingReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}]
+						navigationVue.buttons = [{"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "REPORTS", "function": "missingReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}]
+						//navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "REPORTS", "function": "missingReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}]
 					}
 					if (msgData.value.filter(elem=>elem.name == "Congregation").length !== 0) {
 						congregationVue.display = true
 						configured = true
-						navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "PUBLISHERS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
-						//navigationVue.buttons = [{"title": "PUBLISHERS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "REPORTS", "function": "missingReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "SETTINGS", "function": "configurationVue"}]
+						//navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+						navigationVue.buttons = [{"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+						//navigationVue.buttons = [{"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "REPORTS", "function": "missingReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "SETTINGS", "function": "configurationVue"}]
 						configurationVue.configuration = msgData.value.filter(elem=>elem.name == "Congregation")[0]
 						navigationVue.allGroups = msgData.value.filter(elem=>elem.name == "Congregation")[0].fieldServiceGroups
 						DBWorker.postMessage({ storeName: 'data', action: "readAll"});
@@ -171,7 +173,7 @@ DBWorker.onmessage = async function (msg) {
 					}/*
 					if (msgData.value.filter(elem=>elem.name == "Late Reports").length !== 0) {
 						
-						//navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "PUBLISHERS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "REPORTS", "function": "missingReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}]
+						//navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "REPORTS", "function": "missingReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}]
 					}*/
 				}
 				break;
@@ -307,44 +309,118 @@ function processNavigation() {
         methods: {
 			openButton(button) {
                 //console.log(button)
-				if (button.innerHTML == "PUBLISHERS") {
+
+				if (button.innerHTML == "REPORTS") {
+					this.displayDropdown = true
+					this.buttons = [{"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH", "function": "branchReportVue"}, {"title": "CONG", "function": "congregationVue"}]
+				} else if (button.innerHTML == "CURRENT") {
+					this.displayDropdown = true
+					this.buttons = [{"title": "REPORTS", "function": "missingReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH", "function": "branchReportVue"}, {"title": "CONG", "function": "congregationVue"}]
+				} else if (button.innerHTML == "ATTENDANCE") {
+					this.displayDropdown = false
+					this.buttons = [{"title": "REPORTS", "function": "missingReportVue"}, {"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "BRANCH", "function": "branchReportVue"}, {"title": "CONG", "function": "congregationVue"}]
+				} else if (button.innerHTML == "BRANCH") {
+					this.displayDropdown = false
+					this.buttons = [{"title": "REPORTS", "function": "missingReportVue"}, {"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "CONG", "function": "congregationVue"}]
+				} else if (button.innerHTML == "CONG") {
+					this.displayDropdown = false
+					this.buttons = [{"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+				} else if (button.innerHTML == "CONTACTS") {
+					this.displayDropdown = true
+					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+				} else if (button.innerHTML == "RECORDS") {
+					this.displayDropdown = true
+					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+				} else if (button.innerHTML == "GROUPS") {
+					this.displayDropdown = true
+					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "ACTIVE", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+				} else if (button.innerHTML == "ACTIVE") {
+					this.displayDropdown = true
+					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "ALL", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+				} else if (button.innerHTML == "ALL") {
+					this.displayDropdown = true
+					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "ACTIVE", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+				} else {
+					this.displayDropdown = false
+					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+				}
+
+				/*
+				if (button.innerHTML == "REPORTS") {
+					this.displayDropdown = true
+					this.buttons = [{"title": "REPORTS", "function": "missingReportVue"}, {"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH", "function": "branchReportVue"}, {"title": "CONG", "function": "congregationVue"}]
+				} else if (button.innerHTML == "CURRENT") {
+					this.displayDropdown = true
+					this.buttons = [{"title": "REPORTS", "function": "missingReportVue"}, {"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH", "function": "branchReportVue"}, {"title": "CONG", "function": "congregationVue"}]
+				} else if (button.innerHTML == "ATTENDANCE") {
+					this.displayDropdown = false
+					this.buttons = [{"title": "REPORTS", "function": "missingReportVue"}, {"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH", "function": "branchReportVue"}, {"title": "CONG", "function": "congregationVue"}]
+				} else if (button.innerHTML == "BRANCH") {
+					this.displayDropdown = false
+					this.buttons = [{"title": "REPORTS", "function": "missingReportVue"}, {"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH", "function": "branchReportVue"}, {"title": "CONG", "function": "congregationVue"}]
+				} else if (button.innerHTML == "CONG") {
+					this.displayDropdown = false
+					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+				} else if (button.innerHTML == "CONTACTS") {
+					this.displayDropdown = true
+					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+				} else if (button.innerHTML == "RECORDS") {
+					this.displayDropdown = true
+					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+				} else if (button.innerHTML == "GROUPS") {
+					this.displayDropdown = true
+					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "ACTIVE", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+				} else if (button.innerHTML == "ACTIVE") {
+					this.displayDropdown = true
+					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "ALL", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+				} else if (button.innerHTML == "ALL") {
+					this.displayDropdown = true
+					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "ACTIVE", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+				} else {
+					this.displayDropdown = false
+					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+				}*/
+
+				/*
+				if (button.innerHTML == "RECORDS") {
 					this.displayDropdown = true
 					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
 				} else if (button.innerHTML == "CONTACTS") {
 					this.displayDropdown = true
-					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "PUBLISHERS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
 				} else if (button.innerHTML == "CONG") {
 					this.displayDropdown = false
-					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "PUBLISHERS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
 				} else if (button.innerHTML == "GROUPS") {
 					this.displayDropdown = true
-					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "PUBLISHERS", "function": "allPublishersVue"}, {"title": "ACTIVE PUBLISHERS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
-				} else if (button.innerHTML == "ACTIVE PUBLISHERS") {
+					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "ACTIVE", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+				} else if (button.innerHTML == "ACTIVE") {
 					this.displayDropdown = true
-					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "PUBLISHERS", "function": "allPublishersVue"}, {"title": "ALL PUBLISHERS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
-				} else if (button.innerHTML == "ALL PUBLISHERS") {
+					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "ALL", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+				} else if (button.innerHTML == "ALL") {
 					this.displayDropdown = true
-					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "PUBLISHERS", "function": "allPublishersVue"}, {"title": "ACTIVE PUBLISHERS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "ACTIVE", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
 				} else if (button.innerHTML == "REPORTS") {
 					this.displayDropdown = true
-					this.buttons = [{"title": "MONTHLY", "function": "monthlyReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH REPORT", "function": "branchReportVue"}, {"title": "CONG", "function": "congregationVue"}]
-				} else if (button.innerHTML == "MISSING") {
+					this.buttons = [{"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH", "function": "branchReportVue"}, {"title": "CONG", "function": "congregationVue"}]
+				} else if (button.innerHTML == "REPORTS") {
 					this.displayDropdown = true
-					this.buttons = [{"title": "MONTHLY", "function": "monthlyReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH REPORT", "function": "branchReportVue"}, {"title": "CONG", "function": "congregationVue"}]
-				} else if (button.innerHTML == "MONTHLY") {
+					this.buttons = [{"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH", "function": "branchReportVue"}, {"title": "CONG", "function": "congregationVue"}]
+				} else if (button.innerHTML == "CURRENT") {
 					this.displayDropdown = true
-					this.buttons = [{"title": "MISSING", "function": "missingReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH REPORT", "function": "branchReportVue"}, {"title": "CONG", "function": "congregationVue"}]
+					this.buttons = [{"title": "REPORTS", "function": "missingReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH", "function": "branchReportVue"}, {"title": "CONG", "function": "congregationVue"}]
 				} else if (button.innerHTML == "ATTENDANCE") {
 					this.displayDropdown = false
-					this.buttons = [{"title": "MONTHLY", "function": "monthlyReportVue"}, {"title": "MISSING", "function": "missingReportVue"}, {"title": "BRANCH REPORT", "function": "branchReportVue"}, {"title": "CONG", "function": "congregationVue"}]
-				} else if (button.innerHTML == "BRANCH REPORT") {
+					this.buttons = [{"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "REPORTS", "function": "missingReportVue"}, {"title": "BRANCH", "function": "branchReportVue"}, {"title": "CONG", "function": "congregationVue"}]
+				} else if (button.innerHTML == "BRANCH") {
 					this.displayDropdown = false
-					this.buttons = [{"title": "MONTHLY", "function": "monthlyReportVue"}, {"title": "MISSING", "function": "missingReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "CONG", "function": "congregationVue"}]
+					this.buttons = [{"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "REPORTS", "function": "missingReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "CONG", "function": "congregationVue"}]
 				} else {
 					this.displayDropdown = false
 					this.buttons = allButtons.filter(elem=>elem.title !== button.innerHTML)
 				}
-				if (button.innerHTML == "ALL PUBLISHERS" || button.innerHTML == "ACTIVE PUBLISHERS") {
+				*/
+				if (button.innerHTML == "ALL" || button.innerHTML == "ACTIVE") {
 					fieldServiceGroupsVue.inactive()
 				} else {
 					gotoView(allButtons.filter(elem=>elem.title == button.innerHTML)[0].function)
@@ -404,44 +480,119 @@ function processNavigation2() {
                 //console.log(button)
 				
 				w3_close()
-				if (button.innerHTML == "PUBLISHERS") {
+
+				
+				if (button.innerHTML == "REPORTS") {
+					navigationVue.displayDropdown = true
+					navigationVue.buttons = [{"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH", "function": "branchReportVue"}, {"title": "CONG", "function": "congregationVue"}]
+				} else if (button.innerHTML == "CURRENT") {
+					navigationVue.displayDropdown = true
+					navigationVue.buttons = [{"title": "REPORTS", "function": "missingReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH", "function": "branchReportVue"}, {"title": "CONG", "function": "congregationVue"}]
+				} else if (button.innerHTML == "ATTENDANCE") {
+					navigationVue.displayDropdown = false
+					navigationVue.buttons = [{"title": "REPORTS", "function": "missingReportVue"}, {"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "BRANCH", "function": "branchReportVue"}, {"title": "CONG", "function": "congregationVue"}]
+				} else if (button.innerHTML == "BRANCH") {
+					navigationVue.displayDropdown = false
+					navigationVue.buttons = [{"title": "REPORTS", "function": "missingReportVue"}, {"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "CONG", "function": "congregationVue"}]
+				} else if (button.innerHTML == "CONG") {
+					navigationVue.displayDropdown = false
+					navigationVue.buttons = [{"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+				} else if (button.innerHTML == "CONTACTS") {
+					navigationVue.displayDropdown = true
+					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+				} else if (button.innerHTML == "RECORDS") {
+					navigationVue.displayDropdown = true
+					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+				} else if (button.innerHTML == "GROUPS") {
+					navigationVue.displayDropdown = true
+					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "ACTIVE", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+				} else if (button.innerHTML == "ACTIVE") {
+					navigationVue.displayDropdown = true
+					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "ALL", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+				} else if (button.innerHTML == "ALL") {
+					navigationVue.displayDropdown = true
+					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "ACTIVE", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+				} else {
+					navigationVue.displayDropdown = false
+					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+				}
+
+				/*
+
+				if (button.innerHTML == "REPORTS") {
+					navigationVue.displayDropdown = true
+					navigationVue.buttons = [{"title": "REPORTS", "function": "missingReportVue"}, {"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH", "function": "branchReportVue"}, {"title": "CONG", "function": "congregationVue"}]
+				} else if (button.innerHTML == "CURRENT") {
+					navigationVue.displayDropdown = true
+					navigationVue.buttons = [{"title": "REPORTS", "function": "missingReportVue"}, {"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH", "function": "branchReportVue"}, {"title": "CONG", "function": "congregationVue"}]
+				} else if (button.innerHTML == "ATTENDANCE") {
+					navigationVue.displayDropdown = false
+					navigationVue.buttons = [{"title": "REPORTS", "function": "missingReportVue"}, {"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH", "function": "branchReportVue"}, {"title": "CONG", "function": "congregationVue"}]
+				} else if (button.innerHTML == "BRANCH") {
+					navigationVue.displayDropdown = false
+					navigationVue.buttons = [{"title": "REPORTS", "function": "missingReportVue"}, {"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH", "function": "branchReportVue"}, {"title": "CONG", "function": "congregationVue"}]
+				} else if (button.innerHTML == "CONG") {
+					navigationVue.displayDropdown = false
+					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+				} else if (button.innerHTML == "CONTACTS") {
+					navigationVue.displayDropdown = true
+					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+				} else if (button.innerHTML == "RECORDS") {
+					navigationVue.displayDropdown = true
+					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+				} else if (button.innerHTML == "GROUPS") {
+					navigationVue.displayDropdown = true
+					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "ACTIVE", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+				} else if (button.innerHTML == "ACTIVE") {
+					navigationVue.displayDropdown = true
+					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "ALL", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+				} else if (button.innerHTML == "ALL") {
+					navigationVue.displayDropdown = true
+					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "ACTIVE", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+				} else {
+					navigationVue.displayDropdown = false
+					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+				}*/
+
+				/*
+				if (button.innerHTML == "RECORDS") {
 					navigationVue.displayDropdown = true
 					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
 				} else if (button.innerHTML == "CONTACTS") {
 					navigationVue.displayDropdown = true
-					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "PUBLISHERS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
 				} else if (button.innerHTML == "CONG") {
 					navigationVue.displayDropdown = false
-					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "PUBLISHERS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
 				} else if (button.innerHTML == "GROUPS") {
 					navigationVue.displayDropdown = true
-					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "PUBLISHERS", "function": "allPublishersVue"}, {"title": "ACTIVE PUBLISHERS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
-				} else if (button.innerHTML == "ACTIVE PUBLISHERS") {
+					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "ACTIVE", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+				} else if (button.innerHTML == "ACTIVE") {
 					navigationVue.displayDropdown = true
-					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "PUBLISHERS", "function": "allPublishersVue"}, {"title": "ALL PUBLISHERS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
-				} else if (button.innerHTML == "ALL PUBLISHERS") {
+					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "ALL", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+				} else if (button.innerHTML == "ALL") {
 					navigationVue.displayDropdown = true
-					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "PUBLISHERS", "function": "allPublishersVue"}, {"title": "ACTIVE PUBLISHERS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "ACTIVE", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
 				} else if (button.innerHTML == "REPORTS") {
 					navigationVue.displayDropdown = true
-					navigationVue.buttons = [{"title": "MONTHLY", "function": "monthlyReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH REPORT", "function": "branchReportVue"}, {"title": "CONG", "function": "congregationVue"}]
-				} else if (button.innerHTML == "MISSING") {
+					navigationVue.buttons = [{"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH", "function": "branchReportVue"}, {"title": "CONG", "function": "congregationVue"}]
+				} else if (button.innerHTML == "REPORTS") {
 					navigationVue.displayDropdown = true
-					navigationVue.buttons = [{"title": "MONTHLY", "function": "monthlyReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH REPORT", "function": "branchReportVue"}, {"title": "CONG", "function": "congregationVue"}]
-				} else if (button.innerHTML == "MONTHLY") {
+					navigationVue.buttons = [{"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH", "function": "branchReportVue"}, {"title": "CONG", "function": "congregationVue"}]
+				} else if (button.innerHTML == "CURRENT") {
 					navigationVue.displayDropdown = true
-					navigationVue.buttons = [{"title": "MISSING", "function": "missingReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH REPORT", "function": "branchReportVue"}, {"title": "CONG", "function": "congregationVue"}]
+					navigationVue.buttons = [{"title": "REPORTS", "function": "missingReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH", "function": "branchReportVue"}, {"title": "CONG", "function": "congregationVue"}]
 				} else if (button.innerHTML == "ATTENDANCE") {
 					navigationVue.displayDropdown = false
-					navigationVue.buttons = [{"title": "MONTHLY", "function": "monthlyReportVue"}, {"title": "MISSING", "function": "missingReportVue"}, {"title": "BRANCH REPORT", "function": "branchReportVue"}, {"title": "CONG", "function": "congregationVue"}]
-				} else if (button.innerHTML == "BRANCH REPORT") {
+					navigationVue.buttons = [{"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "REPORTS", "function": "missingReportVue"}, {"title": "BRANCH", "function": "branchReportVue"}, {"title": "CONG", "function": "congregationVue"}]
+				} else if (button.innerHTML == "BRANCH") {
 					navigationVue.displayDropdown = false
-					navigationVue.buttons = [{"title": "MONTHLY", "function": "monthlyReportVue"}, {"title": "MISSING", "function": "missingReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "CONG", "function": "congregationVue"}]
+					navigationVue.buttons = [{"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "REPORTS", "function": "missingReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "CONG", "function": "congregationVue"}]
 				} else {
 					navigationVue.displayDropdown = false
 					navigationVue.buttons = allButtons.filter(elem=>elem.title !== button.innerHTML)
-				}
-				if (button.innerHTML == "ALL PUBLISHERS" || button.innerHTML == "ACTIVE PUBLISHERS") {
+				}*/
+				if (button.innerHTML == "ALL" || button.innerHTML == "ACTIVE") {
 					fieldServiceGroupsVue.inactive()
 				} else {
 					gotoView(allButtons.filter(elem=>elem.title == button.innerHTML)[0].function)
