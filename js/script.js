@@ -1645,15 +1645,15 @@ function processAttendance() {
 				//console.log(this.month)
 
 				if (attendanceVue.months.findIndex(elem=>elem.abbr == this.month.abbr) < 4) {
+					this.meetingAttendanceRecord.meetings[0].currentServiceYear.year = currentYear + 1
+					this.meetingAttendanceRecord.meetings[1].currentServiceYear.year = currentYear + 1
+					this.meetingAttendanceRecord.meetings[0].lastServiceYear.year = currentYear
+					this.meetingAttendanceRecord.meetings[1].lastServiceYear.year = currentYear
+				} else {
 					this.meetingAttendanceRecord.meetings[0].currentServiceYear.year = currentYear
 					this.meetingAttendanceRecord.meetings[1].currentServiceYear.year = currentYear
 					this.meetingAttendanceRecord.meetings[0].lastServiceYear.year = currentYear - 1
 					this.meetingAttendanceRecord.meetings[1].lastServiceYear.year = currentYear - 1
-				} else {
-					this.meetingAttendanceRecord.meetings[0].currentServiceYear.year = currentYear - 1
-					this.meetingAttendanceRecord.meetings[1].currentServiceYear.year = currentYear - 1
-					this.meetingAttendanceRecord.meetings[0].lastServiceYear.year = currentYear - 2
-					this.meetingAttendanceRecord.meetings[1].lastServiceYear.year = currentYear - 2
 				}
 
 				return currentYear
