@@ -1697,7 +1697,7 @@ function processAttendance() {
 				this.meetingAttendanceRecord.meetings.filter(elem=>elem.name.startsWith(attendance.name))[0].currentServiceYear[`${this.month.abbr}`].totalAttendance = sum
 				this.meetingAttendanceRecord.meetings.filter(elem=>elem.name.startsWith(attendance.name))[0].currentServiceYear[`${this.month.abbr}`].averageAttendanceEachWeek = average
 				
-				return average;
+				return Number(average.toFixed(2));
 			  },
 			totalAttendance(attendance) {
 				const numbersArray = attendance.attendance.filter(elem=>elem.count !== null)
