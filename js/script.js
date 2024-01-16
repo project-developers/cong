@@ -249,7 +249,6 @@ DBWorker.onmessage = async function (msg) {
 
 document.querySelector('#navigation').innerHTML = `<template>
 <div class="w3-bar w3-white w3-card" id="myNavbar">
-	<a v-if="logged() == false" class="w3-bar-item w3-button" href="https://project-developers.github.io/hexa/"><i class="fas fa-arrow-left"></i> BACK</a>
 	<a class="w3-bar-item w3-button w3-wide" @click="openButton($event.target)">{{ buttons[0] ? buttons[0].title : '' }}</a>
 	<!-- Right-sided navbar links -->
 	<div class="w3-right w3-hide-small">
