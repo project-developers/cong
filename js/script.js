@@ -345,81 +345,6 @@ function processNavigation() {
 					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
 				}
 
-				/*
-				if (button.innerHTML == "REPORTS") {
-					this.displayDropdown = true
-					this.buttons = [{"title": "REPORTS", "function": "missingReportVue"}, {"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH", "function": "branchReportVue"}, {"title": "CONG", "function": "congregationVue"}]
-				} else if (button.innerHTML == "CURRENT") {
-					this.displayDropdown = true
-					this.buttons = [{"title": "REPORTS", "function": "missingReportVue"}, {"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH", "function": "branchReportVue"}, {"title": "CONG", "function": "congregationVue"}]
-				} else if (button.innerHTML == "ATTENDANCE") {
-					this.displayDropdown = false
-					this.buttons = [{"title": "REPORTS", "function": "missingReportVue"}, {"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH", "function": "branchReportVue"}, {"title": "CONG", "function": "congregationVue"}]
-				} else if (button.innerHTML == "BRANCH") {
-					this.displayDropdown = false
-					this.buttons = [{"title": "REPORTS", "function": "missingReportVue"}, {"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH", "function": "branchReportVue"}, {"title": "CONG", "function": "congregationVue"}]
-				} else if (button.innerHTML == "CONG") {
-					this.displayDropdown = false
-					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
-				} else if (button.innerHTML == "CONTACTS") {
-					this.displayDropdown = true
-					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
-				} else if (button.innerHTML == "RECORDS") {
-					this.displayDropdown = true
-					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
-				} else if (button.innerHTML == "GROUPS") {
-					this.displayDropdown = true
-					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "ACTIVE", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
-				} else if (button.innerHTML == "ACTIVE") {
-					this.displayDropdown = true
-					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "ALL", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
-				} else if (button.innerHTML == "ALL") {
-					this.displayDropdown = true
-					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "ACTIVE", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
-				} else {
-					this.displayDropdown = false
-					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
-				}*/
-
-				/*
-				if (button.innerHTML == "RECORDS") {
-					this.displayDropdown = true
-					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
-				} else if (button.innerHTML == "CONTACTS") {
-					this.displayDropdown = true
-					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
-				} else if (button.innerHTML == "CONG") {
-					this.displayDropdown = false
-					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
-				} else if (button.innerHTML == "GROUPS") {
-					this.displayDropdown = true
-					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "ACTIVE", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
-				} else if (button.innerHTML == "ACTIVE") {
-					this.displayDropdown = true
-					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "ALL", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
-				} else if (button.innerHTML == "ALL") {
-					this.displayDropdown = true
-					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "ACTIVE", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
-				} else if (button.innerHTML == "REPORTS") {
-					this.displayDropdown = true
-					this.buttons = [{"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH", "function": "branchReportVue"}, {"title": "CONG", "function": "congregationVue"}]
-				} else if (button.innerHTML == "REPORTS") {
-					this.displayDropdown = true
-					this.buttons = [{"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH", "function": "branchReportVue"}, {"title": "CONG", "function": "congregationVue"}]
-				} else if (button.innerHTML == "CURRENT") {
-					this.displayDropdown = true
-					this.buttons = [{"title": "REPORTS", "function": "missingReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH", "function": "branchReportVue"}, {"title": "CONG", "function": "congregationVue"}]
-				} else if (button.innerHTML == "ATTENDANCE") {
-					this.displayDropdown = false
-					this.buttons = [{"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "REPORTS", "function": "missingReportVue"}, {"title": "BRANCH", "function": "branchReportVue"}, {"title": "CONG", "function": "congregationVue"}]
-				} else if (button.innerHTML == "BRANCH") {
-					this.displayDropdown = false
-					this.buttons = [{"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "REPORTS", "function": "missingReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "CONG", "function": "congregationVue"}]
-				} else {
-					this.displayDropdown = false
-					this.buttons = allButtons.filter(elem=>elem.title !== button.innerHTML)
-				}
-				*/
 				if (button.innerHTML == "ALL" || button.innerHTML == "ACTIVE") {
 					fieldServiceGroupsVue.inactive()
 				} else {
@@ -517,81 +442,6 @@ function processNavigation2() {
 					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
 				}
 
-				/*
-
-				if (button.innerHTML == "REPORTS") {
-					navigationVue.displayDropdown = true
-					navigationVue.buttons = [{"title": "REPORTS", "function": "missingReportVue"}, {"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH", "function": "branchReportVue"}, {"title": "CONG", "function": "congregationVue"}]
-				} else if (button.innerHTML == "CURRENT") {
-					navigationVue.displayDropdown = true
-					navigationVue.buttons = [{"title": "REPORTS", "function": "missingReportVue"}, {"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH", "function": "branchReportVue"}, {"title": "CONG", "function": "congregationVue"}]
-				} else if (button.innerHTML == "ATTENDANCE") {
-					navigationVue.displayDropdown = false
-					navigationVue.buttons = [{"title": "REPORTS", "function": "missingReportVue"}, {"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH", "function": "branchReportVue"}, {"title": "CONG", "function": "congregationVue"}]
-				} else if (button.innerHTML == "BRANCH") {
-					navigationVue.displayDropdown = false
-					navigationVue.buttons = [{"title": "REPORTS", "function": "missingReportVue"}, {"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH", "function": "branchReportVue"}, {"title": "CONG", "function": "congregationVue"}]
-				} else if (button.innerHTML == "CONG") {
-					navigationVue.displayDropdown = false
-					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
-				} else if (button.innerHTML == "CONTACTS") {
-					navigationVue.displayDropdown = true
-					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
-				} else if (button.innerHTML == "RECORDS") {
-					navigationVue.displayDropdown = true
-					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
-				} else if (button.innerHTML == "GROUPS") {
-					navigationVue.displayDropdown = true
-					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "ACTIVE", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
-				} else if (button.innerHTML == "ACTIVE") {
-					navigationVue.displayDropdown = true
-					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "ALL", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
-				} else if (button.innerHTML == "ALL") {
-					navigationVue.displayDropdown = true
-					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "ACTIVE", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
-				} else {
-					navigationVue.displayDropdown = false
-					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
-				}*/
-
-				/*
-				if (button.innerHTML == "RECORDS") {
-					navigationVue.displayDropdown = true
-					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
-				} else if (button.innerHTML == "CONTACTS") {
-					navigationVue.displayDropdown = true
-					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
-				} else if (button.innerHTML == "CONG") {
-					navigationVue.displayDropdown = false
-					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
-				} else if (button.innerHTML == "GROUPS") {
-					navigationVue.displayDropdown = true
-					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "ACTIVE", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
-				} else if (button.innerHTML == "ACTIVE") {
-					navigationVue.displayDropdown = true
-					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "ALL", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
-				} else if (button.innerHTML == "ALL") {
-					navigationVue.displayDropdown = true
-					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "ACTIVE", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
-				} else if (button.innerHTML == "REPORTS") {
-					navigationVue.displayDropdown = true
-					navigationVue.buttons = [{"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH", "function": "branchReportVue"}, {"title": "CONG", "function": "congregationVue"}]
-				} else if (button.innerHTML == "REPORTS") {
-					navigationVue.displayDropdown = true
-					navigationVue.buttons = [{"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH", "function": "branchReportVue"}, {"title": "CONG", "function": "congregationVue"}]
-				} else if (button.innerHTML == "CURRENT") {
-					navigationVue.displayDropdown = true
-					navigationVue.buttons = [{"title": "REPORTS", "function": "missingReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH", "function": "branchReportVue"}, {"title": "CONG", "function": "congregationVue"}]
-				} else if (button.innerHTML == "ATTENDANCE") {
-					navigationVue.displayDropdown = false
-					navigationVue.buttons = [{"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "REPORTS", "function": "missingReportVue"}, {"title": "BRANCH", "function": "branchReportVue"}, {"title": "CONG", "function": "congregationVue"}]
-				} else if (button.innerHTML == "BRANCH") {
-					navigationVue.displayDropdown = false
-					navigationVue.buttons = [{"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "REPORTS", "function": "missingReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "CONG", "function": "congregationVue"}]
-				} else {
-					navigationVue.displayDropdown = false
-					navigationVue.buttons = allButtons.filter(elem=>elem.title !== button.innerHTML)
-				}*/
 				if (button.innerHTML == "ALL" || button.innerHTML == "ACTIVE") {
 					fieldServiceGroupsVue.inactive()
 				} else {
@@ -722,67 +572,67 @@ document.querySelector('#allPublishers').innerHTML = `<template>
 							<h5 @click="publisherDetail(publisher, $event.target)">{{ publisher.name }}</h5>
 						</div>
 						<div class="detail" style="display:none; padding:15px">
-							<i @click="publisherDetail(publisher, $event.target)" class="fas fa-arrow-left"></i>
-							<i @click="removePublisher(count, publisher.name, $event.target)" class="fas fa-trash-alt"></i>
+							<div style="display:flex; justify-content:space-between">
+								<i @click="publisherDetail(publisher, $event.target)" class="fas fa-chevron-left"></i>
+								<i @click="removePublisher(count, publisher.name, $event.target)" class="fas fa-trash-alt"></i>
+							</div>
 							<h2 contenteditable="true" class="name">{{ publisher.name }}</h2>
 							<p>
-								<label>Date of Birth: </label>
-								<input v-if="publisher.dateOfBirth == null" type="date" class="dateOfBirth">
-								<input v-if="publisher.dateOfBirth !== null" type="date" class="dateOfBirth" :value="cleanDate(publisher.dateOfBirth)">
-								<select class="gender" :v-model="publisher.gender">
+								<label>Date of Birth: <input v-if="publisher.dateOfBirth == null" type="date" class="dateOfBirth w3-input"><input v-if="publisher.dateOfBirth !== null" type="date" class="dateOfBirth w3-input" :value="cleanDate(publisher.dateOfBirth)"></label>
+								<select class="gender w3-input" :v-model="publisher.gender">
 									<option v-if="publisher.gender !== 'Male' && publisher.gender !== 'Female'" value="">Select Gender</option>
 									<option v-if="publisher.gender == 'Male' || publisher.gender == 'Female'" :value="publisher.gender">{{ publisher.gender }}</option>
 									<option v-for="gender in ['Male', 'Female'].filter(elem=>elem !== publisher.gender)" :value="gender">{{ gender }}</option>
 								</select>
 							</p>
 							<p>
-								<label>Date of Baptism: </label>
-								<input type="date" class="dateOfBaptism" :value="cleanDate(publisher.dateOfBaptism)">
-								
-								<select class="hope" :v-model="publisher.hope">
+								<label>Date of Baptism: <input v-if="publisher.dateOfBaptism == null" type="date" class="dateOfBaptism w3-input"><input v-if="publisher.dateOfBaptism !== null" type="date" class="dateOfBaptism w3-input" :value="cleanDate(publisher.dateOfBaptism)"></label>
+								<select class="hope w3-input" :v-model="publisher.hope">
 									<option :value="publisher.hope">{{ publisher.hope }}</option>
 									<option v-for="hope in hopes.filter(elem=>elem !== publisher.hope)" :value="hope">{{ hope }}</option>
 								</select>
 							</p>
-							<label v-for="(privilege, index) in privileges" :key="index"><input type="checkbox" :name="privilege" class="privileges" :checked=publisher.privilege.includes(privilege)>{{ privilege }}</label>
+							<label v-for="(privilege, index) in privileges" :key="index" class="w3-input"><input type="checkbox" :name="privilege" class="privileges" :checked=publisher.privilege.includes(privilege)> {{ privilege }}</label>
 							<p>
-								<label>Field Service Group: </label>
-								<select class="fieldServiceGroup" :v-model="publisher.fieldServiceGroup">
+								<label>Field Service Group: 
+								<select class="fieldServiceGroup w3-input" :v-model="publisher.fieldServiceGroup">
 									<option v-if="!allGroups.includes(publisher.fieldServiceGroup)" value="">Select Group</option>
 									<option v-if="allGroups.includes(publisher.fieldServiceGroup)" :value="publisher.fieldServiceGroup">{{ publisher.fieldServiceGroup }}</option>
 									<option v-for="group in allGroups.filter(elem=>elem !== publisher.fieldServiceGroup)" :value="group">{{ group }}</option>
-								</select>
+								</select></label>
 							</p>
-							<table>
-								<thead>
-								<tr>
-									<th>Service Year 2024</th>
-									<th>Shared in Ministry</th>
-									<th>Bible Studies</th>
-									<th>Auxiliary Pioneer</th>
-									<th>Hours (If pioneer or ﬁeld missionary)</th>
-									<th>Remarks</th>
-								</tr>
-								</thead>
-								<tbody>
-								<tr v-for="(month, index) in months" :key="month.abbr" :class="month.abbr">
-									<td>{{ month.fullName }}</td>
-									<td><input class="sharedInMinistry" type="checkbox" :checked="publisher.report.currentServiceYear[month.abbr].sharedInMinistry !== null"></td>
-									<td class="bibleStudies" contenteditable="true">{{ publisher.report.currentServiceYear[month.abbr].bibleStudies }}</td>
-									<td><input class="auxiliaryPioneer" type="checkbox" :checked="publisher.report.currentServiceYear[month.abbr].auxiliaryPioneer !== null"></td>
-									<td class="hours" contenteditable="true">{{ publisher.report.currentServiceYear[month.abbr].hours }}</td>
-									<td class="remarks" contenteditable="true">{{ publisher.report.currentServiceYear[month.abbr].remarks }}</td>
-								</tr>
-								<tr>
-									<td></td>
-									<td></td>
-									<td></td>
-									<td>Total</td>
-									<td>{{ publisher.report.currentServiceYear.totalHours }}</td>
-									<td contenteditable="true">{{ publisher.report.currentServiceYear.totalRemarks }}</td>
-								</tr>
-								</tbody>
-							</table>
+							<div style="overflow-x: scroll;">
+								<table>
+									<thead>
+									<tr>
+										<th>Service Year 2024</th>
+										<th>Shared in Ministry</th>
+										<th>Bible Studies</th>
+										<th>Auxiliary Pioneer</th>
+										<th>Hours (If pioneer or ﬁeld missionary)</th>
+										<th>Remarks</th>
+									</tr>
+									</thead>
+									<tbody>
+									<tr v-for="(month, index) in months" :key="month.abbr" :class="month.abbr">
+										<td>{{ month.fullName }}</td>
+										<td><input class="sharedInMinistry" type="checkbox" :checked="publisher.report.currentServiceYear[month.abbr].sharedInMinistry !== null"></td>
+										<td class="bibleStudies" contenteditable="true">{{ publisher.report.currentServiceYear[month.abbr].bibleStudies }}</td>
+										<td><input class="auxiliaryPioneer" type="checkbox" :checked="publisher.report.currentServiceYear[month.abbr].auxiliaryPioneer !== null"></td>
+										<td class="hours" contenteditable="true">{{ publisher.report.currentServiceYear[month.abbr].hours }}</td>
+										<td class="remarks" contenteditable="true">{{ publisher.report.currentServiceYear[month.abbr].remarks }}</td>
+									</tr>
+									<tr>
+										<td></td>
+										<td></td>
+										<td></td>
+										<td>Total</td>
+										<td>{{ publisher.report.currentServiceYear.totalHours }}</td>
+										<td contenteditable="true">{{ publisher.report.currentServiceYear.totalRemarks }}</td>
+									</tr>
+									</tbody>
+								</table>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -797,37 +647,110 @@ document.querySelector('#allPublishers').innerHTML = `<template>
 							<h5 @click="publisherDetail(publisher, $event.target)">{{ publisher.name }}</h5>
 						</div>
 						<div class="detail" style="display:none; padding:15px">
-							<i @click="publisherDetail(publisher, $event.target)" class="fas fa-arrow-left"></i>
-							<i @click="removePublisher(count, publisher.name, $event.target)" class="fas fa-trash-alt"></i>
+							<div style="display:flex; justify-content:space-between">
+								<i @click="publisherDetail(publisher, $event.target)" class="fas fa-chevron-left"></i>
+								<i @click="removePublisher(count, publisher.name, $event.target)" class="fas fa-trash-alt"></i>
+							</div>
 							<h2 contenteditable="true" class="name">{{ publisher.name }}</h2>
 							<p>
-								<label>Date of Birth: </label>
-								<input v-if="publisher.dateOfBirth == null" type="date" class="dateOfBirth">
-								<input v-if="publisher.dateOfBirth !== null" type="date" class="dateOfBirth" :value="cleanDate(publisher.dateOfBirth)">
-								<select class="gender" :v-model="publisher.gender">
+								<label>Date of Birth: <input v-if="publisher.dateOfBirth == null" type="date" class="dateOfBirth w3-input"><input v-if="publisher.dateOfBirth !== null" type="date" class="dateOfBirth w3-input" :value="cleanDate(publisher.dateOfBirth)"></label>
+								<select class="gender w3-input" :v-model="publisher.gender">
 									<option v-if="publisher.gender !== 'Male' && publisher.gender !== 'Female'" value="">Select Gender</option>
 									<option v-if="publisher.gender == 'Male' || publisher.gender == 'Female'" :value="publisher.gender">{{ publisher.gender }}</option>
 									<option v-for="gender in ['Male', 'Female'].filter(elem=>elem !== publisher.gender)" :value="gender">{{ gender }}</option>
 								</select>
 							</p>
 							<p>
-								<label>Date of Baptism: </label>
-								<input type="date" class="dateOfBaptism" :value="cleanDate(publisher.dateOfBaptism)">
-								
-								<select class="hope" :v-model="publisher.hope">
+								<label>Date of Baptism: <input v-if="publisher.dateOfBaptism == null" type="date" class="dateOfBaptism w3-input"><input v-if="publisher.dateOfBaptism !== null" type="date" class="dateOfBaptism w3-input" :value="cleanDate(publisher.dateOfBaptism)"></label>
+								<select class="hope w3-input" :v-model="publisher.hope">
 									<option :value="publisher.hope">{{ publisher.hope }}</option>
 									<option v-for="hope in hopes.filter(elem=>elem !== publisher.hope)" :value="hope">{{ hope }}</option>
 								</select>
 							</p>
-							<label v-for="(privilege, index) in privileges" :key="index"><input type="checkbox" :name="privilege" class="privileges" :checked=publisher.privilege.includes(privilege)>{{ privilege }}</label>
+							<label v-for="(privilege, index) in privileges" :key="index" class="w3-input"><input type="checkbox" :name="privilege" class="privileges" :checked=publisher.privilege.includes(privilege)> {{ privilege }}</label>
 							<p>
-								<label>Field Service Group: </label>
-								<select class="fieldServiceGroup" :v-model="publisher.fieldServiceGroup">
+								<label>Field Service Group: 
+								<select class="fieldServiceGroup w3-input" :v-model="publisher.fieldServiceGroup">
 									<option v-if="!allGroups.includes(publisher.fieldServiceGroup)" value="">Select Group</option>
 									<option v-if="allGroups.includes(publisher.fieldServiceGroup)" :value="publisher.fieldServiceGroup">{{ publisher.fieldServiceGroup }}</option>
 									<option v-for="group in allGroups.filter(elem=>elem !== publisher.fieldServiceGroup)" :value="group">{{ group }}</option>
-								</select>
+								</select></label>
 							</p>
+							<div style="overflow-x: scroll;">
+								<table>
+									<thead>
+									<tr>
+										<th>Service Year 2024</th>
+										<th>Shared in Ministry</th>
+										<th>Bible Studies</th>
+										<th>Auxiliary Pioneer</th>
+										<th>Hours (If pioneer or ﬁeld missionary)</th>
+										<th>Remarks</th>
+									</tr>
+									</thead>
+									<tbody>
+									<tr v-for="(month, index) in months" :key="month.abbr" :class="month.abbr">
+										<td>{{ month.fullName }}</td>
+										<td><input class="sharedInMinistry" type="checkbox" :checked="publisher.report.currentServiceYear[month.abbr].sharedInMinistry !== null"></td>
+										<td class="bibleStudies" contenteditable="true">{{ publisher.report.currentServiceYear[month.abbr].bibleStudies }}</td>
+										<td><input class="auxiliaryPioneer" type="checkbox" :checked="publisher.report.currentServiceYear[month.abbr].auxiliaryPioneer !== null"></td>
+										<td class="hours" contenteditable="true">{{ publisher.report.currentServiceYear[month.abbr].hours }}</td>
+										<td class="remarks" contenteditable="true">{{ publisher.report.currentServiceYear[month.abbr].remarks }}</td>
+									</tr>
+									<tr>
+										<td></td>
+										<td></td>
+										<td></td>
+										<td>Total</td>
+										<td>{{ publisher.report.currentServiceYear.totalHours }}</td>
+										<td contenteditable="true">{{ publisher.report.currentServiceYear.totalRemarks }}</td>
+									</tr>
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<h2 class="w3-center">Inactive Publishers</h2>
+		<div class="w3-row-padding w3-grayscale" style="margin-top:4px">
+			<div v-for="(publisher, count) in inactivePublishers" :key="publisher + '|' + count" v-if="(publisher.fieldServiceGroup == selectedGroup || selectedGroup == 'All Groups') && publisher.name.toLowerCase().includes(searchTerms.toLowerCase())" class="w3-col l3 m6 w3-margin-bottom">
+				<div class="w3-card">
+					<div class="w3-container main">
+						<h5 @click="publisherDetail(publisher, $event.target)">{{ publisher.name }}</h5>
+					</div>
+					<div class="detail" style="display:none; padding:15px">
+						<div style="display:flex; justify-content:space-between">
+							<i @click="publisherDetail(publisher, $event.target)" class="fas fa-chevron-left"></i>
+							<i @click="removePublisher(count, publisher.name, $event.target)" class="fas fa-trash-alt"></i>
+						</div>
+						<h2 contenteditable="true" class="name">{{ publisher.name }}</h2>
+						<p>
+							<label>Date of Birth: <input v-if="publisher.dateOfBirth == null" type="date" class="dateOfBirth w3-input"><input v-if="publisher.dateOfBirth !== null" type="date" class="dateOfBirth w3-input" :value="cleanDate(publisher.dateOfBirth)"></label>
+							<select class="gender w3-input" :v-model="publisher.gender">
+								<option v-if="publisher.gender !== 'Male' && publisher.gender !== 'Female'" value="">Select Gender</option>
+								<option v-if="publisher.gender == 'Male' || publisher.gender == 'Female'" :value="publisher.gender">{{ publisher.gender }}</option>
+								<option v-for="gender in ['Male', 'Female'].filter(elem=>elem !== publisher.gender)" :value="gender">{{ gender }}</option>
+							</select>
+						</p>
+						<p>
+							<label>Date of Baptism: <input v-if="publisher.dateOfBaptism == null" type="date" class="dateOfBaptism w3-input"><input v-if="publisher.dateOfBaptism !== null" type="date" class="dateOfBaptism w3-input" :value="cleanDate(publisher.dateOfBaptism)"></label>
+							<select class="hope w3-input" :v-model="publisher.hope">
+								<option :value="publisher.hope">{{ publisher.hope }}</option>
+								<option v-for="hope in hopes.filter(elem=>elem !== publisher.hope)" :value="hope">{{ hope }}</option>
+							</select>
+						</p>
+						<label v-for="(privilege, index) in privileges" :key="index" class="w3-input"><input type="checkbox" :name="privilege" class="privileges" :checked=publisher.privilege.includes(privilege)> {{ privilege }}</label>
+						<p>
+							<label>Field Service Group: 
+							<select class="fieldServiceGroup w3-input" :v-model="publisher.fieldServiceGroup">
+								<option v-if="!allGroups.includes(publisher.fieldServiceGroup)" value="">Select Group</option>
+								<option v-if="allGroups.includes(publisher.fieldServiceGroup)" :value="publisher.fieldServiceGroup">{{ publisher.fieldServiceGroup }}</option>
+								<option v-for="group in allGroups.filter(elem=>elem !== publisher.fieldServiceGroup)" :value="group">{{ group }}</option>
+							</select></label>
+						</p>
+						<div style="overflow-x: scroll;">
 							<table>
 								<thead>
 								<tr>
@@ -859,79 +782,6 @@ document.querySelector('#allPublishers').innerHTML = `<template>
 								</tbody>
 							</table>
 						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-		<h2 class="w3-center">Inactive Publishers</h2>
-		<div class="w3-row-padding w3-grayscale" style="margin-top:4px">
-			<div v-for="(publisher, count) in inactivePublishers" :key="publisher + '|' + count" v-if="(publisher.fieldServiceGroup == selectedGroup || selectedGroup == 'All Groups') && publisher.name.toLowerCase().includes(searchTerms.toLowerCase())" class="w3-col l3 m6 w3-margin-bottom">
-				<div class="w3-card">
-					<div class="w3-container main">
-						<h5 @click="publisherDetail(publisher, $event.target)">{{ publisher.name }}</h5>
-					</div>
-					<div class="detail" style="display:none; padding:15px">
-						<i @click="publisherDetail(publisher, $event.target)" class="fas fa-arrow-left"></i>
-						<i @click="removePublisher(count, publisher.name, $event.target)" class="fas fa-trash-alt"></i>
-						<h2 contenteditable="true" class="name">{{ publisher.name }}</h2>
-						<p>
-							<label>Date of Birth: </label>
-							<input v-if="publisher.dateOfBirth == null" type="date" class="dateOfBirth">
-							<input v-if="publisher.dateOfBirth !== null" type="date" class="dateOfBirth" :value="cleanDate(publisher.dateOfBirth)">
-							<select class="gender" :v-model="publisher.gender">
-								<option v-if="publisher.gender !== 'Male' && publisher.gender !== 'Female'" value="">Select Gender</option>
-								<option v-if="publisher.gender == 'Male' || publisher.gender == 'Female'" :value="publisher.gender">{{ publisher.gender }}</option>
-								<option v-for="gender in ['Male', 'Female'].filter(elem=>elem !== publisher.gender)" :value="gender">{{ gender }}</option>
-							</select>
-						</p>
-						<p>
-							<label>Date of Baptism: </label>
-							<input type="date" class="dateOfBaptism" :value="cleanDate(publisher.dateOfBaptism)">
-							
-							<select class="hope" :v-model="publisher.hope">
-								<option :value="publisher.hope">{{ publisher.hope }}</option>
-								<option v-for="hope in hopes.filter(elem=>elem !== publisher.hope)" :value="hope">{{ hope }}</option>
-							</select>
-						</p>
-						<label v-for="(privilege, index) in privileges" :key="index"><input type="checkbox" :name="privilege" class="privileges" :checked=publisher.privilege.includes(privilege)>{{ privilege }}</label>
-						<p>
-							<label>Field Service Group: </label>
-							<select class="fieldServiceGroup" :v-model="publisher.fieldServiceGroup">
-								<option v-if="!allGroups.includes(publisher.fieldServiceGroup)" value="">Select Group</option>
-								<option v-if="allGroups.includes(publisher.fieldServiceGroup)" :value="publisher.fieldServiceGroup">{{ publisher.fieldServiceGroup }}</option>
-								<option v-for="group in allGroups.filter(elem=>elem !== publisher.fieldServiceGroup)" :value="group">{{ group }}</option>
-							</select>
-						</p>
-						<table>
-							<thead>
-							<tr>
-								<th>Service Year 2024</th>
-								<th>Shared in Ministry</th>
-								<th>Bible Studies</th>
-								<th>Auxiliary Pioneer</th>
-								<th>Hours (If pioneer or ﬁeld missionary)</th>
-								<th>Remarks</th>
-							</tr>
-							</thead>
-							<tbody>
-							<tr v-for="(month, index) in months" :key="month.abbr" :class="month.abbr">
-								<td>{{ month.fullName }}</td>
-								<td><input class="sharedInMinistry" type="checkbox" :checked="publisher.report.currentServiceYear[month.abbr].sharedInMinistry !== null"></td>
-								<td class="bibleStudies" contenteditable="true">{{ publisher.report.currentServiceYear[month.abbr].bibleStudies }}</td>
-								<td><input class="auxiliaryPioneer" type="checkbox" :checked="publisher.report.currentServiceYear[month.abbr].auxiliaryPioneer !== null"></td>
-								<td class="hours" contenteditable="true">{{ publisher.report.currentServiceYear[month.abbr].hours }}</td>
-								<td class="remarks" contenteditable="true">{{ publisher.report.currentServiceYear[month.abbr].remarks }}</td>
-							</tr>
-							<tr>
-								<td></td>
-								<td></td>
-								<td></td>
-								<td>Total</td>
-								<td>{{ publisher.report.currentServiceYear.totalHours }}</td>
-								<td contenteditable="true">{{ publisher.report.currentServiceYear.totalRemarks }}</td>
-							</tr>
-							</tbody>
-						</table>
 					</div>
 				</div>
 			</div>
@@ -1016,27 +866,27 @@ function processAllPublishers() {
                     item.parentNode.parentNode.querySelector('.main').style.display = 'none'
                     item.parentNode.parentNode.querySelector('.detail').style.display = ''
                 } else {
-					if (item.parentNode.querySelector('.name').innerHTML.trim() == '' || item.parentNode.querySelector('.name').innerHTML.trim().replaceAll('&nbsp;','').replaceAll('nbsp;','').replaceAll('&amp;','').replaceAll(' ','') == '') {
+					if (item.parentNode.parentNode.querySelector('.name').innerHTML.trim() == '' || item.parentNode.parentNode.querySelector('.name').innerHTML.trim().replaceAll('&nbsp;','').replaceAll('nbsp;','').replaceAll('&amp;','').replaceAll(' ','') == '') {
 						alert("Please enter Publisher Name")
 						return
 					}
-					if (publisher.name !== item.parentNode.querySelector('.name').innerHTML) {
+					if (publisher.name !== item.parentNode.parentNode.querySelector('.name').innerHTML) {
 						DBWorker.postMessage({ storeName: 'data', action: "deleteItem", value: publisher.name});
 					}
-                    publisher.name = item.parentNode.querySelector('.name').innerHTML
-                    if (item.parentNode.querySelector('.dateOfBirth').value) {
-                        publisher.dateOfBirth = item.parentNode.querySelector('.dateOfBirth').value
+                    publisher.name = item.parentNode.parentNode.querySelector('.name').innerHTML
+                    if (item.parentNode.parentNode.querySelector('.dateOfBirth').value) {
+                        publisher.dateOfBirth = item.parentNode.parentNode.querySelector('.dateOfBirth').value
                     }
-                    if (item.parentNode.querySelector('.dateOfBaptism')) {
-                        publisher.dateOfBaptism = item.parentNode.querySelector('.dateOfBaptism').value
+                    if (item.parentNode.parentNode.querySelector('.dateOfBaptism').value) {
+                        publisher.dateOfBaptism = item.parentNode.parentNode.querySelector('.dateOfBaptism').value
                     }
-                    publisher.gender = item.parentNode.querySelector('.gender').value
-                    publisher.hope = item.parentNode.querySelector('.hope').value
-                    publisher.fieldServiceGroup = item.parentNode.querySelector('.fieldServiceGroup').value
+                    publisher.gender = item.parentNode.parentNode.querySelector('.gender').value
+                    publisher.hope = item.parentNode.parentNode.querySelector('.hope').value
+                    publisher.fieldServiceGroup = item.parentNode.parentNode.querySelector('.fieldServiceGroup').value
                     
                     var allPrivileges = []
 
-                    item.parentNode.parentNode.querySelectorAll('.privileges').forEach(elem=>{
+                    item.parentNode.parentNode.parentNode.querySelectorAll('.privileges').forEach(elem=>{
                         if (elem.checked) {
                             allPrivileges.push(elem.name)
                         }
@@ -1047,7 +897,7 @@ function processAllPublishers() {
                     publisher.privilege = allPrivileges
 
                     this.months.forEach(elem=>{
-                        const currentItem = item.parentNode.querySelector(`.${elem.abbr}`)
+                        const currentItem = item.parentNode.parentNode.querySelector(`.${elem.abbr}`)
                         if (currentItem.querySelector('.hours').innerHTML !== '') {
                             publisher.report.currentServiceYear[elem.abbr].hours = Number(currentItem.querySelector('.hours').innerHTML)
                         } else {
@@ -1079,8 +929,8 @@ function processAllPublishers() {
 
                     //console.log(publisher)
                     
-                    item.parentNode.parentNode.querySelector('.detail').style.display = 'none'
-                    item.parentNode.parentNode.querySelector('.main').style.display = ''
+                    item.parentNode.parentNode.parentNode.querySelector('.detail').style.display = 'none'
+                    item.parentNode.parentNode.parentNode.querySelector('.main').style.display = ''
                     DBWorker.postMessage({ storeName: 'data', action: "save", value: [publisher]});
                 }
 			},          
@@ -1093,8 +943,8 @@ function processAllPublishers() {
             },
             removePublisher(count, name, item) {
                 if (confirm('Are you sure you want to delete "' + name + '" records?\nPress "OK" to Delete')) {
-					item.parentNode.parentNode.querySelector('.detail').style.display = 'none'
-					item.parentNode.parentNode.querySelector('.main').style.display = ''
+					item.parentNode.parentNode.parentNode.querySelector('.detail').style.display = 'none'
+					item.parentNode.parentNode.parentNode.querySelector('.main').style.display = ''
 					this.publishers.splice(count, 1)
 					DBWorker.postMessage({ storeName: 'data', action: "deleteItem", value: name});
 				}
@@ -1277,14 +1127,14 @@ document.querySelector('#monthlyReport').innerHTML = `<template>
 		<div class="w3-row-padding w3-grayscale">
 			<div v-for="(publisher, count) in publishers" :key="count" v-if="(publisher.active == true || (publisher.active == false && publisher.reactivated)) && (publisher.fieldServiceGroup == selectedGroup || selectedGroup == 'All Groups') && (publisher.name.toLowerCase().includes(searchTerms.toLowerCase()))" class="w3-col l3 m6 w3-margin-bottom">
 				<div class="w3-card">
-					<div class="w3-container">
+					<div class="w3-container" style="padding-bottom:15px">
 						<h3>{{ publisher.name }}</h3>
-						<hr>
-						<p><label>Shared in Ministry: <input style="margin-left:8px" class="sharedInMinistry" type="checkbox" :checked = "publisher.report.currentServiceYear[month.abbr].sharedInMinistry !== null" @change="handleCheckboxChange(publisher.report.currentServiceYear[month.abbr], $event.target, publisher)"></label></p>
-						<p><label>Bible Studies: <input class="bibleStudies w3-input" type="number" min="0" max="999" style="width: 64px;" :value="publisher.report.currentServiceYear[month.abbr].bibleStudies" @change="handleInputChange(publisher.report.currentServiceYear[month.abbr], $event.target, publisher)"></label></p>
-						<p><label>Auxiliary Pioneer: <input style="margin-left:8px" class="auxiliaryPioneer" type="checkbox" :checked = "publisher.report.currentServiceYear[month.abbr].auxiliaryPioneer !== null" @change="handleCheckboxChange(publisher.report.currentServiceYear[month.abbr], $event.target, publisher)"></label></p>
-						<p><label>Hours (If pioneer or ﬁeld missionary): <input class="hours w3-input" type="number" min="0" max="999" style="width: 64px;" :value="publisher.report.currentServiceYear[month.abbr].hours" @change="handleInputChange(publisher.report.currentServiceYear[month.abbr], $event.target, publisher)"></label></p>
-						<p><label>Remarks: <input class="remarks w3-input" type="text" style="width: 200px" :value="publisher.report.currentServiceYear[month.abbr].remarks" @change="handleInputChange(publisher.report.currentServiceYear[month.abbr], $event.target, publisher)"></label></p>
+						<hr style="margin:0;padding:5px">
+						<p style="margin:0"><label>Shared in Ministry: <input style="margin-left:8px" class="sharedInMinistry" type="checkbox" :checked = "publisher.report.currentServiceYear[month.abbr].sharedInMinistry !== null" @change="handleCheckboxChange(publisher.report.currentServiceYear[month.abbr], $event.target, publisher)"></label></p>
+						<p style="margin:0"><label>Bible Studies: <input class="bibleStudies w3-input" type="number" min="0" max="999" style="width: 64px;" :value="publisher.report.currentServiceYear[month.abbr].bibleStudies" @change="handleInputChange(publisher.report.currentServiceYear[month.abbr], $event.target, publisher)"></label></p>
+						<p style="margin:0"><label>Auxiliary Pioneer: <input style="margin-left:8px" class="auxiliaryPioneer" type="checkbox" :checked = "publisher.report.currentServiceYear[month.abbr].auxiliaryPioneer !== null" @change="handleCheckboxChange(publisher.report.currentServiceYear[month.abbr], $event.target, publisher)"></label></p>
+						<p style="margin:0"><label>Hours (If pioneer or ﬁeld missionary): <input class="hours w3-input" type="number" min="0" max="999" style="width: 64px;" :value="publisher.report.currentServiceYear[month.abbr].hours" @change="handleInputChange(publisher.report.currentServiceYear[month.abbr], $event.target, publisher)"></label></p>
+						<p style="margin:0"><label>Remarks: <input class="remarks w3-input" type="text" style="width: 95%" :value="publisher.report.currentServiceYear[month.abbr].remarks" @change="handleInputChange(publisher.report.currentServiceYear[month.abbr], $event.target, publisher)"></label></p>
 					</div>
 				</div>
 			</div>
@@ -1293,15 +1143,15 @@ document.querySelector('#monthlyReport').innerHTML = `<template>
 		<div class="w3-row-padding w3-grayscale">
 			<div v-for="(publisher, count) in lateReports" :key="count" v-if="(publisher.publisher.active == true || (publisher.publisher.active == false && publisher.publisher.reactivated)) && (publisher.fieldServiceGroup == selectedGroup || selectedGroup == 'All Groups') && (publisher.name.toLowerCase().includes(searchTerms.toLowerCase()))" class="w3-col l3 m6 w3-margin-bottom">
 				<div class="w3-card">
-					<div class="w3-container">
+					<div class="w3-container" style="padding-bottom:15px">
 						<h3>{{ publisher.name }}</h3>
 						<h3>{{ publisher.month.fullName }}</h3>
-						<hr>
-						<p><label>Shared in Ministry: <input style="margin-left:8px" class="sharedInMinistry" type="checkbox" :checked = "publisher.report.sharedInMinistry !== null" @change="handleCheckboxChange2($event.target, publisher.publisher, publisher.month)"></label></p>
-						<p><label>Bible Studies: <input class="bibleStudies w3-input" type="number" min="0" max="999" style="width: 64px;" :value="publisher.report.bibleStudies" @change="handleInputChange2($event.target, publisher.publisher, publisher.month)"></label></p>
-						<p><label>Auxiliary Pioneer: <input style="margin-left:8px" class="auxiliaryPioneer" type="checkbox" :checked = "publisher.report.auxiliaryPioneer !== null" @change="handleCheckboxChange2($event.target, publisher.publisher, publisher.month)"></label></p>
-						<p><label>Hours (If pioneer or ﬁeld missionary): <input class="hours w3-input" type="number" min="0" max="999" style="width: 64px;" :value="publisher.report.hours" @change="handleInputChange2($event.target, publisher.publisher, publisher.month)"></label></p>
-						<p><label>Remarks: <input class="remarks w3-input" type="text" style="width: 200px" :value="publisher.report.remarks" @change="handleInputChange2($event.target, publisher.publisher, publisher.month)"></label></p>
+						<hr style="margin:0;padding:5px">
+						<p style="margin:0"><label>Shared in Ministry: <input style="margin-left:8px" class="sharedInMinistry" type="checkbox" :checked = "publisher.report.sharedInMinistry !== null" @change="handleCheckboxChange2($event.target, publisher.publisher, publisher.month)"></label></p>
+						<p style="margin:0"><label>Bible Studies: <input class="bibleStudies w3-input" type="number" min="0" max="999" style="width: 64px;" :value="publisher.report.bibleStudies" @change="handleInputChange2($event.target, publisher.publisher, publisher.month)"></label></p>
+						<p style="margin:0"><label>Auxiliary Pioneer: <input style="margin-left:8px" class="auxiliaryPioneer" type="checkbox" :checked = "publisher.report.auxiliaryPioneer !== null" @change="handleCheckboxChange2($event.target, publisher.publisher, publisher.month)"></label></p>
+						<p style="margin:0"><label>Hours (If pioneer or ﬁeld missionary): <input class="hours w3-input" type="number" min="0" max="999" style="width: 64px;" :value="publisher.report.hours" @change="handleInputChange2($event.target, publisher.publisher, publisher.month)"></label></p>
+						<p style="margin:0"><label>Remarks: <input class="remarks w3-input" type="text" style="width: 95%" :value="publisher.report.remarks" @change="handleInputChange2($event.target, publisher.publisher, publisher.month)"></label></p>
 					</div>
 				</div>
 			</div>
@@ -1457,15 +1307,7 @@ function processMonthlyReport() {
 
                 return formattedDate
             },
-            removePublisher(count, name, item) {
-                if (confirm('Are you sure you want to delete "' + name + '" records?\nPress "OK" to Delete')) {
-					item.parentNode.parentNode.querySelector('.detail').style.display = 'none'
-					item.parentNode.parentNode.querySelector('.main').style.display = ''
-					this.publishers.splice(count, 1)
-					DBWorker.postMessage({ storeName: 'data', action: "deleteItem", value: name});
-				}
-            },
-			handleCheckboxChange(record, event, publisher) {
+            handleCheckboxChange(record, event, publisher) {
 				this.saved++
 				if (!record.created) {
 					record.created = this.cleanDate(new Date())
@@ -1571,7 +1413,7 @@ document.querySelector('#missingReport').innerHTML = `<template>
 				<div style="padding-bottom:10px" class="w3-card">
 					<div class="w3-container">
 						<div style="display:flex; justify-content:space-between">
-							<h3>{{ group }}</h3>
+							<h3 style="margin-right:4px">{{ group }}</h3>
 							<h3 style="text-align: right;" @click="message($event.target, group)" title="Send Message"><i class="fas fa-envelope"></i></h3>
 						</div>
 						<div class="main" v-for="(publisher, count) in groupPublishers(group)" :key="publisher + '|' + count" style="cursor:pointer" v-if="missingRecord(publisher) !== '' && publisher.fieldServiceGroup == group && (publisher.name.toLowerCase().includes(searchTerms.toLowerCase()))">
@@ -1730,8 +1572,8 @@ document.querySelector('#attendance').innerHTML = `<template>
 		<h2 v-if="reportEntry == true" class="w3-center">ATTENDANCE RECORD</h2>
 		<div v-if="reportEntry == true" v-for="(meeting, count) in meetingAttendanceRecord.meetings" :key="meeting.name + '|' + count" class="w3-row-padding w3-grayscale">
 			<h3>{{ meeting.name }}</h3>
-			<div v-for="(serviceYear, count) in serviceYears" :key="serviceYear + '|' + count" class="w3-col l3 m6 w3-margin-bottom">
-				<div class="w3-card">
+			<div v-for="(serviceYear, count) in serviceYears" :key="serviceYear + '|' + count">
+				<div class="w3-card" style="display:flex; flex-wrap:wrap; padding:10px;margin-bottom:15px">
 					<table>
 						<thead>
 							<tr>
@@ -2091,7 +1933,7 @@ document.querySelector('#configuration').innerHTML = `<template>
 							<button class="w3-button w3-black" @click="saveFile()"><i class="fas fa-save"> </i> Save File</button>
 							<input type="file" id="pdfFile" accept=".pdf">
 						</p>
-						<p>
+						<div>
 							<div class="main">
 								<button class="w3-button w3-black" @click="publisherDetail($event.target)">New Publisher</button>
 								<button class="w3-button w3-black" @click="reloadPage()">Reload</button>
@@ -2099,70 +1941,67 @@ document.querySelector('#configuration').innerHTML = `<template>
 							<div class="detail" style="display:none; border: 1px solid gray; padding:5px">
 								<button class="w3-button w3-black" @click="publisherDetail($event.target)">Save</button>
 								<button class="w3-button w3-black" @click="cancel($event.target)">Cancel</button>
-								<p><label>Name: <input type="text" class="name" placeholder="Publisher Name" :value="publisher.name"></label></p>
+								<h3 contenteditable="true" class="name">Publisher Name</h3>
 								<p>
-									<label>Date of Birth: </label>
-									<input v-if="publisher.dateOfBirth == null" type="date" class="dateOfBirth">
-									<select class="gender">
+									<label>Date of Birth: <input v-if="publisher.dateOfBirth == null" type="date" class="dateOfBirth w3-input"><input v-if="publisher.dateOfBirth !== null" type="date" class="dateOfBirth w3-input"></label>
+									<select class="gender w3-input">
 										<option v-for="gender in ['Select Gender', 'Male', 'Female']" :value="gender">{{ gender }}</option>
 									</select>
 								</p>
 								<p>
-									<label>Date of Baptism: </label>
-									<input type="date" class="dateOfBaptism">
-									
-									<select class="hope">
+									<label>Date of Baptism: <input v-if="publisher.dateOfBaptism == null" type="date" class="dateOfBaptism w3-input"><input v-if="publisher.dateOfBaptism !== null" type="date" class="dateOfBaptism w3-input" :value="cleanDate(publisher.dateOfBaptism)"></label>
+									<select class="hope w3-input">
 										<option v-for="hope in hopes" :value="hope">{{ hope }}</option>
 									</select>
 								</p>
-								<label v-for="(privilege, index) in privileges" :key="index"><input type="checkbox" :name="privilege" class="privileges" :checked=publisher.privilege.includes(privilege)>{{ privilege }}</label>
+								<label v-for="(privilege, index) in privileges" :key="index" class="w3-input"><input type="checkbox" :name="privilege" class="privileges" :checked=publisher.privilege.includes(privilege)> {{ privilege }}</label>
 								<p>
-									<label>Field Service Group: </label>
-									<select class="fieldServiceGroup">
+									<label>Field Service Group: 
+									<select class="fieldServiceGroup w3-input">
 										<option value="">Select Group</option>
 										<option v-for="group in allGroups" :value="group">{{ group }}</option>
-									</select>
+									</select></label>
 								</p>
-								<label>Address: </label>
-								<p contenteditable="true" class="contactAddress">{{ publisher.contactInformation.address }}</p>
-								<label>Phone Number: </label>
-								<p contenteditable="true" class="contactPhoneNumber">{{ publisher.contactInformation.phoneNumber }}</p>
-								<label>Emergency Contact Name: </label>
-								<p contenteditable="true" class="emergencyContactName">{{ publisher.emergencyContactInformation.address }}</p>
-								<label>Emergency Contact Phone Number: </label>
-								<p contenteditable="true" class="emergencyContactPhoneNumber">{{ publisher.emergencyContactInformation.phoneNumber }}</p>
-								<table>
-									<thead>
-									<tr>
-										<th>Service Year 2024</th>
-										<th>Shared in Ministry</th>
-										<th>Bible Studies</th>
-										<th>Auxiliary Pioneer</th>
-										<th>Hours (If pioneer or ﬁeld missionary)</th>
-										<th>Remarks</th>
-									</tr>
-									</thead>
-									<tbody>
-									<tr v-for="(month, index) in months" :key="month.abbr" :class="month.abbr">
-										<td>{{ month.fullName }}</td>
-										<td><input class="sharedInMinistry" type="checkbox" :checked="publisher.report.currentServiceYear[month.abbr].sharedInMinistry !== null"></td>
-										<td class="bibleStudies" contenteditable="true">{{ publisher.report.currentServiceYear[month.abbr].bibleStudies }}</td>
-										<td><input class="auxiliaryPioneer" type="checkbox" :checked="publisher.report.currentServiceYear[month.abbr].auxiliaryPioneer !== null"></td>
-										<td class="hours" contenteditable="true">{{ publisher.report.currentServiceYear[month.abbr].hours }}</td>
-										<td class="remarks" contenteditable="true">{{ publisher.report.currentServiceYear[month.abbr].remarks }}</td>
-									</tr>
-									<tr>
-										<td></td>
-										<td></td>
-										<td></td>
-										<td>Total</td>
-										<td>{{ publisher.report.currentServiceYear.totalHours }}</td>
-										<td contenteditable="true">{{ publisher.report.currentServiceYear.totalRemarks }}</td>
-									</tr>
-									</tbody>
-								</table>
+								<div class="detail" style="padding:0 15px 15px 15px">
+									<p><label>Phone Number: <input class="contactPhoneNumber w3-input" type="tel" :value="publisher.contactInformation.phoneNumber"></label></p>
+									<p><label>Address:<input class="contactAddress w3-input" type="text" :value="publisher.contactInformation.address"></label></p>
+									<p><label>Emergency Contact: <input class="emergencyContactName w3-input" type="text" :value="publisher.emergencyContactInformation.name"></label></p>
+									<p><label>Contact Number: <input class="emergencyContactPhoneNumber w3-input" type="tel" :value="publisher.emergencyContactInformation.phoneNumber"></label></p>
+								</div>
+								<div style="overflow-x: scroll;">
+									<table>
+										<thead>
+										<tr>
+											<th>Service Year 2024</th>
+											<th>Shared in Ministry</th>
+											<th>Bible Studies</th>
+											<th>Auxiliary Pioneer</th>
+											<th>Hours (If pioneer or ﬁeld missionary)</th>
+											<th>Remarks</th>
+										</tr>
+										</thead>
+										<tbody>
+										<tr v-for="(month, index) in months" :key="month.abbr" :class="month.abbr">
+											<td>{{ month.fullName }}</td>
+											<td><input class="sharedInMinistry" type="checkbox" :checked="publisher.report.currentServiceYear[month.abbr].sharedInMinistry !== null"></td>
+											<td class="bibleStudies" contenteditable="true">{{ publisher.report.currentServiceYear[month.abbr].bibleStudies }}</td>
+											<td><input class="auxiliaryPioneer" type="checkbox" :checked="publisher.report.currentServiceYear[month.abbr].auxiliaryPioneer !== null"></td>
+											<td class="hours" contenteditable="true">{{ publisher.report.currentServiceYear[month.abbr].hours }}</td>
+											<td class="remarks" contenteditable="true">{{ publisher.report.currentServiceYear[month.abbr].remarks }}</td>
+										</tr>
+										<tr>
+											<td></td>
+											<td></td>
+											<td></td>
+											<td>Total</td>
+											<td>{{ publisher.report.currentServiceYear.totalHours }}</td>
+											<td contenteditable="true">{{ publisher.report.currentServiceYear.totalRemarks }}</td>
+										</tr>
+										</tbody>
+									</table>
+								</div>
 							</div>
-						</p>
+						</div>
 						<p>
 							<button class="w3-button w3-black" @click="exportData()">Export Data</button>
 							<button class="w3-button w3-black" @click="importData()">Import Data</button>
@@ -2321,7 +2160,7 @@ Thanks a lot
                 this.configuration.fieldServiceGroups.pop()
             },
 			cancel(item) {
-				item.parentNode.querySelector('.name').value = ''
+				item.parentNode.querySelector('.name').innerHTML = 'Publisher Name'
 				item.parentNode.querySelector('.dateOfBirth').value = ''
 				item.parentNode.querySelector('.dateOfBaptism').value = ''
 				item.parentNode.querySelector('.gender').value = 'Select Gender'
@@ -2330,10 +2169,10 @@ Thanks a lot
 				item.parentNode.parentNode.querySelectorAll('.privileges').forEach(elem=>{
 					elem.checked = false
 				})
-                item.parentNode.querySelector('.contactAddress').innerHTML = ''
-                item.parentNode.querySelector('.contactPhoneNumber').innerHTML = ''
-                item.parentNode.querySelector('.emergencyContactName').innerHTML = ''
-                item.parentNode.querySelector('.emergencyContactPhoneNumber').innerHTML = ''
+                item.parentNode.querySelector('.contactAddress').value = ''
+                item.parentNode.querySelector('.contactPhoneNumber').value = ''
+                item.parentNode.querySelector('.emergencyContactName').value = ''
+                item.parentNode.querySelector('.emergencyContactPhoneNumber').value = ''
 				this.months.forEach(elem=>{
 					const currentItem = item.parentNode.querySelector(`.${elem.abbr}`)
 					currentItem.querySelector('.hours').innerHTML = ''
@@ -2351,8 +2190,8 @@ Thanks a lot
                     item.parentNode.parentNode.querySelector('.main').style.display = 'none'
                     item.parentNode.parentNode.querySelector('.detail').style.display = ''
                 } else {
-                    if (item.parentNode.querySelector('.name').value) {
-                        publisher.name = item.parentNode.querySelector('.name').value
+                    if (item.parentNode.querySelector('.name').innerHTML) {
+                        publisher.name = item.parentNode.querySelector('.name').innerHTML
                     } else {
 						alert('Please enter Publisher Name')
 						return
@@ -2379,10 +2218,10 @@ Thanks a lot
 
                     publisher.privilege = allPrivileges
 
-                    publisher.contactInformation.address = item.parentNode.querySelector('.contactAddress').innerHTML
-                    publisher.contactInformation.phoneNumber = item.parentNode.querySelector('.contactPhoneNumber').innerHTML
-                    publisher.emergencyContactInformation.name = item.parentNode.querySelector('.emergencyContactName').innerHTML
-                    publisher.emergencyContactInformation.phoneNumber = item.parentNode.querySelector('.emergencyContactPhoneNumber').innerHTML
+                    publisher.contactInformation.address = item.parentNode.querySelector('.contactAddress').value
+                    publisher.contactInformation.phoneNumber = item.parentNode.querySelector('.contactPhoneNumber').value
+                    publisher.emergencyContactInformation.name = item.parentNode.querySelector('.emergencyContactName').value
+                    publisher.emergencyContactInformation.phoneNumber = item.parentNode.querySelector('.emergencyContactPhoneNumber').value
                     this.months.forEach(elem=>{
                         const currentItem = item.parentNode.querySelector(`.${elem.abbr}`)
                         if (currentItem.querySelector('.hours').innerHTML !== '') {
