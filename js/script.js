@@ -98,7 +98,7 @@ function createWorker(script, fn) {
     return new Worker(url);
 }
 
-var DBWorker = new Worker("indexedDB.js")
+var DBWorker = new Worker("js/indexedDB.js")
 
 DBWorker.postMessage({ dbName: 'handler', action: "init"});
 
