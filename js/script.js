@@ -84,7 +84,7 @@ loginButton.addEventListener("click", (e) => {
 var currentUser = { "name": "currentUser", "username": null, "password": null, "accesses": [] }
 
 var navigationVue, navigationVue2, allPublishersVue, congregationVue, configurationVue, branchReportVue, contactInformationVue, fieldServiceGroupsVue, monthlyReportVue, missingReportVue;
-var allButtons = [{"title": "CONG", "function": "congregationVue"}, {"title": "PUBLISHERS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "REPORTS", "function": "monthlyReportVue"}, {"title": "MONTHLY", "function": "monthlyReportVue"}, {"title": "MISSING", "function": "missingReportVue"}, {"title": "BRANCH REPORT", "function": "branchReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "SETTINGS", "function": "configurationVue"}]
+var allButtons = [{"title": "CONG", "function": "congregationVue"}, {"title": "PUBLISHERS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "REPORTS", "function": "missingReportVue"}, {"title": "MONTHLY", "function": "monthlyReportVue"}, {"title": "MISSING", "function": "missingReportVue"}, {"title": "BRANCH REPORT", "function": "branchReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "SETTINGS", "function": "configurationVue"}]
 //var CongregationData = JSON.parse(localStorage.getItem('CongregationData'));
 
 function createWorker(script, fn) {
@@ -156,14 +156,14 @@ DBWorker.onmessage = async function (msg) {
 						//attendanceVue.currentMonth = result.attendance[0]
 						//attendanceVue.meetingAttendanceRecord = result.attendance[1]
 
-						navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "PUBLISHERS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "REPORTS", "function": "monthlyReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}]
-						//navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "PUBLISHERS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "REPORTS", "function": "monthlyReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}]
+						navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "PUBLISHERS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "REPORTS", "function": "missingReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}]
+						//navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "PUBLISHERS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "REPORTS", "function": "missingReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}]
 					}
 					if (msgData.value.filter(elem=>elem.name == "Congregation").length !== 0) {
 						congregationVue.display = true
 						configured = true
-						navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "PUBLISHERS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "monthlyReportVue"}]
-						//navigationVue.buttons = [{"title": "PUBLISHERS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "REPORTS", "function": "monthlyReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "SETTINGS", "function": "configurationVue"}]
+						navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "PUBLISHERS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+						//navigationVue.buttons = [{"title": "PUBLISHERS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "REPORTS", "function": "missingReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "SETTINGS", "function": "configurationVue"}]
 						configurationVue.configuration = msgData.value.filter(elem=>elem.name == "Congregation")[0]
 						navigationVue.allGroups = msgData.value.filter(elem=>elem.name == "Congregation")[0].fieldServiceGroups
 						DBWorker.postMessage({ storeName: 'data', action: "readAll"});
@@ -171,7 +171,7 @@ DBWorker.onmessage = async function (msg) {
 					}/*
 					if (msgData.value.filter(elem=>elem.name == "Late Reports").length !== 0) {
 						
-						//navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "PUBLISHERS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "REPORTS", "function": "monthlyReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}]
+						//navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "PUBLISHERS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "REPORTS", "function": "missingReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}]
 					}*/
 				}
 				break;
@@ -309,25 +309,25 @@ function processNavigation() {
                 //console.log(button)
 				if (button.innerHTML == "PUBLISHERS") {
 					this.displayDropdown = true
-					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "monthlyReportVue"}]
+					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
 				} else if (button.innerHTML == "CONTACTS") {
 					this.displayDropdown = true
-					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "PUBLISHERS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "monthlyReportVue"}]
+					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "PUBLISHERS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
 				} else if (button.innerHTML == "CONG") {
 					this.displayDropdown = false
-					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "PUBLISHERS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "monthlyReportVue"}]
+					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "PUBLISHERS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
 				} else if (button.innerHTML == "GROUPS") {
 					this.displayDropdown = true
-					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "PUBLISHERS", "function": "allPublishersVue"}, {"title": "ACTIVE PUBLISHERS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "monthlyReportVue"}]
+					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "PUBLISHERS", "function": "allPublishersVue"}, {"title": "ACTIVE PUBLISHERS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
 				} else if (button.innerHTML == "ACTIVE PUBLISHERS") {
 					this.displayDropdown = true
-					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "PUBLISHERS", "function": "allPublishersVue"}, {"title": "ALL PUBLISHERS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "monthlyReportVue"}]
+					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "PUBLISHERS", "function": "allPublishersVue"}, {"title": "ALL PUBLISHERS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
 				} else if (button.innerHTML == "ALL PUBLISHERS") {
 					this.displayDropdown = true
-					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "PUBLISHERS", "function": "allPublishersVue"}, {"title": "ACTIVE PUBLISHERS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "monthlyReportVue"}]
+					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "PUBLISHERS", "function": "allPublishersVue"}, {"title": "ACTIVE PUBLISHERS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
 				} else if (button.innerHTML == "REPORTS") {
 					this.displayDropdown = true
-					this.buttons = [{"title": "MISSING", "function": "missingReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH REPORT", "function": "branchReportVue"}, {"title": "CONG", "function": "congregationVue"}]
+					this.buttons = [{"title": "MONTHLY", "function": "monthlyReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH REPORT", "function": "branchReportVue"}, {"title": "CONG", "function": "congregationVue"}]
 				} else if (button.innerHTML == "MISSING") {
 					this.displayDropdown = true
 					this.buttons = [{"title": "MONTHLY", "function": "monthlyReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH REPORT", "function": "branchReportVue"}, {"title": "CONG", "function": "congregationVue"}]
@@ -406,25 +406,25 @@ function processNavigation2() {
 				w3_close()
 				if (button.innerHTML == "PUBLISHERS") {
 					navigationVue.displayDropdown = true
-					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "monthlyReportVue"}]
+					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
 				} else if (button.innerHTML == "CONTACTS") {
 					navigationVue.displayDropdown = true
-					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "PUBLISHERS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "monthlyReportVue"}]
+					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "PUBLISHERS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
 				} else if (button.innerHTML == "CONG") {
 					navigationVue.displayDropdown = false
-					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "PUBLISHERS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "monthlyReportVue"}]
+					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "PUBLISHERS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
 				} else if (button.innerHTML == "GROUPS") {
 					navigationVue.displayDropdown = true
-					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "PUBLISHERS", "function": "allPublishersVue"}, {"title": "ACTIVE PUBLISHERS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "monthlyReportVue"}]
+					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "PUBLISHERS", "function": "allPublishersVue"}, {"title": "ACTIVE PUBLISHERS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
 				} else if (button.innerHTML == "ACTIVE PUBLISHERS") {
 					navigationVue.displayDropdown = true
-					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "PUBLISHERS", "function": "allPublishersVue"}, {"title": "ALL PUBLISHERS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "monthlyReportVue"}]
+					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "PUBLISHERS", "function": "allPublishersVue"}, {"title": "ALL PUBLISHERS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
 				} else if (button.innerHTML == "ALL PUBLISHERS") {
 					navigationVue.displayDropdown = true
-					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "PUBLISHERS", "function": "allPublishersVue"}, {"title": "ACTIVE PUBLISHERS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "monthlyReportVue"}]
+					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "PUBLISHERS", "function": "allPublishersVue"}, {"title": "ACTIVE PUBLISHERS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
 				} else if (button.innerHTML == "REPORTS") {
 					navigationVue.displayDropdown = true
-					navigationVue.buttons = [{"title": "MISSING", "function": "missingReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH REPORT", "function": "branchReportVue"}, {"title": "CONG", "function": "congregationVue"}]
+					navigationVue.buttons = [{"title": "MONTHLY", "function": "monthlyReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH REPORT", "function": "branchReportVue"}, {"title": "CONG", "function": "congregationVue"}]
 				} else if (button.innerHTML == "MISSING") {
 					navigationVue.displayDropdown = true
 					navigationVue.buttons = [{"title": "MONTHLY", "function": "monthlyReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH REPORT", "function": "branchReportVue"}, {"title": "CONG", "function": "congregationVue"}]
@@ -895,10 +895,6 @@ function processAllPublishers() {
 
                     publisher.privilege = allPrivileges
 
-                    item.parentNode.querySelector('.contactAddress').innerHTML == '' ? null : publisher.contactInformation.address = item.parentNode.querySelector('.contactAddress').innerHTML
-                    item.parentNode.querySelector('.contactPhoneNumber').innerHTML == '' ? null : publisher.contactInformation.phoneNumber = item.parentNode.querySelector('.contactPhoneNumber').innerHTML
-                    item.parentNode.querySelector('.emergencyContactName').innerHTML == '' ? null : publisher.emergencyContactInformation.name = item.parentNode.querySelector('.emergencyContactName').innerHTML
-                    item.parentNode.querySelector('.emergencyContactPhoneNumber').innerHTML == '' ? null : publisher.emergencyContactInformation.phoneNumber = item.parentNode.querySelector('.emergencyContactPhoneNumber').innerHTML
                     this.months.forEach(elem=>{
                         const currentItem = item.parentNode.querySelector(`.${elem.abbr}`)
                         if (currentItem.querySelector('.hours').innerHTML !== '') {
@@ -1411,7 +1407,7 @@ function processMonthlyReport() {
 
 document.querySelector('#missingReport').innerHTML = `<template>
 	<div v-if="display == true" style="display:block">
-		<h2 class="w3-center">MISSINGS</h2>
+		<h2 class="w3-center">MISSING</h2>
 		<div class="w3-row-padding w3-grayscale" style="margin-top:4px">
 			<div v-for="(group) in allGroups" :key="group" v-if="(selectedGroup == group || selectedGroup == 'All Groups') && (groupPublishers(group).filter(elem=>elem.name.toLowerCase().includes(searchTerms.toLowerCase()) && missingRecord(elem).length !== 0).length !== 0)" class="w3-col l3 m6 w3-margin-bottom">
 				<div style="padding-bottom:10px" class="w3-card">
