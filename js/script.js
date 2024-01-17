@@ -314,16 +314,17 @@ document.querySelector('#navigation').innerHTML = `<template>
 		<a v-if="logged() == true" class="w3-bar-item w3-button" @click="openSettings()"><i class="fa fa-cog"></i></a>
 		<a v-if="logged() == true" class="w3-bar-item w3-button" @click="signOut()"><i class="fa fa-sign-out-alt"></i></a>
 		<div v-if="logged() == true && displayDropdown == true">
-			<select style="width:180px;margin:2px 0;padding:0;" :class="searchMode()" v-model="fieldServiceGroup">
-				<option v-if="allGroups.length > 1" value="All Groups">All Groups</option>
-				<option v-for="group in allGroups" :key="group" :value="group">{{ group }}</option>
-			</select>
+			
 			<input 
 				:class="inputMode()"
 				v-model="searchTerms" 
 				placeholder="Search . . ." 
 				type="text" 
 			>
+			<select style="width:180px;margin:2px 0;padding:0;" :class="searchMode()" v-model="fieldServiceGroup">
+				<option v-if="allGroups.length > 1" value="All Groups">All Groups</option>
+				<option v-for="group in allGroups" :key="group" :value="group">{{ group }}</option>
+			</select>
 		</div>
 	</div>
 	<!-- Hide right-floated links on small screens and replace them with a menu icon -->
@@ -332,16 +333,17 @@ document.querySelector('#navigation').innerHTML = `<template>
 		<i class="fa fa-bars"></i>
 	</a>
 	<div v-if="logged() == true && displayDropdown == true" class="w3-hide-large w3-hide-medium">
-		<select style="width:150px;margin:3px;padding:0;" :class="searchMode()" v-model="fieldServiceGroup">
-			<option v-if="allGroups.length > 1" value="All Groups">All Groups</option>
-			<option v-for="group in allGroups" :key="group" :value="group">{{ group }}</option>
-		</select>
+		
 		<input 
 			:class="inputMode()"
 			v-model="searchTerms" 
 			placeholder="Search . . ." 
 			type="text" 
 		>
+		<select style="width:150px;margin:3px;padding:0;" :class="searchMode()" v-model="fieldServiceGroup">
+			<option v-if="allGroups.length > 1" value="All Groups">All Groups</option>
+			<option v-for="group in allGroups" :key="group" :value="group">{{ group }}</option>
+		</select>
 	</div>
 </div>
 </template>`
