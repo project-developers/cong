@@ -85,6 +85,7 @@ var currentUser = { "name": "currentUser", "username": null, "password": null, "
 
 var navigationVue, navigationVue2, allPublishersVue, congregationVue, configurationVue, branchReportVue, contactInformationVue, fieldServiceGroupsVue, monthlyReportVue, missingReportVue;
 var allButtons = [{"title": "CONG", "function": "congregationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "REPORTS", "function": "missingReportVue"}, {"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "REPORTS", "function": "missingReportVue"}, {"title": "BRANCH", "function": "branchReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "SETTINGS", "function": "configurationVue"}]
+
 //var CongregationData = JSON.parse(localStorage.getItem('CongregationData'));
 
 function createWorker(script, fn) {
@@ -107,6 +108,37 @@ var configured, reset, resetCount = 0;
 var currentMonth = `${new Date().getFullYear()}-${(new Date().getMonth() + 1).toString().padStart(2, '0')}`;
 
 var reportButtons = [{"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "REPORTS", "function": "missingReportVue"}, {"title": "BRANCH", "function": "branchReportVue"}]
+var currentMode = 'System';
+var mode = 'w3-card w3-white';
+/*
+if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+	mode = 'w3-card w3-black'
+} else {
+	mode = 'w3-card w3-white'
+}*/
+/*
+document.body.querySelectorAll('.w3-white').forEach(elem=>{
+	elem.classList.toggle("w3-white");
+	elem.classList.toggle("w3-yellow");
+})
+document.body.querySelectorAll('.w3-black').forEach(elem=>{
+	elem.classList.toggle("w3-black");
+	elem.classList.toggle("w3-blue");
+})
+document.body.querySelectorAll('.w3-yellow').forEach(elem=>{
+	elem.classList.toggle("w3-black");
+	elem.classList.toggle("w3-yellow");
+})
+document.body.querySelectorAll('.w3-blue').forEach(elem=>{
+	elem.classList.toggle("w3-blue");
+	elem.classList.toggle("w3-white");
+})
+document.body.querySelectorAll('.w3-light-grey').forEach(elem=>{
+	elem.classList.toggle("w3-dark-grey");
+	elem.classList.toggle("w3-light-grey");
+})
+document.body.classList.toggle("w3-dark-grey");
+document.body.classList.toggle("w3-light-grey");*/
 
 DBWorker.onmessage = async function (msg) {
     var msgData = msg.data;
@@ -170,11 +202,31 @@ DBWorker.onmessage = async function (msg) {
 						navigationVue.allGroups = msgData.value.filter(elem=>elem.name == "Congregation")[0].fieldServiceGroups
 						DBWorker.postMessage({ storeName: 'data', action: "readAll"});
 						DBWorker.postMessage({ storeName: 'attendance', action: "readAll"});
-					}/*
-					if (msgData.value.filter(elem=>elem.name == "Late Reports").length !== 0) {
-						
-						//navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "REPORTS", "function": "missingReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}]
-					}*/
+					}
+					if (msgData.value.filter(elem=>elem.name == "Display").length !== 0) {
+						console.log(msgData.value.filter(elem=>elem.name == "Display"))
+						currentMode = msgData.value.filter(elem=>elem.name == "Display")[0].value
+						/*
+						if (msgData.value.filter(elem=>elem.name == "Display")[0].value !== 'System') {
+							currentMode = msgData.value.filter(elem=>elem.name == "Display")[0].value
+						} else {
+							if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+								currentMode = 'Dark'
+							} else {
+								currentMode = 'Light'
+							}
+						}*/
+		/*
+						if ((mode == 'w3-card w3-black' && currentMode == 'Dark') || (mode == 'w3-card w3-white' && currentMode == 'Light')) {
+							return
+						} else if (mode == 'w3-card w3-black') {
+							mode = 'w3-card w3-white'
+						} else {
+							mode = 'w3-card w3-black'
+						}*/
+						//mode = msgData.value.filter(elem=>elem.name == "Display")[0].value
+						configurationVue.displayMode({"value": currentMode})
+					}
 				}
 				break;
 			case "data":
@@ -257,8 +309,8 @@ document.querySelector('#navigation').innerHTML = `<template>
 		<a v-for="(button, count) in buttons.slice(1)" class="w3-bar-item w3-button" @click="openButton($event.target)">{{ button.title }}</a>
 		<a v-if="logged() == true" class="w3-bar-item w3-button" @click="openSettings()"><i class="fa fa-cog"></i></a>
 		<a v-if="logged() == true" class="w3-bar-item w3-button" @click="signOut()"><i class="fa fa-sign-out-alt"></i></a>
-		<div v-if="logged() == true && displayDropdown == true">
-			<select style="margin-top:2px" class="w3-bar-item w3-select" v-model="fieldServiceGroup">
+		<div v-if="logged() == true && displayDropdown == true" style="margin:5px">
+			<select style="margin:3px" class="w3-bar-item w3-select" v-model="fieldServiceGroup">
 				<option v-if="allGroups.length > 1" value="All Groups">All Groups</option>
 				<option v-for="group in allGroups" :key="group" :value="group">{{ group }}</option>
 			</select>
@@ -275,8 +327,8 @@ document.querySelector('#navigation').innerHTML = `<template>
 	<a href="javascript:void(0)" v-if="logged() == true" class="w3-bar-item w3-button w3-right w3-hide-large w3-hide-medium" onclick="w3_open()">
 		<i class="fa fa-bars"></i>
 	</a>
-	<div v-if="logged() == true && displayDropdown == true" class="w3-hide-large w3-hide-medium">
-		<select style="margin-top:2px" class="w3-bar-item w3-select" v-model="fieldServiceGroup">
+	<div v-if="logged() == true && displayDropdown == true" class="w3-hide-large w3-hide-medium" style="margin:5px">
+		<select style="margin:3px" class="w3-bar-item w3-select" v-model="fieldServiceGroup">
 			<option v-if="allGroups.length > 1" value="All Groups">All Groups</option>
 			<option v-for="group in allGroups" :key="group" :value="group">{{ group }}</option>
 		</select>
@@ -307,6 +359,9 @@ function processNavigation() {
             
         },
         methods: {
+			mode() {
+				return mode
+			},
 			openButton(button) {
                 //console.log(button)
 
@@ -401,6 +456,9 @@ function processNavigation2() {
             },
         },
         methods: {
+			mode() {
+				return mode
+			},
 			openButton(button) {
                 //console.log(button)
 				
@@ -555,6 +613,9 @@ function processCongregation() {
             },
         },
         methods: {
+			mode() {
+				return mode
+			},
 			
         }
     })
@@ -567,7 +628,7 @@ document.querySelector('#allPublishers').innerHTML = `<template>
 			<h2 class="w3-center">{{ category.name }}</h2>
 			<div class="w3-row-padding w3-grayscale" style="margin-top:4px">
 				<div v-for="(publisher, count) in category.value" :key="publisher + '|' + count" v-if="(publisher.fieldServiceGroup == selectedGroup || selectedGroup == 'All Groups') && publisher.name.toLowerCase().includes(searchTerms.toLowerCase())" class="w3-col l3 m6 w3-margin-bottom">
-					<div class="w3-card">
+					<div :class="mode()">
 						<div class="w3-container main">
 							<h5 @click="publisherDetail(publisher, $event.target)">{{ publisher.name }}</h5>
 						</div>
@@ -642,7 +703,7 @@ document.querySelector('#allPublishers').innerHTML = `<template>
 			<h2 class="w3-center">{{ group }}</h2>
 			<div class="w3-row-padding w3-grayscale" style="margin-top:4px">
 				<div v-for="(publisher, count) in activePublishers" v-if="publisher.fieldServiceGroup == group && (group == selectedGroup || selectedGroup == 'All Groups') && publisher.name.toLowerCase().includes(searchTerms.toLowerCase())" :key="publisher + '|' + count" class="w3-col l3 m6 w3-margin-bottom">
-					<div class="w3-card">
+					<div :class="mode()">
 						<div class="w3-container main">
 							<h5 @click="publisherDetail(publisher, $event.target)">{{ publisher.name }}</h5>
 						</div>
@@ -716,7 +777,7 @@ document.querySelector('#allPublishers').innerHTML = `<template>
 		<h2 class="w3-center">Inactive Publishers</h2>
 		<div class="w3-row-padding w3-grayscale" style="margin-top:4px">
 			<div v-for="(publisher, count) in inactivePublishers" :key="publisher + '|' + count" v-if="(publisher.fieldServiceGroup == selectedGroup || selectedGroup == 'All Groups') && publisher.name.toLowerCase().includes(searchTerms.toLowerCase())" class="w3-col l3 m6 w3-margin-bottom">
-				<div class="w3-card">
+				<div :class="mode()">
 					<div class="w3-container main">
 						<h5 @click="publisherDetail(publisher, $event.target)">{{ publisher.name }}</h5>
 					</div>
@@ -794,7 +855,7 @@ function processAllPublishers() {
     allPublishersVue = new Vue({
         el: document.querySelector('#allPublishers'),
         data: {
-            publishers: [],
+			publishers: [],
             status: ["Active", "Inactive"],
             display: false,
             categories: [],
@@ -841,6 +902,9 @@ function processAllPublishers() {
 			},
         },
         methods: {
+			mode() {
+				return mode
+			},
 			checkStatus(report) {
 				var lastServiceYearMonths = monthlyReportVue.months.map((element) => ({
                     ...element,
@@ -969,7 +1033,7 @@ document.querySelector('#fieldServiceGroups').innerHTML = `<template>
 		<h2 class="w3-center">FIELD SERVICE GROUPS</h2>
 		<div class="w3-row-padding w3-grayscale" style="margin-top:4px">
 			<div v-for="(group) in allGroups" :key="group" class="w3-col l3 m6 w3-margin-bottom">
-				<div class="w3-card">
+				<div :class="mode()">
 					<div class="w3-container main">
 						<h3 class="w3-center">{{ group }}</h3>
 						<hr>
@@ -1004,6 +1068,9 @@ function processFieldServiceGroups() {
             },
         },
         methods: {
+			mode() {
+				return mode
+			},
 			groupPublishers(group) {
                 return allPublishersVue.publishers.filter(elem=>elem.fieldServiceGroup == group && (elem.active == true || this.active == true))
             },
@@ -1028,7 +1095,7 @@ document.querySelector('#contactInformation').innerHTML = `<template>
 			<h2 class="w3-center">{{ group }}</h2>
 			<div class="w3-row-padding w3-grayscale" style="margin-top:4px">
 				<div v-for="(publisher, count) in groupPublishers(group)" :key="publisher + '|' + count" style="cursor:pointer" v-if="publisher.fieldServiceGroup == group && (publisher.name.toLowerCase().includes(searchTerms.toLowerCase()))" class="w3-col l3 m6 w3-margin-bottom">
-					<div class="w3-card">
+					<div :class="mode()">
 						<h5 @click="publisherDetail($event.target, publisher)" style="padding:10px 15px;margin:0">{{ publisher.name }}</h5>
 						<div class="w3-container main" style="padding:0 15px">
 							<p v-if="publisher.contactInformation.phoneNumber !== null" v-for="(number) in getEachNumber(publisher.contactInformation.phoneNumber)" @click="call(number)" title="Call Number"><i class="fas fa-phone"></i> {{ number }}</p>
@@ -1074,6 +1141,9 @@ function contactInformation() {
             },
         },
         methods: {
+			mode() {
+				return mode
+			},
 			getEachNumber(number) {
 				if (number == null) {
 					return []
@@ -1126,7 +1196,7 @@ document.querySelector('#monthlyReport').innerHTML = `<template>
 		<h3 class="w3-center">{{ month.fullName }} {{ year }}</h3>
 		<div class="w3-row-padding w3-grayscale">
 			<div v-for="(publisher, count) in publishers" :key="count" v-if="(publisher.active == true || (publisher.active == false && publisher.reactivated)) && (publisher.fieldServiceGroup == selectedGroup || selectedGroup == 'All Groups') && (publisher.name.toLowerCase().includes(searchTerms.toLowerCase()))" class="w3-col l3 m6 w3-margin-bottom">
-				<div class="w3-card">
+				<div :class="mode()">
 					<div class="w3-container" style="padding-bottom:15px">
 						<h3>{{ publisher.name }}</h3>
 						<hr style="margin:0;padding:5px">
@@ -1142,7 +1212,7 @@ document.querySelector('#monthlyReport').innerHTML = `<template>
 		<h3 class="w3-center">Late Reports</h3>
 		<div class="w3-row-padding w3-grayscale">
 			<div v-for="(publisher, count) in lateReports" :key="count" v-if="(publisher.publisher.active == true || (publisher.publisher.active == false && publisher.publisher.reactivated)) && (publisher.fieldServiceGroup == selectedGroup || selectedGroup == 'All Groups') && (publisher.name.toLowerCase().includes(searchTerms.toLowerCase()))" class="w3-col l3 m6 w3-margin-bottom">
-				<div class="w3-card">
+				<div :class="mode()">
 					<div class="w3-container" style="padding-bottom:15px">
 						<h3>{{ publisher.name }}</h3>
 						<h3>{{ publisher.month.fullName }}</h3>
@@ -1230,6 +1300,9 @@ function processMonthlyReport() {
             },
         },
         methods: {
+			mode() {
+				return mode
+			},
 			publisherDetail(publisher, item) {
                 if (item.parentNode.className == 'main') {
                     item.parentNode.parentNode.querySelector('.main').style.display = 'none'
@@ -1410,7 +1483,7 @@ document.querySelector('#missingReport').innerHTML = `<template>
 		<h2 class="w3-center">MISSING</h2>
 		<div class="w3-row-padding w3-grayscale" style="margin-top:4px">
 			<div v-for="(group) in allGroups" :key="group" v-if="(selectedGroup == group || selectedGroup == 'All Groups') && (groupPublishers(group).filter(elem=>elem.name.toLowerCase().includes(searchTerms.toLowerCase()) && missingRecord(elem).length !== 0).length !== 0)" class="w3-col l3 m6 w3-margin-bottom">
-				<div style="padding-bottom:10px" class="w3-card">
+				<div style="padding-bottom:10px" :class="mode()">
 					<div class="w3-container">
 						<div style="display:flex; justify-content:space-between">
 							<h3 style="margin-right:4px">{{ group }}</h3>
@@ -1462,6 +1535,9 @@ function processMissingReport() {
             },
         },
         methods: {
+			mode() {
+				return mode
+			},
 			groupPublishers(group) {
                 return allPublishersVue.publishers.filter(elem=>elem.fieldServiceGroup == group && (elem.active == true || (elem.active == false && elem.reactivated)))
             },
@@ -1558,7 +1634,7 @@ document.querySelector('#attendance').innerHTML = `<template>
 		<h3>{{ month.fullName }} {{ year }}</h3>
 		<div class="w3-row-padding w3-grayscale" style="margin-top:4px">
 			<div v-for="(meeting, count) in currentMonth.meetings" :key="count" class="w3-col l3 m6 w3-margin-bottom">
-				<div style="padding-bottom:10px" class="w3-card">
+				<div style="padding-bottom:10px" :class="mode()">
 					<div class="w3-container main">
 						<h3>{{ meeting.name }} Meeting</h3>
 						<p v-for="(attendance) in meeting.attendance">{{ attendance.name.replace('Week', ' Week') }}: <input :class="attendance.name" type="number" min="0" max="9999" style="width: 60px;" :value="attendance.count" @change="handleInputChange(attendance, $event.target)"></p>
@@ -1573,7 +1649,7 @@ document.querySelector('#attendance').innerHTML = `<template>
 		<div v-if="reportEntry == true" v-for="(meeting, count) in meetingAttendanceRecord.meetings" :key="meeting.name + '|' + count" class="w3-row-padding w3-grayscale">
 			<h3>{{ meeting.name }}</h3>
 			<div v-for="(serviceYear, count) in serviceYears" :key="serviceYear + '|' + count">
-				<div class="w3-card" style="display:flex; flex-wrap:wrap; padding:10px;margin-bottom:15px">
+				<div :class="mode()" style="display:flex; flex-wrap:wrap; padding:10px;margin-bottom:15px">
 					<table>
 						<thead>
 							<tr>
@@ -1660,6 +1736,9 @@ function processAttendance() {
             },
         },
         methods: {
+			mode() {
+				return mode
+			},
 			cleanDate(date) {
                 const currentDate = new Date(date);
 
@@ -1746,7 +1825,7 @@ document.querySelector('#branchReport').innerHTML = `<template>
 		<h2 class="w3-center">{{ month.fullName }} {{ year }}</h2>
 		<div class="w3-row-padding w3-grayscale" style="margin-top:4px">
 			<div class="w3-col l3 m6 w3-margin-bottom">
-				<div class="w3-card">
+				<div :class="mode()">
 					<div class="w3-container main">
 						<h4>Active Publishers</h4>
 						<h3><span>{{ activePublishers() }}</span><i style="margin-left:10px" @click="copy($event.target)" title="Copy" class="fas fa-copy"></i></h3>
@@ -1756,7 +1835,7 @@ document.querySelector('#branchReport').innerHTML = `<template>
 				</div>
 			</div>
 			<div class="w3-col l3 m6 w3-margin-bottom">
-				<div class="w3-card">
+				<div :class="mode()">
 					<div class="w3-container main">
 						<h3>Publishers</h3>
 						<h4>Number of Reports</h4>
@@ -1767,7 +1846,7 @@ document.querySelector('#branchReport').innerHTML = `<template>
 				</div>
 			</div>
 			<div class="w3-col l3 m6 w3-margin-bottom">
-				<div class="w3-card">
+				<div :class="mode()">
 					<div class="w3-container main">
 						<h3>Auxiliary Pioneers</h3>
 						<h4>Number of Reports</h4>
@@ -1780,7 +1859,7 @@ document.querySelector('#branchReport').innerHTML = `<template>
 				</div>
 			</div>
 			<div class="w3-col l3 m6 w3-margin-bottom">
-				<div class="w3-card">
+				<div :class="mode()">
 					<div class="w3-container main">
 						<h3>Regular Pioneers</h3>
 						<h4>Number of Reports</h4>
@@ -1822,6 +1901,9 @@ function branchReportDetails() {
             },
         },
         methods: {
+			mode() {
+				return mode
+			},
 			activePublishers() {
 				if (!allPublishersVue.publishers[0]) {
 					return 0
@@ -1911,7 +1993,7 @@ document.querySelector('#configuration').innerHTML = `<template>
 		<h2 class="w3-center">SETTINGS</h2>
 		<div class="w3-row-padding w3-grayscale">
 			<div class="w3-margin-bottom">
-				<div class="w3-card">
+				<div :class="mode()">
 					<div class="w3-container">
 						<h3 v-if="reset !== true" contenteditable="true" class="name">{{ configuration.congregationName }}</h3>
 						<h4 v-if="reset !== true" contenteditable="true" class="address">{{ configuration.address }}</h4>
@@ -1924,6 +2006,11 @@ document.querySelector('#configuration').innerHTML = `<template>
 							<button class="w3-button w3-black" @click="addGroup($event.target)" title="Add Field Service Group">Add Group</button>
 							<button class="w3-button w3-black" @click="removeGroup($event.target)" title="Remove Field Service Group">Remove Group</button>
 						</p>
+						<label>Appearance: 
+						<select @change="displayMode($event.target)" class="appearance w3-input">
+							<option :value="currentMode()">{{ currentMode() }}</option>
+							<option v-for="mode in ['System', 'Light', 'Dark'].filter(elem=>elem !== currentMode())" :value="mode">{{ mode }}</option>
+						</select></label>
 						<p>
 							<button class="w3-button w3-black" @click="saveConfiguration($event.target)"><i class="fas fa-save"> </i> Save</button>
 							<button class="w3-button w3-black" @click="resetConfiguration($event.target)">Reset</button>
@@ -2039,6 +2126,65 @@ function processConfiguration() {
             }
         },
         methods: {
+			displayMode(event) {
+				console.log(event.value)
+				var selectedMode
+				if (event.value !== 'System') {
+					selectedMode = event.value
+					console.log(selectedMode)
+				} else {
+					if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+						selectedMode = 'Dark'
+					} else {
+						selectedMode = 'Light'
+					}
+					console.log(selectedMode)
+				}
+
+				currentMode = event.value
+				
+				DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [{"name": "Display", "value": currentMode}]});
+
+				console.log(selectedMode)
+
+				if ((mode == 'w3-card w3-black' && selectedMode == 'Dark') || (mode == 'w3-card w3-white' && selectedMode == 'Light')) {
+					return
+				} else if (mode == 'w3-card w3-black') {
+					mode = 'w3-card w3-white'
+				} else {
+					mode = 'w3-card w3-black'
+				}
+
+				
+				document.body.querySelectorAll('.w3-white').forEach(elem=>{
+					elem.classList.toggle("w3-white");
+					elem.classList.toggle("w3-yellow");
+				})
+				document.body.querySelectorAll('.w3-black').forEach(elem=>{
+					elem.classList.toggle("w3-black");
+					elem.classList.toggle("w3-blue");
+				})
+				document.body.querySelectorAll('.w3-yellow').forEach(elem=>{
+					elem.classList.toggle("w3-black");
+					elem.classList.toggle("w3-yellow");
+				})
+				document.body.querySelectorAll('.w3-blue').forEach(elem=>{
+					elem.classList.toggle("w3-blue");
+					elem.classList.toggle("w3-white");
+				})
+				document.body.querySelectorAll('.w3-light-grey').forEach(elem=>{
+					elem.classList.toggle("w3-dark-grey");
+					elem.classList.toggle("w3-light-grey");
+				})
+				document.body.classList.toggle("w3-dark-grey");
+				document.body.classList.toggle("w3-light-grey");
+			},
+			mode() {
+				return mode
+			},
+			currentMode() {
+				return currentMode
+			},
 			reloadPage() {
 				location.reload()
 			},
