@@ -321,7 +321,7 @@ document.querySelector('#navigation').innerHTML = `<template>
 				placeholder="Search . . ." 
 				type="text" 
 			>
-			<select style="width:180px;margin:2px 0;padding:0;" :class="searchMode()" v-model="fieldServiceGroup">
+			<select style="width:180px;" :class="searchMode()" v-model="fieldServiceGroup">
 				<option v-if="allGroups.length > 1" value="All Groups">All Groups</option>
 				<option v-for="group in allGroups" :key="group" :value="group">{{ group }}</option>
 			</select>
@@ -340,7 +340,7 @@ document.querySelector('#navigation').innerHTML = `<template>
 			placeholder="Search . . ." 
 			type="text" 
 		>
-		<select style="width:150px;margin:3px;padding:0;" :class="searchMode()" v-model="fieldServiceGroup">
+		<select style="width:150px;" :class="searchMode()" v-model="fieldServiceGroup">
 			<option v-if="allGroups.length > 1" value="All Groups">All Groups</option>
 			<option v-for="group in allGroups" :key="group" :value="group">{{ group }}</option>
 		</select>
