@@ -22,6 +22,8 @@ loginButton.addEventListener("click", (e) => {
 			currentUser.password = loginForm.password.value
 			if (currentUser.accesses.includes('secretary')) {
 				console.log("You have successfully logged in.");
+				loginForm.username.value = ''
+				loginForm.password.value = ''
 				hiddenElements.forEach(elem=>{
 					document.getElementById(`${elem}`).style.display = ''
 				})
@@ -38,6 +40,8 @@ loginButton.addEventListener("click", (e) => {
 		}
 	} else if (null !== currentUser.username && username.toLowerCase() === currentUser.username.toLowerCase() && password === currentUser.password) {
         console.log("You have successfully logged in.");
+		loginForm.username.value = ''
+		loginForm.password.value = ''
 		hiddenElements.forEach(elem=>{
 			document.getElementById(`${elem}`).style.display = ''
 		})
@@ -309,13 +313,13 @@ document.querySelector('#navigation').innerHTML = `<template>
 		<a v-for="(button, count) in buttons.slice(1)" class="w3-bar-item w3-button" @click="openButton($event.target)">{{ button.title }}</a>
 		<a v-if="logged() == true" class="w3-bar-item w3-button" @click="openSettings()"><i class="fa fa-cog"></i></a>
 		<a v-if="logged() == true" class="w3-bar-item w3-button" @click="signOut()"><i class="fa fa-sign-out-alt"></i></a>
-		<div v-if="logged() == true && displayDropdown == true" style="margin:5px">
-			<select style="margin:3px" class="w3-bar-item w3-select" v-model="fieldServiceGroup">
+		<div v-if="logged() == true && displayDropdown == true" style="margin:15px;padding:5px">
+			<select style="width:180px;margin:2px 0;padding:0;height:25px" class="w3-bar-item w3-select" v-model="fieldServiceGroup">
 				<option v-if="allGroups.length > 1" value="All Groups">All Groups</option>
 				<option v-for="group in allGroups" :key="group" :value="group">{{ group }}</option>
 			</select>
 			<input 
-				style="margin-left:3px"
+				style="width:180px;height:25px;margin:2px 0 2px 3px"
 				class="w3-bar-item w3-search"
 				v-model="searchTerms" 
 				placeholder="Search . . ." 
@@ -328,13 +332,13 @@ document.querySelector('#navigation').innerHTML = `<template>
 	<a href="javascript:void(0)" v-if="logged() == true" class="w3-bar-item w3-button w3-right w3-hide-large w3-hide-medium" onclick="w3_open()">
 		<i class="fa fa-bars"></i>
 	</a>
-	<div v-if="logged() == true && displayDropdown == true" class="w3-hide-large w3-hide-medium" style="margin:5px">
-		<select style="margin:3px" class="w3-bar-item w3-select" v-model="fieldServiceGroup">
+	<div v-if="logged() == true && displayDropdown == true" class="w3-hide-large w3-hide-medium" style="margin:0 5px">
+		<select style="width:150px;margin:3px;padding:0;height:25px" class="w3-bar-item w3-select" v-model="fieldServiceGroup">
 			<option v-if="allGroups.length > 1" value="All Groups">All Groups</option>
 			<option v-for="group in allGroups" :key="group" :value="group">{{ group }}</option>
 		</select>
 		<input 
-			style="width:150px;margin-left:3px"
+			style="width:150px;height:25px;margin:3px 0 3px 3px"
 			class="w3-bar-item w3-search"
 			v-model="searchTerms" 
 			placeholder="Search . . ." 
@@ -364,6 +368,7 @@ function processNavigation() {
 				return mode
 			},
 			openButton(button) {
+				if (logged == false) { return }
                 //console.log(button)
 
 				if (button.innerHTML == "REPORTS") {
@@ -413,10 +418,28 @@ function processNavigation() {
                 return logged
             },
 			openSettings() {
+				var groupCount = navigationVue.buttons.findIndex(elem=>elem.title == 'ALL' || elem.title == 'ACTIVE')
+				if (groupCount !== -1){
+					navigationVue.buttons[groupCount].title = 'GROUPS'
+				}
+
 				gotoView('configurationVue')
 			},
 			signOut() {
-				location.href = "/cong/"
+				navigationVue.buttons = []
+				congregationVue.display = false
+				allPublishersVue.display = false
+				fieldServiceGroupsVue.display = false
+				configurationVue.display = false
+				monthlyReportVue.display = false
+				missingReportVue.display = false
+				attendanceVue.display = false
+				contactInformationVue.display = false
+				branchReportVue.display = false
+				logged = false
+				navigationVue.displayDropdown = false
+				document.getElementById("home").style.display = ''
+				//location.href = "/cong/"
 			},
 			clearFilter() {
 				
@@ -517,11 +540,29 @@ function processNavigation2() {
 			},
 			openSettings() {
 				w3_close()
+				var groupCount = navigationVue.buttons.findIndex(elem=>elem.title == 'ALL' || elem.title == 'ACTIVE')
+				if (groupCount !== -1){
+					navigationVue.buttons[groupCount].title = 'GROUPS'
+				}
+
 				gotoView('configurationVue')
 			},
 			signOut() {
 				w3_close()
-				location.href = "/cong/"
+				navigationVue.buttons = []
+				congregationVue.display = false
+				allPublishersVue.display = false
+				fieldServiceGroupsVue.display = false
+				configurationVue.display = false
+				monthlyReportVue.display = false
+				missingReportVue.display = false
+				attendanceVue.display = false
+				contactInformationVue.display = false
+				branchReportVue.display = false
+				logged = false
+				navigationVue.displayDropdown = false
+				document.getElementById("home").style.display = ''
+				//location.href = "/cong/"
 			},
 			logged() {
                 return logged
