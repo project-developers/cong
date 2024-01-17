@@ -314,10 +314,6 @@ document.querySelector('#navigation').innerHTML = `<template>
 		<a v-if="logged() == true" class="w3-bar-item w3-button" @click="openSettings()"><i class="fa fa-cog"></i></a>
 		<a v-if="logged() == true" class="w3-bar-item w3-button" @click="signOut()"><i class="fa fa-sign-out-alt"></i></a>
 		<div v-if="logged() == true && displayDropdown == true" style="margin:15px;padding:5px">
-			<select style="width:180px;margin:2px 0;padding:0;" :class="searchMode()" v-model="fieldServiceGroup">
-				<option v-if="allGroups.length > 1" value="All Groups">All Groups</option>
-				<option v-for="group in allGroups" :key="group" :value="group">{{ group }}</option>
-			</select>
 			<input 
 				style="width:180px;height:25px;margin:2px 0 2px 3px"
 				:class="inputMode()"
@@ -325,6 +321,11 @@ document.querySelector('#navigation').innerHTML = `<template>
 				placeholder="Search . . ." 
 				type="text" 
 			>
+			<select style="width:180px;margin:2px 0;padding:0;" :class="searchMode()" v-model="fieldServiceGroup">
+				<option v-if="allGroups.length > 1" value="All Groups">All Groups</option>
+				<option v-for="group in allGroups" :key="group" :value="group">{{ group }}</option>
+			</select>
+			
 		</div>
 	</div>
 	<!-- Hide right-floated links on small screens and replace them with a menu icon -->
@@ -333,10 +334,6 @@ document.querySelector('#navigation').innerHTML = `<template>
 		<i class="fa fa-bars"></i>
 	</a>
 	<div v-if="logged() == true && displayDropdown == true" class="w3-hide-large w3-hide-medium" style="margin:0 5px">
-		<select style="width:150px;margin:3px;padding:0;" :class="searchMode()" v-model="fieldServiceGroup">
-			<option v-if="allGroups.length > 1" value="All Groups">All Groups</option>
-			<option v-for="group in allGroups" :key="group" :value="group">{{ group }}</option>
-		</select>
 		<input 
 			style="width:150px;height:25px;margin:3px 0 3px 3px"
 			:class="inputMode()"
@@ -344,6 +341,11 @@ document.querySelector('#navigation').innerHTML = `<template>
 			placeholder="Search . . ." 
 			type="text" 
 		>
+		<select style="width:150px;margin:3px;padding:0;" :class="searchMode()" v-model="fieldServiceGroup">
+			<option v-if="allGroups.length > 1" value="All Groups">All Groups</option>
+			<option v-for="group in allGroups" :key="group" :value="group">{{ group }}</option>
+		</select>
+		
 	</div>
 </div>
 </template>`
