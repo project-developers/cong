@@ -313,7 +313,7 @@ document.querySelector('#navigation').innerHTML = `<template>
 		<a v-for="(button, count) in buttons.slice(1)" class="w3-bar-item w3-button" @click="openButton($event.target)">{{ button.title }}</a>
 		<a v-if="logged() == true" class="w3-bar-item w3-button" @click="openSettings()"><i class="fa fa-cog"></i></a>
 		<a v-if="logged() == true" class="w3-bar-item w3-button" @click="signOut()"><i class="fa fa-sign-out-alt"></i></a>
-		<div v-if="logged() == true && displayDropdown == true" style="margin:15px;padding:5px">
+		<div v-if="logged() == true && displayDropdown == true">
 			<select style="width:180px;margin:2px 0;padding:0;" :class="searchMode()" v-model="fieldServiceGroup">
 				<option v-if="allGroups.length > 1" value="All Groups">All Groups</option>
 				<option v-for="group in allGroups" :key="group" :value="group">{{ group }}</option>
@@ -331,7 +331,7 @@ document.querySelector('#navigation').innerHTML = `<template>
 	<a href="javascript:void(0)" v-if="logged() == true" class="w3-bar-item w3-button w3-right w3-hide-large w3-hide-medium" onclick="w3_open()">
 		<i class="fa fa-bars"></i>
 	</a>
-	<div v-if="logged() == true && displayDropdown == true" class="w3-hide-large w3-hide-medium" style="margin:0 5px">
+	<div v-if="logged() == true && displayDropdown == true" class="w3-hide-large w3-hide-medium">
 		<select style="width:150px;margin:3px;padding:0;" :class="searchMode()" v-model="fieldServiceGroup">
 			<option v-if="allGroups.length > 1" value="All Groups">All Groups</option>
 			<option v-for="group in allGroups" :key="group" :value="group">{{ group }}</option>
