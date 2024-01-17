@@ -315,7 +315,7 @@ document.querySelector('#navigation').innerHTML = `<template>
 		<a v-if="logged() == true" class="w3-bar-item w3-button" @click="signOut()"><i class="fa fa-sign-out-alt"></i></a>
 		<div v-if="logged() == true && displayDropdown == true" style="margin:15px;padding:5px">
 			<input 
-				style="width:180px;height:25px;margin:2px 0 2px 3px"
+				style="width:180px;margin:2px 0 2px 3px"
 				:class="inputMode()"
 				v-model="searchTerms" 
 				placeholder="Search . . ." 
@@ -335,7 +335,7 @@ document.querySelector('#navigation').innerHTML = `<template>
 	</a>
 	<div v-if="logged() == true && displayDropdown == true" class="w3-hide-large w3-hide-medium" style="margin:0 5px">
 		<input 
-			style="width:150px;height:25px;margin:3px 0 3px 3px"
+			style="width:150px;margin:3px 0 3px 3px"
 			:class="inputMode()"
 			v-model="searchTerms" 
 			placeholder="Search . . ." 
