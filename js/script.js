@@ -178,7 +178,7 @@ DBWorker.onmessage = async function (msg) {
 		switch (msgData.name) {
 			case "configuration":
 				{
-					console.log(msgData.value)
+					//console.log(msgData.value)
 					if (msgData.value.filter(elem=>elem.name == "Congregation").length == 0) {
 						configurationVue.display = true
 						configured = false
@@ -208,7 +208,7 @@ DBWorker.onmessage = async function (msg) {
 						DBWorker.postMessage({ storeName: 'attendance', action: "readAll"});
 					}
 					if (msgData.value.filter(elem=>elem.name == "Display").length !== 0) {
-						console.log(msgData.value.filter(elem=>elem.name == "Display"))
+						//console.log(msgData.value.filter(elem=>elem.name == "Display"))
 						currentMode = msgData.value.filter(elem=>elem.name == "Display")[0].value
 						/*
 						if (msgData.value.filter(elem=>elem.name == "Display")[0].value !== 'System') {
@@ -314,13 +314,13 @@ document.querySelector('#navigation').innerHTML = `<template>
 		<a v-if="logged() == true" class="w3-bar-item w3-button" @click="openSettings()"><i class="fa fa-cog"></i></a>
 		<a v-if="logged() == true" class="w3-bar-item w3-button" @click="signOut()"><i class="fa fa-sign-out-alt"></i></a>
 		<div v-if="logged() == true && displayDropdown == true" style="margin:15px;padding:5px">
-			<select style="width:180px;margin:2px 0;padding:0;height:25px" class="w3-bar-item w3-select" v-model="fieldServiceGroup">
+			<select style="width:180px;margin:2px 0;padding:0;height:25px" :class="searchMode()" v-model="fieldServiceGroup">
 				<option v-if="allGroups.length > 1" value="All Groups">All Groups</option>
 				<option v-for="group in allGroups" :key="group" :value="group">{{ group }}</option>
 			</select>
 			<input 
 				style="width:180px;height:25px;margin:2px 0 2px 3px"
-				class="w3-bar-item w3-search"
+				:class="inputMode()"
 				v-model="searchTerms" 
 				placeholder="Search . . ." 
 				type="text" 
@@ -333,13 +333,13 @@ document.querySelector('#navigation').innerHTML = `<template>
 		<i class="fa fa-bars"></i>
 	</a>
 	<div v-if="logged() == true && displayDropdown == true" class="w3-hide-large w3-hide-medium" style="margin:0 5px">
-		<select style="width:150px;margin:3px;padding:0;height:25px" class="w3-bar-item w3-select" v-model="fieldServiceGroup">
+		<select style="width:150px;margin:3px;padding:0;height:25px" :class="searchMode()" v-model="fieldServiceGroup">
 			<option v-if="allGroups.length > 1" value="All Groups">All Groups</option>
 			<option v-for="group in allGroups" :key="group" :value="group">{{ group }}</option>
 		</select>
 		<input 
 			style="width:150px;height:25px;margin:3px 0 3px 3px"
-			class="w3-bar-item w3-search"
+			:class="inputMode()"
 			v-model="searchTerms" 
 			placeholder="Search . . ." 
 			type="text" 
@@ -364,8 +364,11 @@ function processNavigation() {
             
         },
         methods: {
-			mode() {
-				return mode
+			inputMode() {
+				return 'w3-bar-item w3-search ' + mode.replace('w3-card ','')
+			},
+			searchMode() {
+				return 'w3-bar-item w3-select ' + mode.replace('w3-card ','')
 			},
 			openButton(button) {
 				if (logged == false) { return }
@@ -2175,25 +2178,25 @@ function processConfiguration() {
         },
         methods: {
 			displayMode(event) {
-				console.log(event.value)
+				//console.log(event.value)
 				var selectedMode
 				if (event.value !== 'System') {
 					selectedMode = event.value
-					console.log(selectedMode)
+					//console.log(selectedMode)
 				} else {
 					if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
 						selectedMode = 'Dark'
 					} else {
 						selectedMode = 'Light'
 					}
-					console.log(selectedMode)
+					//console.log(selectedMode)
 				}
 
 				currentMode = event.value
 				
 				DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [{"name": "Display", "value": currentMode}]});
 
-				console.log(selectedMode)
+				//console.log(selectedMode)
 
 				if ((mode == 'w3-card w3-black' && selectedMode == 'Dark') || (mode == 'w3-card w3-white' && selectedMode == 'Light')) {
 					return
@@ -2221,8 +2224,20 @@ function processConfiguration() {
 					elem.classList.toggle("w3-white");
 				})
 				document.body.querySelectorAll('.w3-light-grey').forEach(elem=>{
-					elem.classList.toggle("w3-dark-grey");
+					elem.classList.toggle("w3-green");
 					elem.classList.toggle("w3-light-grey");
+				})
+				document.body.querySelectorAll('.w3-dark-grey').forEach(elem=>{
+					elem.classList.toggle("w3-red");
+					elem.classList.toggle("w3-light-grey");
+				})
+				document.body.querySelectorAll('.w3-green').forEach(elem=>{
+					elem.classList.toggle("w3-dark-grey");
+					elem.classList.toggle("w3-green");
+				})
+				document.body.querySelectorAll('.w3-red').forEach(elem=>{
+					elem.classList.toggle("w3-dark-grey");
+					elem.classList.toggle("w3-red");
 				})
 				document.body.classList.toggle("w3-dark-grey");
 				document.body.classList.toggle("w3-light-grey");
