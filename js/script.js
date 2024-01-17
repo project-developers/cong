@@ -315,6 +315,7 @@ document.querySelector('#navigation').innerHTML = `<template>
 				<option v-for="group in allGroups" :key="group" :value="group">{{ group }}</option>
 			</select>
 			<input 
+				style="margin-left:3px"
 				class="w3-bar-item w3-search"
 				v-model="searchTerms" 
 				placeholder="Search . . ." 
@@ -333,7 +334,7 @@ document.querySelector('#navigation').innerHTML = `<template>
 			<option v-for="group in allGroups" :key="group" :value="group">{{ group }}</option>
 		</select>
 		<input 
-			style="width:150px"
+			style="width:150px;margin-left:3px"
 			class="w3-bar-item w3-search"
 			v-model="searchTerms" 
 			placeholder="Search . . ." 
@@ -435,7 +436,8 @@ processNavigation()
 
 document.querySelector('#mySidebar').innerHTML = `<template>
 	<a href="javascript:void(0)" onclick="w3_close()" class="w3-bar-item w3-button w3-large w3-padding-16">Close ×</a>
-    <a v-for="(button) in buttons()" @click="openButton($event.target)" class="w3-bar-item w3-button">{{ button.title }}</a>
+    <a v-for="(button) in buttons()" v-if="button.title !== 'ACTIVE' && button.title !== 'ALL'" @click="openButton($event.target)" class="w3-bar-item w3-button">{{ button.title }}</a>
+    <a v-for="(button) in buttons()" v-if="button.title == 'ACTIVE' || button.title == 'ALL'" @click="openButton($event.target)" :class="mode()">{{ button.title }}</a>
 	<a v-if="logged() == true" class="w3-bar-item w3-button" @click="openSettings()"><i class="fa fa-cog"></i> Settings</a>
 	<a v-if="logged() == true" class="w3-bar-item w3-button" @click="signOut()"><i class="fa fa-sign-out-alt"></i> Sign Out</a>
 </template>`
@@ -457,7 +459,7 @@ function processNavigation2() {
         },
         methods: {
 			mode() {
-				return mode
+				return 'w3-bar-item w3-button ' + mode.replace('w3-card ','')
 			},
 			openButton(button) {
                 //console.log(button)
@@ -1543,6 +1545,9 @@ function processMissingReport() {
             },
 			publisherDetail(publisher, event) {
 				//console.log(publisher, event, event.parentNode.querySelector('p'))
+				if (!event.parentNode.querySelector('.detail')) {
+					event = event.parentNode
+				}
 				if (event.parentNode.querySelector('.detail').style.display !== '') {
 					event.parentNode.querySelector('p').style.display = 'none'
 					event.parentNode.querySelector('.fa-caret-right').classList.value = 'fa fa-caret-down w3-margin-right'
@@ -1650,24 +1655,26 @@ document.querySelector('#attendance').innerHTML = `<template>
 			<h3>{{ meeting.name }}</h3>
 			<div v-for="(serviceYear, count) in serviceYears" :key="serviceYear + '|' + count">
 				<div :class="mode()" style="display:flex; flex-wrap:wrap; padding:10px;margin-bottom:15px">
-					<table>
-						<thead>
-							<tr>
-								<th>Service Year {{ meeting[serviceYear].year }}</th>
-								<th>Number of Meetings</th>
-								<th>Total Attendance</th>
-								<th>Average Attendance Each Week</th>
-							</tr>
-						</thead>
-						<tbody>
-							<tr v-for="(month, count) in months" :key="month.abbr + '|' + count + '|' + serviceYear">
-								<td>{{ month.fullName }}</td>
-								<td><input class="numberOfMeetings" type="number" min="0" max="5" style="width: 30px;" :value="meeting[serviceYear][month.abbr].numberOfMeetings" @change="handleRecordInputChange(meeting[serviceYear][month.abbr], $event.target)"></td>
-								<td><input class="totalAttendance" type="number" min="0" max="9999" style="width: 60px;" :value="meeting[serviceYear][month.abbr].totalAttendance" @change="handleRecordInputChange(meeting[serviceYear][month.abbr], $event.target)"></td>
-								<td><input class="averageAttendanceEachWeek" type="number" min="0" max="9999" style="width: 60px;" :value="meeting[serviceYear][month.abbr].averageAttendanceEachWeek" @change="handleRecordInputChange(meeting[serviceYear][month.abbr], $event.target)"></td>
-							</tr>
-						</tbody>
-					</table>
+					<div style="overflow-x: scroll;">
+						<table>
+							<thead>
+								<tr>
+									<th>Service Year {{ meeting[serviceYear].year }}</th>
+									<th>Number of Meetings</th>
+									<th>Total Attendance</th>
+									<th>Average Attendance Each Week</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr v-for="(month, count) in months" :key="month.abbr + '|' + count + '|' + serviceYear">
+									<td>{{ month.fullName }}</td>
+									<td><input class="numberOfMeetings" type="number" min="0" max="5" style="width: 30px;" :value="meeting[serviceYear][month.abbr].numberOfMeetings" @change="handleRecordInputChange(meeting[serviceYear][month.abbr], $event.target)"></td>
+									<td><input class="totalAttendance" type="number" min="0" max="9999" style="width: 60px;" :value="meeting[serviceYear][month.abbr].totalAttendance" @change="handleRecordInputChange(meeting[serviceYear][month.abbr], $event.target)"></td>
+									<td><input class="averageAttendanceEachWeek" type="number" min="0" max="9999" style="width: 60px;" :value="meeting[serviceYear][month.abbr].averageAttendanceEachWeek" @change="handleRecordInputChange(meeting[serviceYear][month.abbr], $event.target)"></td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
 				</div>
 			</div>
 		</div>
