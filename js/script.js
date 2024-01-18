@@ -4,10 +4,61 @@ const loginButton = document.getElementById("login-form-submit");
 //const backButton = document.getElementById("login-back");
 const loginErrorMsg = document.getElementById("login-error-msg");
 loginForm.confirmPassword.style.display = 'none';
-//backButton.style.display = 'none';
+document.getElementById("securityQuestions").style.display = 'none';
 loginErrorMsg.style.opacity = 0;
 var logged = false, reportEntry = false;
 var hiddenElements = ["congregation", "allPublishers", "contactInformation", "fieldServiceGroups", "monthlyReport", "missingReport", "attendance", "branchReport", "configuration"]
+var securityQuestions = [
+	{value: "What was the name of your first CO?".replaceAll(' ',''), label: "What was the name of your first CO?"},
+	{value: "In which city did you start preaching?".replaceAll(' ',''), label: "In which city did you start preaching?"},
+	{value: "What’s your neighbor’s last name?".replaceAll(' ',''), label: "What’s your neighbor’s last name?"},
+	{value: "How many pets did you have at 10?".replaceAll(' ',''), label: "How many pets did you have at 10?"},
+	{value: "What month did you get married?".replaceAll(' ',''), label: "What month did you get married?"}
+]
+
+
+function createRadioButtons(containerId, options) {
+	var container = document.getElementById(containerId);
+  
+	options.forEach(function(option) {
+		var radioBtn = document.createElement("input");
+		radioBtn.type = "radio";
+		radioBtn.name = "securityGroup"; // All radio buttons with the same name belong to the same group
+		radioBtn.value = option.value;
+	
+		var paragraph = document.createElement("br");
+		var label = document.createElement("label");
+		radioBtn.style.marginRight = "5px"
+		label.appendChild(radioBtn);
+		label.appendChild(document.createTextNode(option.label));
+		container.appendChild(label)
+	
+		container.appendChild(paragraph);
+	});
+	var answerInput = document.createElement("input");
+	answerInput.id = 'answer'
+	answerInput.type = 'text'
+	answerInput.placeholder = 'Enter answer here'
+	answerInput.classList = 'w3-input w3-border'
+	container.appendChild(answerInput);
+}
+
+function getSelectedOption() {
+	var radioButtons = document.getElementsByName("securityGroup");
+
+	for (var i = 0; i < radioButtons.length; i++) {
+		if (radioButtons[i].checked) {
+			var selectedOption = radioButtons[i].value;
+			//console.log("Selected Option: " + selectedOption);
+			return selectedOption;
+		}
+	}
+  
+	console.log("No option selected");
+}
+  
+
+createRadioButtons("securityQuestions", securityQuestions)
 
 loginButton.addEventListener("click", (e) => {
     e.preventDefault();
@@ -18,6 +69,8 @@ loginButton.addEventListener("click", (e) => {
 		if ('' == username || ' ' == username || username.includes(' ') || username.toLowerCase() == 'reporter') {
 			loginErrorMsg.innerHTML = 'Please enter a different username.'
 			
+		} else if ('No option selected' == getSelectedOption() || '' == document.querySelector('#answer').value.toLowerCase()) {
+			loginErrorMsg.innerHTML = 'Please select question and enter answer.'
 		} else if (loginForm.password.value !== loginForm.confirmPassword.value) {
 			loginErrorMsg.innerHTML = 'Password is not the same.'
 		} else if (allUsers.findIndex(elem=>elem.username.toLowerCase() == username.toLowerCase()) !== -1) {
@@ -27,7 +80,9 @@ loginButton.addEventListener("click", (e) => {
 			if (existingUser.accesses.findIndex(str => currentUser.accesses.includes(str)) !== -1) {
 				loginErrorMsg.innerHTML = 'User already exists. Please enter a different username.'
 			} else if (existingUser.password !== password) {
-				loginErrorMsg.innerHTML = 'Invalid password'
+				loginErrorMsg.innerHTML = 'Invalid password.'
+			} else if (existingUser.selectedQuestion !== getSelectedOption() || existingUser.answer !== document.querySelector('#answer').value.toLowerCase()) {
+				loginErrorMsg.innerHTML = 'Invalid question and/or answer.'
 			} else {
 				if (currentUser.accesses.includes('secretary')) {
 					reportEntry = true
@@ -35,6 +90,7 @@ loginButton.addEventListener("click", (e) => {
 					reportEntry = false
 				}
 				console.log("You have successfully logged in.");
+				document.getElementById("securityQuestions").style.display = 'none';
 				loginForm.username.value = ''
 				loginForm.password.value = ''
 				loginForm.confirmPassword.value = ''
@@ -54,8 +110,11 @@ loginButton.addEventListener("click", (e) => {
 		} else {
 			currentUser.username = loginForm.username.value
 			currentUser.password = loginForm.password.value
+			currentUser.selectedQuestion = getSelectedOption()
+			currentUser.answer = document.querySelector('#answer').value.toLowerCase()
 			if (currentUser.accesses.includes('secretary')) {
 				console.log("You have successfully logged in.");
+				document.getElementById("securityQuestions").style.display = 'none';
 				loginForm.username.value = ''
 				loginForm.password.value = ''
 				loginForm.confirmPassword.value = ''
@@ -75,6 +134,7 @@ loginButton.addEventListener("click", (e) => {
 				loginErrorMsg.style.opacity = 0;
 			} else if (currentUser.accesses.includes('sendReport')) {
 				console.log("You have successfully logged in.");
+				document.getElementById("securityQuestions").style.display = 'none';
 				loginForm.username.value = ''
 				loginForm.password.value = ''
 				loginForm.confirmPassword.value = ''
@@ -85,6 +145,7 @@ loginButton.addEventListener("click", (e) => {
 				})
 				logged = true
 				reportEntry = false
+				navigationVue.displayDropdown = true
 
 				allUsers.push(currentUser)
 				
@@ -96,6 +157,7 @@ loginButton.addEventListener("click", (e) => {
 		}
 	} else if (allUsers.findIndex(elem=>elem.username.toLowerCase() == username.toLowerCase() && elem.password == password) !== -1) {
         console.log("You have successfully logged in.");
+		document.getElementById("securityQuestions").style.display = 'none';
 		loginForm.username.value = ''
 		loginForm.password.value = ''
 		currentUser = allUsers.filter(elem=>elem.username.toLowerCase() == username.toLowerCase() && elem.password == password)[0]
@@ -119,6 +181,7 @@ loginButton.addEventListener("click", (e) => {
 				"function": "missingReportVue"
 			}
 		]
+		document.getElementById("securityQuestions").style.display = '';
         loginErrorMsg.innerHTML = 'You will need to create an account to continue:'
 		loginForm.username.value="";
 		loginForm.password.value="";
@@ -135,6 +198,7 @@ loginButton.addEventListener("click", (e) => {
 				"function": "missingReportVue"
 			}
 		]
+		document.getElementById("securityQuestions").style.display = '';
         loginErrorMsg.innerHTML = 'You will need to create an account to continue:'
 		loginForm.username.value="";
 		loginForm.password.value="";
@@ -150,7 +214,7 @@ loginButton.addEventListener("click", (e) => {
     }
 })
 
-var currentUser = { "name": "currentUser", "username": null, "password": null, "accesses": [] }
+var currentUser = { "name": "currentUser", "username": null, "password": null, "accesses": [], "selectedQuestion": null, "answer": null }
 var allUsers;
 
 var navigationVue, navigationVue2, allPublishersVue, congregationVue, configurationVue, branchReportVue, contactInformationVue, fieldServiceGroupsVue, monthlyReportVue, missingReportVue;
@@ -459,6 +523,8 @@ function processNavigation() {
 							"function": "missingReportVue"
 						}
 					]
+
+					document.getElementById("securityQuestions").style.display = 'none';
 					
 					loginErrorMsg.innerHTML = ` Invalid username <span id="error-msg-second-line">and/or password</span>`
 					
@@ -535,6 +601,8 @@ function processNavigation() {
 				gotoView('configurationVue')
 			},
 			signOut() {
+				location.reload()
+				return
 				navigationVue.buttons = []
 				congregationVue.display = false
 				allPublishersVue.display = false
@@ -664,6 +732,8 @@ function processNavigation2() {
 			},
 			signOut() {
 				w3_close()
+				location.reload()
+				return
 				navigationVue.buttons = []
 				congregationVue.display = false
 				allPublishersVue.display = false
@@ -2274,8 +2344,9 @@ document.querySelector('#configuration').innerHTML = `<template>
 							</div>
 						</div>
 						<p>
-							<button :class="buttonMode('w3-button w3-dark-grey')" @click="exportData()">Export Data</button>
-							<button :class="buttonMode('w3-button w3-dark-grey')" @click="importData()">Import Data</button>
+							<label v-if="reportEntry()"><input class="export" type="checkbox" checked="true"> All</label>
+							<button :class="buttonMode('w3-button w3-dark-grey')" @click="exportData()">Export</button>
+							<button :class="buttonMode('w3-button w3-dark-grey')" @click="importData()">Import</button>
 							<hr>
 							<input type="file" id="dataFile" accept=".txt">
 						</p>
@@ -2395,6 +2466,8 @@ function processConfiguration() {
 				location.reload()
 			},
 			signOut() {
+				location.reload()
+				return
 				location.href = '/cong/'
 			},
 			backupData() {
@@ -2416,10 +2489,25 @@ Thanks a lot
 			},
             exportData() {
                 var a = document.createElement("a");
-				var file = new Blob([JSON.stringify({"configuration":configurationVue.configuration, "data":allPublishersVue.publishers, "attendance": [attendanceVue.currentMonth, attendanceVue.meetingAttendanceRecord]})], {type: 'text/plain'});
+				var file;
+				if (document.querySelector('.export').checked)  {
+					file = new Blob([JSON.stringify({"configuration":configurationVue.configuration, "data":allPublishersVue.publishers, "attendance": [attendanceVue.currentMonth, attendanceVue.meetingAttendanceRecord]})], {type: 'text/plain'});
+				} else {
+					var currentConfiguration = JSON.parse(JSON.stringify(configurationVue.configuration))
+					delete currentConfiguration.address
+					delete currentConfiguration.email
+					var currentData = JSON.parse(JSON.stringify(allPublishersVue.publishers))
+					currentData.forEach(elem=>{
+						delete elem.contactInformation
+						delete elem.dateOfBaptism
+						delete elem.dateOfBirth
+						delete elem.emergencyContactInformation
+					})
+					file = new Blob([JSON.stringify({"configuration":currentConfiguration, "data":currentData, "attendance": [attendanceVue.currentMonth, attendanceVue.meetingAttendanceRecord]})], {type: 'text/plain'});
+				}
 				a.href = URL.createObjectURL(file);
 				
-				a.download = 'congData.txt';
+				a.download = 'congData-' + new Date() + '.txt';
 				a.click();
 				//window.indexedDB.deleteDatabase('congRec');
             },
