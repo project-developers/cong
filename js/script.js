@@ -1,8 +1,10 @@
 
 const loginForm = document.getElementById("login-form");
 const loginButton = document.getElementById("login-form-submit");
+//const backButton = document.getElementById("login-back");
 const loginErrorMsg = document.getElementById("login-error-msg");
 loginForm.confirmPassword.style.display = 'none';
+//backButton.style.display = 'none';
 loginErrorMsg.style.opacity = 0;
 var logged = false, reportEntry = false;
 var hiddenElements = ["congregation", "allPublishers", "contactInformation", "fieldServiceGroups", "monthlyReport", "missingReport", "attendance", "branchReport", "configuration"]
@@ -13,10 +15,42 @@ loginButton.addEventListener("click", (e) => {
     const password = loginForm.password.value;
 
     if (loginButton.value == 'Create Account') {
-		if ('' == username || username.toLowerCase() == 'reporter') {
-			loginErrorMsg.innerHTML = 'Please select a different Username'
+		if ('' == username || ' ' == username || username.includes(' ') || username.toLowerCase() == 'reporter') {
+			loginErrorMsg.innerHTML = 'Please enter a different username.'
+			
 		} else if (loginForm.password.value !== loginForm.confirmPassword.value) {
-			loginErrorMsg.innerHTML = 'Password is not the same'
+			loginErrorMsg.innerHTML = 'Password is not the same.'
+		} else if (allUsers.findIndex(elem=>elem.username.toLowerCase() == username.toLowerCase()) !== -1) {
+			var existingUser = allUsers.filter(elem=>elem.username.toLowerCase() == username.toLowerCase())[0]
+			console.log(existingUser)
+			console.log(existingUser.accesses.findIndex(str => currentUser.accesses.includes(str)) !== -1)
+			if (existingUser.accesses.findIndex(str => currentUser.accesses.includes(str)) !== -1) {
+				loginErrorMsg.innerHTML = 'User already exists. Please enter a different username.'
+			} else if (existingUser.password !== password) {
+				loginErrorMsg.innerHTML = 'Invalid password'
+			} else {
+				if (currentUser.accesses.includes('secretary')) {
+					reportEntry = true
+				} else if (currentUser.accesses.includes('sendReport')) {
+					reportEntry = false
+				}
+				console.log("You have successfully logged in.");
+				loginForm.username.value = ''
+				loginForm.password.value = ''
+				loginForm.confirmPassword.value = ''
+				loginForm.confirmPassword.style.display = 'none';
+				hiddenElements.forEach(elem=>{
+					document.getElementById(`${elem}`).style.display = ''
+				})
+				logged = true
+				existingUser.accesses = existingUser.accesses.concat(currentUser.accesses)
+				currentUser = existingUser
+				
+				document.getElementById("home").style.display = 'none'
+				DBWorker.postMessage({ storeName: 'settings', action: "save", value: [currentUser]});
+				DBWorker.postMessage({ dbName: 'cong-' + currentUser.username, action: "init"});
+				loginErrorMsg.style.opacity = 0;
+			}
 		} else {
 			currentUser.username = loginForm.username.value
 			currentUser.password = loginForm.password.value
@@ -24,45 +58,67 @@ loginButton.addEventListener("click", (e) => {
 				console.log("You have successfully logged in.");
 				loginForm.username.value = ''
 				loginForm.password.value = ''
+				loginForm.confirmPassword.value = ''
+				loginForm.confirmPassword.style.display = 'none';
+				currentUser.name = currentUser.username
 				hiddenElements.forEach(elem=>{
 					document.getElementById(`${elem}`).style.display = ''
 				})
 				logged = true
 				reportEntry = true
+
+				allUsers.push(currentUser)
+
 				document.getElementById("home").style.display = 'none'
 				DBWorker.postMessage({ storeName: 'settings', action: "save", value: [currentUser]});
-				DBWorker.postMessage({ dbName: 'congRec', action: "init"});
+				DBWorker.postMessage({ dbName: 'cong-' + currentUser.username, action: "init"});
 				loginErrorMsg.style.opacity = 0;
 			} else if (currentUser.accesses.includes('sendReport')) {
 				console.log("You have successfully logged in.");
 				loginForm.username.value = ''
 				loginForm.password.value = ''
+				loginForm.confirmPassword.value = ''
+				loginForm.confirmPassword.style.display = 'none';
+				currentUser.name = currentUser.username
 				hiddenElements.forEach(elem=>{
 					document.getElementById(`${elem}`).style.display = ''
 				})
 				logged = true
 				reportEntry = false
+
+				allUsers.push(currentUser)
 				
 				document.getElementById("home").style.display = 'none'
 				DBWorker.postMessage({ storeName: 'settings', action: "save", value: [currentUser]});
-				DBWorker.postMessage({ dbName: 'congRec', action: "init"});
+				DBWorker.postMessage({ dbName: 'cong-' + currentUser.username, action: "init"});
 				loginErrorMsg.style.opacity = 0;
 			}
 		}
-	} else if (null !== currentUser.username && username.toLowerCase() === currentUser.username.toLowerCase() && password === currentUser.password) {
+	} else if (allUsers.findIndex(elem=>elem.username.toLowerCase() == username.toLowerCase() && elem.password == password) !== -1) {
         console.log("You have successfully logged in.");
 		loginForm.username.value = ''
 		loginForm.password.value = ''
+		currentUser = allUsers.filter(elem=>elem.username.toLowerCase() == username.toLowerCase() && elem.password == password)[0]
 		hiddenElements.forEach(elem=>{
 			document.getElementById(`${elem}`).style.display = ''
 		})
+		if (currentUser.accesses.includes('secretary')) {
+			reportEntry = true
+		} else if (currentUser.accesses.includes('sendReport')) {
+			reportEntry = false
+		}
 		logged = true
 		document.getElementById("home").style.display = 'none'
-		DBWorker.postMessage({ dbName: 'congRec', action: "init"});
+		DBWorker.postMessage({ dbName: 'cong-' + currentUser.username, action: "init"});
 		loginErrorMsg.style.opacity = 0;
 		
-        //location.href = "report.html";
     } else if (username.toLowerCase() === "reporter".toLowerCase() && password === "reportEntry") {
+		navigationVue.buttons = [
+			{
+				"title": "BACK",
+				"function": "missingReportVue"
+			}
+		]
         loginErrorMsg.innerHTML = 'You will need to create an account to continue:'
 		loginForm.username.value="";
 		loginForm.password.value="";
@@ -70,11 +126,15 @@ loginButton.addEventListener("click", (e) => {
 		loginForm.username.select()
 		loginButton.value = 'Create Account'
 		currentUser.accesses = ['sendReport']
-		//DBWorker.postMessage({ dbName: 'congRec', action: "init"});
 		loginErrorMsg.style.opacity = 1;
 		
-        //location.href = "report.html";
     } else if (username.toLowerCase() === "reporter".toLowerCase() && password === "super") {
+		navigationVue.buttons = [
+			{
+				"title": "BACK",
+				"function": "missingReportVue"
+			}
+		]
         loginErrorMsg.innerHTML = 'You will need to create an account to continue:'
 		loginForm.username.value="";
 		loginForm.password.value="";
@@ -82,18 +142,16 @@ loginButton.addEventListener("click", (e) => {
 		loginForm.username.select()
 		loginButton.value = 'Create Account'
 		currentUser.accesses = ['secretary']
-		//DBWorker.postMessage({ dbName: 'congRec', action: "init"});
 		loginErrorMsg.style.opacity = 1;
 		
-        //location.href = "report.html";
     } else {
-		//loginForm.username.value="";
 		loginForm.password.value="";
         loginErrorMsg.style.opacity = 1;
     }
 })
 
 var currentUser = { "name": "currentUser", "username": null, "password": null, "accesses": [] }
+var allUsers;
 
 var navigationVue, navigationVue2, allPublishersVue, congregationVue, configurationVue, branchReportVue, contactInformationVue, fieldServiceGroupsVue, monthlyReportVue, missingReportVue;
 var allButtons = [{"title": "CONG", "function": "congregationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "REPORTS", "function": "missingReportVue"}, {"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "REPORTS", "function": "missingReportVue"}, {"title": "BRANCH", "function": "branchReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "SETTINGS", "function": "configurationVue"}]
@@ -167,12 +225,17 @@ DBWorker.onmessage = async function (msg) {
 					DBWorker.postMessage({ storeName: msgData.name, action: "deleteItem", value: elem.name});
 				})
 			}
+			if (resetCount === 0) {
+				window.indexedDB.deleteDatabase('cong-' + currentUser.username);
+				location.reload()
+			}
 		} else if (msgData.length == 3) {
 			resetCount--
 			document.querySelector('#status1').innerHTML = `Deleting items: ${msgData[1]} - ${msgData[2]}.`
 			document.querySelector('#status2').innerHTML = `${resetCount} Remaining.`
 			document.querySelector('#status3').innerHTML = `Please wait . . .`
 			if (resetCount === 0) {
+				window.indexedDB.deleteDatabase('cong-' + currentUser.username);
 				location.reload()
 				/*
 				document.querySelector('#status1').innerHTML = ``
@@ -196,13 +259,14 @@ DBWorker.onmessage = async function (msg) {
 						
 						//configurationVue.configuration = result.configuration
 						navigationVue.allGroups = configurationVue.configuration.fieldServiceGroups
-						//allPublishersVue.publishers = result.data
-						//attendanceVue.currentMonth = result.attendance[0]
-						//attendanceVue.meetingAttendanceRecord = result.attendance[1]
-
-						//navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "REPORTS", "function": "missingReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}]
-						navigationVue.buttons = [{"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "REPORTS", "function": "missingReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}]
-						//navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "REPORTS", "function": "missingReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}]
+						if (currentUser.accesses.includes('secretary')) {
+							//congregationVue.display = true
+							navigationVue.buttons = [{"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+						} else if (currentUser.accesses.includes('sendReport')) {
+							navigationVue.buttons = [{"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH", "function": "branchReportVue"}]
+							//navigationVue.displayDropdown = true
+							//missingReportVue.display = true
+						}
 					}
 					if (msgData.value.filter(elem=>elem.name == "Congregation").length !== 0) {
 						if (currentUser.accesses.includes('secretary')) {
@@ -273,9 +337,9 @@ DBWorker.onmessage = async function (msg) {
 			case "settings":
 				{
 					console.log(msgData.value)
-					if (msgData.value.filter(elem=>elem.name == "currentUser").length !== 0) {
-						currentUser = msgData.value.filter(elem=>elem.name == "currentUser")[0]
-					}
+					//if (msgData.value.filter(elem=>elem.name == currentUser.username).length !== 0) {
+						allUsers = msgData.value//.filter(elem=>elem.name == currentUser.username)[0]
+					//}
 				}
 				break;
 			case "attendance":
@@ -387,7 +451,27 @@ function processNavigation() {
 				return 'w3-bar-item w3-select ' + mode.replace('w3-card ','')
 			},
 			openButton(button) {
-				if (logged == false) { return }
+				if (logged == false) { 
+
+					navigationVue.buttons = [
+						{
+							"title": "",
+							"function": "missingReportVue"
+						}
+					]
+					
+					loginErrorMsg.innerHTML = ` Invalid username <span id="error-msg-second-line">and/or password</span>`
+					
+					loginForm.password.value="";
+					loginForm.confirmPassword.value="";
+					loginForm.confirmPassword.style.display = 'none';
+					loginForm.username.select()
+					loginButton.value = ''
+					currentUser.accesses = []
+					loginErrorMsg.style.opacity = 0;
+					
+					return 
+				}
                 //console.log(button)
 
 				if (button.innerHTML == "REPORTS") {
@@ -425,7 +509,9 @@ function processNavigation() {
 					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
 				}
 
-				if (currentUser.accesses.includes('sendReport')) {
+				if (currentUser.accesses.includes('secretary')) {
+
+				} else if (currentUser.accesses.includes('sendReport')) {
 					this.buttons.pop()
 				}
 
@@ -548,7 +634,9 @@ function processNavigation2() {
 					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
 				}
 
-				if (currentUser.accesses.includes('sendReport')) {
+				if (currentUser.accesses.includes('secretary')) {
+
+				} else if (currentUser.accesses.includes('sendReport')) {
 					navigationVue.buttons.pop()
 				}
 
@@ -1320,10 +1408,7 @@ function processMonthlyReport() {
             months: [{"abbr": "sept", "fullName": "September"}, {"abbr": "oct", "fullName": "October"}, {"abbr": "nov", "fullName": "November"}, {"abbr": "dec", "fullName": "December"}, {"abbr": "jan", "fullName": "January"}, {"abbr": "feb", "fullName": "February"}, {"abbr": "mar", "fullName": "March"}, {"abbr": "apr", "fullName": "April"}, {"abbr": "may", "fullName": "May"}, {"abbr": "jun", "fullName": "June"}, {"abbr": "jul", "fullName": "July"}, {"abbr": "aug", "fullName": "August"} ],
         },
         computed: {
-            inputMode(currentClass) {
-				return currentClass + ' ' + mode.replace('w3-card ','')
-			},
-			allCharacters() {/*
+            allCharacters() {/*
                 return getUniqueElementsByProperty(this.clickedSectionFilter,['ID'])*/
             },
             publishers() {
@@ -2191,6 +2276,7 @@ document.querySelector('#configuration').innerHTML = `<template>
 						<p>
 							<button :class="buttonMode('w3-button w3-dark-grey')" @click="exportData()">Export Data</button>
 							<button :class="buttonMode('w3-button w3-dark-grey')" @click="importData()">Import Data</button>
+							<hr>
 							<input type="file" id="dataFile" accept=".txt">
 						</p>
 					</div>
@@ -2338,6 +2424,10 @@ Thanks a lot
 				//window.indexedDB.deleteDatabase('congRec');
             },
             importData() {
+				if (!document.querySelector('#dataFile').files[0]) {
+					alert('Please select file to import')
+					return
+				}
                 var reader = new FileReader();
 
 				// When the FileReader has loaded the file...
@@ -2353,6 +2443,11 @@ Thanks a lot
 					DBWorker.postMessage({ storeName: 'data', action: "save", value: result.data});
 					DBWorker.postMessage({ storeName: 'attendance', action: "save", value: result.attendance});
                 	configured = true
+					if (currentUser.accesses.includes('secretary')) {
+						gotoView('congregationVue')
+					} else if (currentUser.accesses.includes('sendReport')) {
+						gotoView('missingReportVue')
+					}
 				}
 				
 				// Read the file content as a single string
@@ -2375,7 +2470,8 @@ Thanks a lot
                 configured = true
             },
             async resetConfiguration() {
-                if (prompt('Are you sure you want to Reset records?\nType "Reset" to Reset').toLowerCase() == 'reset') {
+				var confirmReset = prompt('Are you sure you want to Reset records?\nType "Reset" to Reset')
+                if (confirmReset !== null && confirmReset.toLowerCase() == 'reset') {
 					this.reset = true
 					resetCount = 4
 					DBWorker.postMessage({ storeName: 'data', action: "readAll"});
