@@ -35,7 +35,7 @@ DB.open = function(b, c, d) {
         
         if (b == "handler") {
             settings = db.createObjectStore('settings',{keyPath: 'name'});
-        } else if (b == "congRec") {
+        } else if (b.startsWith("cong-")) {
             account = db.createObjectStore('account',{keyPath: 'name'});
             attendance = db.createObjectStore('attendance',{keyPath: 'name'});
             configuration = db.createObjectStore('configuration',{keyPath: 'name'});
@@ -53,7 +53,7 @@ DB.open = function(b, c, d) {
         db = a.result
         if (b=="handler") {
             DB.readAll("settings")
-        } else if (b=="congRec") {
+        } else if (b.startsWith("cong-")) {
             DB.readAll("configuration")
         } else {
             DB.readAll(b)
