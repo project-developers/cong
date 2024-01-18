@@ -4,7 +4,7 @@ const loginButton = document.getElementById("login-form-submit");
 const loginErrorMsg = document.getElementById("login-error-msg");
 loginForm.confirmPassword.style.display = 'none';
 loginErrorMsg.style.opacity = 0;
-var logged = false, reportEntry = true;
+var logged = false, reportEntry = false;
 var hiddenElements = ["congregation", "allPublishers", "contactInformation", "fieldServiceGroups", "monthlyReport", "missingReport", "attendance", "branchReport", "configuration"]
 
 loginButton.addEventListener("click", (e) => {
@@ -28,12 +28,23 @@ loginButton.addEventListener("click", (e) => {
 					document.getElementById(`${elem}`).style.display = ''
 				})
 				logged = true
-				reportEntry = false
+				reportEntry = true
 				document.getElementById("home").style.display = 'none'
 				DBWorker.postMessage({ storeName: 'settings', action: "save", value: [currentUser]});
-				//document.getElementById("main-holder").style.display = 'none';
-				//document.getElementById("home-button").innerHTML = 'CONG';
-				//document.getElementById("more-buttons").innerHTML = '<i class="fa fa-bars"></i>';
+				DBWorker.postMessage({ dbName: 'congRec', action: "init"});
+				loginErrorMsg.style.opacity = 0;
+			} else if (currentUser.accesses.includes('sendReport')) {
+				console.log("You have successfully logged in.");
+				loginForm.username.value = ''
+				loginForm.password.value = ''
+				hiddenElements.forEach(elem=>{
+					document.getElementById(`${elem}`).style.display = ''
+				})
+				logged = true
+				reportEntry = false
+				
+				document.getElementById("home").style.display = 'none'
+				DBWorker.postMessage({ storeName: 'settings', action: "save", value: [currentUser]});
 				DBWorker.postMessage({ dbName: 'congRec', action: "init"});
 				loginErrorMsg.style.opacity = 0;
 			}
@@ -47,9 +58,6 @@ loginButton.addEventListener("click", (e) => {
 		})
 		logged = true
 		document.getElementById("home").style.display = 'none'
-		//document.getElementById("main-holder").style.display = 'none';
-		//document.getElementById("home-button").innerHTML = 'CONG';
-		//document.getElementById("more-buttons").innerHTML = '<i class="fa fa-bars"></i>';
 		DBWorker.postMessage({ dbName: 'congRec', action: "init"});
 		loginErrorMsg.style.opacity = 0;
 		
@@ -197,10 +205,18 @@ DBWorker.onmessage = async function (msg) {
 						//navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "REPORTS", "function": "missingReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}]
 					}
 					if (msgData.value.filter(elem=>elem.name == "Congregation").length !== 0) {
-						congregationVue.display = true
+						if (currentUser.accesses.includes('secretary')) {
+							congregationVue.display = true
+							navigationVue.buttons = [{"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+						} else if (currentUser.accesses.includes('sendReport')) {
+							navigationVue.buttons = [{"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH", "function": "branchReportVue"}]
+							navigationVue.displayDropdown = true
+							missingReportVue.display = true
+						}
+
 						configured = true
 						//navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
-						navigationVue.buttons = [{"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+						
 						//navigationVue.buttons = [{"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "REPORTS", "function": "missingReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "SETTINGS", "function": "configurationVue"}]
 						configurationVue.configuration = msgData.value.filter(elem=>elem.name == "Congregation")[0]
 						navigationVue.allGroups = msgData.value.filter(elem=>elem.name == "Congregation")[0].fieldServiceGroups
@@ -409,6 +425,10 @@ function processNavigation() {
 					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
 				}
 
+				if (currentUser.accesses.includes('sendReport')) {
+					this.buttons.pop()
+				}
+
 				if (button.innerHTML == "ALL" || button.innerHTML == "ACTIVE") {
 					fieldServiceGroupsVue.inactive()
 				} else {
@@ -526,6 +546,10 @@ function processNavigation2() {
 				} else {
 					navigationVue.displayDropdown = false
 					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+				}
+
+				if (currentUser.accesses.includes('sendReport')) {
+					navigationVue.buttons.pop()
 				}
 
 				if (button.innerHTML == "ALL" || button.innerHTML == "ACTIVE") {
@@ -685,24 +709,24 @@ document.querySelector('#allPublishers').innerHTML = `<template>
 							</div>
 							<h2 contenteditable="true" class="name">{{ publisher.name }}</h2>
 							<p>
-								<label>Date of Birth: <input v-if="publisher.dateOfBirth == null" type="date" class="dateOfBirth w3-input"><input v-if="publisher.dateOfBirth !== null" type="date" class="dateOfBirth w3-input" :value="cleanDate(publisher.dateOfBirth)"></label>
-								<select class="gender w3-input" :v-model="publisher.gender">
+								<label>Date of Birth: <input v-if="publisher.dateOfBirth == null" type="date" :class="inputMode('dateOfBirth w3-input')"><input v-if="publisher.dateOfBirth !== null" type="date" :class="inputMode('dateOfBirth w3-input')" :value="cleanDate(publisher.dateOfBirth)"></label>
+								<select :class="inputMode('gender w3-input')" :v-model="publisher.gender">
 									<option v-if="publisher.gender !== 'Male' && publisher.gender !== 'Female'" value="">Select Gender</option>
 									<option v-if="publisher.gender == 'Male' || publisher.gender == 'Female'" :value="publisher.gender">{{ publisher.gender }}</option>
 									<option v-for="gender in ['Male', 'Female'].filter(elem=>elem !== publisher.gender)" :value="gender">{{ gender }}</option>
 								</select>
 							</p>
 							<p>
-								<label>Date of Baptism: <input v-if="publisher.dateOfBaptism == null" type="date" class="dateOfBaptism w3-input"><input v-if="publisher.dateOfBaptism !== null" type="date" class="dateOfBaptism w3-input" :value="cleanDate(publisher.dateOfBaptism)"></label>
-								<select class="hope w3-input" :v-model="publisher.hope">
+								<label>Date of Baptism: <input v-if="publisher.dateOfBaptism == null" type="date" :class="inputMode('dateOfBaptism w3-input')"><input v-if="publisher.dateOfBaptism !== null" type="date" :class="inputMode('dateOfBaptism w3-input')" :value="cleanDate(publisher.dateOfBaptism)"></label>
+								<select :class="inputMode('hope w3-input')" :v-model="publisher.hope">
 									<option :value="publisher.hope">{{ publisher.hope }}</option>
 									<option v-for="hope in hopes.filter(elem=>elem !== publisher.hope)" :value="hope">{{ hope }}</option>
 								</select>
 							</p>
-							<label v-for="(privilege, index) in privileges" :key="index" class="w3-input"><input type="checkbox" :name="privilege" class="privileges" :checked=publisher.privilege.includes(privilege)> {{ privilege }}</label>
+							<label v-for="(privilege, index) in privileges" :key="index" :class="inputMode('w3-input')"><input type="checkbox" :name="privilege" :class="inputMode('privileges')" :checked=publisher.privilege.includes(privilege)> {{ privilege }}</label>
 							<p>
 								<label>Field Service Group: 
-								<select class="fieldServiceGroup w3-input" :v-model="publisher.fieldServiceGroup">
+								<select :class="inputMode('fieldServiceGroup w3-input')" :v-model="publisher.fieldServiceGroup">
 									<option v-if="!allGroups.includes(publisher.fieldServiceGroup)" value="">Select Group</option>
 									<option v-if="allGroups.includes(publisher.fieldServiceGroup)" :value="publisher.fieldServiceGroup">{{ publisher.fieldServiceGroup }}</option>
 									<option v-for="group in allGroups.filter(elem=>elem !== publisher.fieldServiceGroup)" :value="group">{{ group }}</option>
@@ -760,24 +784,24 @@ document.querySelector('#allPublishers').innerHTML = `<template>
 							</div>
 							<h2 contenteditable="true" class="name">{{ publisher.name }}</h2>
 							<p>
-								<label>Date of Birth: <input v-if="publisher.dateOfBirth == null" type="date" class="dateOfBirth w3-input"><input v-if="publisher.dateOfBirth !== null" type="date" class="dateOfBirth w3-input" :value="cleanDate(publisher.dateOfBirth)"></label>
-								<select class="gender w3-input" :v-model="publisher.gender">
+								<label>Date of Birth: <input v-if="publisher.dateOfBirth == null" type="date" :class="inputMode('dateOfBirth w3-input')"><input v-if="publisher.dateOfBirth !== null" type="date" :class="inputMode('dateOfBirth w3-input')" :value="cleanDate(publisher.dateOfBirth)"></label>
+								<select :class="inputMode('gender w3-input')" :v-model="publisher.gender">
 									<option v-if="publisher.gender !== 'Male' && publisher.gender !== 'Female'" value="">Select Gender</option>
 									<option v-if="publisher.gender == 'Male' || publisher.gender == 'Female'" :value="publisher.gender">{{ publisher.gender }}</option>
 									<option v-for="gender in ['Male', 'Female'].filter(elem=>elem !== publisher.gender)" :value="gender">{{ gender }}</option>
 								</select>
 							</p>
 							<p>
-								<label>Date of Baptism: <input v-if="publisher.dateOfBaptism == null" type="date" class="dateOfBaptism w3-input"><input v-if="publisher.dateOfBaptism !== null" type="date" class="dateOfBaptism w3-input" :value="cleanDate(publisher.dateOfBaptism)"></label>
-								<select class="hope w3-input" :v-model="publisher.hope">
+								<label>Date of Baptism: <input v-if="publisher.dateOfBaptism == null" type="date" :class="inputMode('dateOfBaptism w3-input')"><input v-if="publisher.dateOfBaptism !== null" type="date" :class="inputMode('dateOfBaptism w3-input')" :value="cleanDate(publisher.dateOfBaptism)"></label>
+								<select :class="inputMode('hope w3-input')" :v-model="publisher.hope">
 									<option :value="publisher.hope">{{ publisher.hope }}</option>
 									<option v-for="hope in hopes.filter(elem=>elem !== publisher.hope)" :value="hope">{{ hope }}</option>
 								</select>
 							</p>
-							<label v-for="(privilege, index) in privileges" :key="index" class="w3-input"><input type="checkbox" :name="privilege" class="privileges" :checked=publisher.privilege.includes(privilege)> {{ privilege }}</label>
+							<label v-for="(privilege, index) in privileges" :key="index" :class="inputMode('w3-input')"><input type="checkbox" :name="privilege" :class="inputMode('privileges')" :checked=publisher.privilege.includes(privilege)> {{ privilege }}</label>
 							<p>
 								<label>Field Service Group: 
-								<select class="fieldServiceGroup w3-input" :v-model="publisher.fieldServiceGroup">
+								<select :class="inputMode('fieldServiceGroup w3-input')" :v-model="publisher.fieldServiceGroup">
 									<option v-if="!allGroups.includes(publisher.fieldServiceGroup)" value="">Select Group</option>
 									<option v-if="allGroups.includes(publisher.fieldServiceGroup)" :value="publisher.fieldServiceGroup">{{ publisher.fieldServiceGroup }}</option>
 									<option v-for="group in allGroups.filter(elem=>elem !== publisher.fieldServiceGroup)" :value="group">{{ group }}</option>
@@ -834,24 +858,24 @@ document.querySelector('#allPublishers').innerHTML = `<template>
 						</div>
 						<h2 contenteditable="true" class="name">{{ publisher.name }}</h2>
 						<p>
-							<label>Date of Birth: <input v-if="publisher.dateOfBirth == null" type="date" class="dateOfBirth w3-input"><input v-if="publisher.dateOfBirth !== null" type="date" class="dateOfBirth w3-input" :value="cleanDate(publisher.dateOfBirth)"></label>
-							<select class="gender w3-input" :v-model="publisher.gender">
+							<label>Date of Birth: <input v-if="publisher.dateOfBirth == null" type="date" :class="inputMode('dateOfBirth w3-input')"><input v-if="publisher.dateOfBirth !== null" type="date" :class="inputMode('dateOfBirth w3-input')" :value="cleanDate(publisher.dateOfBirth)"></label>
+							<select :class="inputMode('gender w3-input')" :v-model="publisher.gender">
 								<option v-if="publisher.gender !== 'Male' && publisher.gender !== 'Female'" value="">Select Gender</option>
 								<option v-if="publisher.gender == 'Male' || publisher.gender == 'Female'" :value="publisher.gender">{{ publisher.gender }}</option>
 								<option v-for="gender in ['Male', 'Female'].filter(elem=>elem !== publisher.gender)" :value="gender">{{ gender }}</option>
 							</select>
 						</p>
 						<p>
-							<label>Date of Baptism: <input v-if="publisher.dateOfBaptism == null" type="date" class="dateOfBaptism w3-input"><input v-if="publisher.dateOfBaptism !== null" type="date" class="dateOfBaptism w3-input" :value="cleanDate(publisher.dateOfBaptism)"></label>
-							<select class="hope w3-input" :v-model="publisher.hope">
+							<label>Date of Baptism: <input v-if="publisher.dateOfBaptism == null" type="date" :class="inputMode('dateOfBaptism w3-input')"><input v-if="publisher.dateOfBaptism !== null" type="date" :class="inputMode('dateOfBaptism w3-input')" :value="cleanDate(publisher.dateOfBaptism)"></label>
+							<select :class="inputMode('hope w3-input')" :v-model="publisher.hope">
 								<option :value="publisher.hope">{{ publisher.hope }}</option>
 								<option v-for="hope in hopes.filter(elem=>elem !== publisher.hope)" :value="hope">{{ hope }}</option>
 							</select>
 						</p>
-						<label v-for="(privilege, index) in privileges" :key="index" class="w3-input"><input type="checkbox" :name="privilege" class="privileges" :checked=publisher.privilege.includes(privilege)> {{ privilege }}</label>
+						<label v-for="(privilege, index) in privileges" :key="index" :class="inputMode('w3-input')"><input type="checkbox" :name="privilege" :class="inputMode('privileges')" :checked=publisher.privilege.includes(privilege)> {{ privilege }}</label>
 						<p>
 							<label>Field Service Group: 
-							<select class="fieldServiceGroup w3-input" :v-model="publisher.fieldServiceGroup">
+							<select :class="inputMode('fieldServiceGroup w3-input')" :v-model="publisher.fieldServiceGroup">
 								<option v-if="!allGroups.includes(publisher.fieldServiceGroup)" value="">Select Group</option>
 								<option v-if="allGroups.includes(publisher.fieldServiceGroup)" :value="publisher.fieldServiceGroup">{{ publisher.fieldServiceGroup }}</option>
 								<option v-for="group in allGroups.filter(elem=>elem !== publisher.fieldServiceGroup)" :value="group">{{ group }}</option>
@@ -948,6 +972,9 @@ function processAllPublishers() {
 			},
         },
         methods: {
+			inputMode(currentClass) {
+				return currentClass + ' ' + mode.replace('w3-card ','')
+			},
 			mode() {
 				return mode
 			},
@@ -1150,10 +1177,10 @@ document.querySelector('#contactInformation').innerHTML = `<template>
 							<p v-if="publisher.emergencyContactInformation.phoneNumber !== null" v-for="(number) in getEachNumber(publisher.emergencyContactInformation.phoneNumber)" @click="call(number)" title="Call Emergency Number"><i class="fas fa-address-book"></i> {{ number }}</p>
 						</div>
 						<div class="detail" style="display:none; padding:0 15px 15px 15px">
-							<p><label>Phone Number: <input class="contactInformation w3-input" type="tel" :value="publisher.contactInformation.phoneNumber" @change="handleInputChange($event.target, publisher, 'phoneNumber')"></label></p>
-							<p><label>Address:<input class="contactInformation w3-input" type="text" :value="publisher.contactInformation.address" @change="handleInputChange($event.target, publisher, 'address')"></label></p>
-							<p><label>Emergency Contact: <input class="emergencyContactInformation w3-input" type="text" :value="publisher.emergencyContactInformation.name" @change="handleInputChange($event.target, publisher, 'name')"></label></p>
-							<p><label>Contact Number: <input class="emergencyContactInformation w3-input" type="tel" :value="publisher.emergencyContactInformation.phoneNumber" @change="handleInputChange($event.target, publisher, 'phoneNumber')"></label></p>
+							<p><label>Phone Number: <input :class="inputMode('contactInformation w3-input')" type="tel" :value="publisher.contactInformation.phoneNumber" @change="handleInputChange($event.target, publisher, 'phoneNumber')"></label></p>
+							<p><label>Address:<input :class="inputMode('contactInformation w3-input')" type="text" :value="publisher.contactInformation.address" @change="handleInputChange($event.target, publisher, 'address')"></label></p>
+							<p><label>Emergency Contact: <input :class="inputMode('emergencyContactInformation w3-input')" type="text" :value="publisher.emergencyContactInformation.name" @change="handleInputChange($event.target, publisher, 'name')"></label></p>
+							<p><label>Contact Number: <input :class="inputMode('emergencyContactInformation w3-input')" type="tel" :value="publisher.emergencyContactInformation.phoneNumber" @change="handleInputChange($event.target, publisher, 'phoneNumber')"></label></p>
 						</div>
 					</div>
 				</div>
@@ -1187,6 +1214,12 @@ function contactInformation() {
             },
         },
         methods: {
+			inputMode(currentClass) {
+				return currentClass + ' ' + mode.replace('w3-card ','')
+			},
+			searchMode() {
+				return mode.replace('w3-card ','')
+			},
 			mode() {
 				return mode
 			},
@@ -1246,11 +1279,11 @@ document.querySelector('#monthlyReport').innerHTML = `<template>
 					<div class="w3-container" style="padding-bottom:15px">
 						<h3>{{ publisher.name }}</h3>
 						<hr style="margin:0;padding:5px">
-						<p style="margin:0"><label>Shared in Ministry: <input style="margin-left:8px" class="sharedInMinistry" type="checkbox" :checked = "publisher.report.currentServiceYear[month.abbr].sharedInMinistry !== null" @change="handleCheckboxChange(publisher.report.currentServiceYear[month.abbr], $event.target, publisher)"></label></p>
-						<p style="margin:0"><label>Bible Studies: <input class="bibleStudies w3-input" type="number" min="0" max="999" style="width: 64px;" :value="publisher.report.currentServiceYear[month.abbr].bibleStudies" @change="handleInputChange(publisher.report.currentServiceYear[month.abbr], $event.target, publisher)"></label></p>
-						<p style="margin:0"><label>Auxiliary Pioneer: <input style="margin-left:8px" class="auxiliaryPioneer" type="checkbox" :checked = "publisher.report.currentServiceYear[month.abbr].auxiliaryPioneer !== null" @change="handleCheckboxChange(publisher.report.currentServiceYear[month.abbr], $event.target, publisher)"></label></p>
-						<p style="margin:0"><label>Hours (If pioneer or ﬁeld missionary): <input class="hours w3-input" type="number" min="0" max="999" style="width: 64px;" :value="publisher.report.currentServiceYear[month.abbr].hours" @change="handleInputChange(publisher.report.currentServiceYear[month.abbr], $event.target, publisher)"></label></p>
-						<p style="margin:0"><label>Remarks: <input class="remarks w3-input" type="text" style="width: 95%" :value="publisher.report.currentServiceYear[month.abbr].remarks" @change="handleInputChange(publisher.report.currentServiceYear[month.abbr], $event.target, publisher)"></label></p>
+						<p style="margin:0"><label>Shared in Ministry: <input style="margin-left:8px" :class="inputMode('sharedInMinistry')" type="checkbox" :checked = "publisher.report.currentServiceYear[month.abbr].sharedInMinistry !== null" @change="handleCheckboxChange(publisher.report.currentServiceYear[month.abbr], $event.target, publisher)"></label></p>
+						<p style="margin:0"><label>Bible Studies: <input :class="inputMode('bibleStudies w3-input')" type="number" min="0" max="999" style="width: 64px;" :value="publisher.report.currentServiceYear[month.abbr].bibleStudies" @change="handleInputChange(publisher.report.currentServiceYear[month.abbr], $event.target, publisher)"></label></p>
+						<p style="margin:0"><label>Auxiliary Pioneer: <input style="margin-left:8px" :class="inputMode('auxiliaryPioneer')" type="checkbox" :checked = "publisher.report.currentServiceYear[month.abbr].auxiliaryPioneer !== null" @change="handleCheckboxChange(publisher.report.currentServiceYear[month.abbr], $event.target, publisher)"></label></p>
+						<p style="margin:0"><label>Hours (If pioneer or ﬁeld missionary): <input :class="inputMode('hours w3-input')" type="number" min="0" max="999" style="width: 64px;" :value="publisher.report.currentServiceYear[month.abbr].hours" @change="handleInputChange(publisher.report.currentServiceYear[month.abbr], $event.target, publisher)"></label></p>
+						<p style="margin:0"><label>Remarks: <input :class="inputMode('remarks w3-input')" type="text" style="width: 95%" :value="publisher.report.currentServiceYear[month.abbr].remarks" @change="handleInputChange(publisher.report.currentServiceYear[month.abbr], $event.target, publisher)"></label></p>
 					</div>
 				</div>
 			</div>
@@ -1263,11 +1296,11 @@ document.querySelector('#monthlyReport').innerHTML = `<template>
 						<h3>{{ publisher.name }}</h3>
 						<h3>{{ publisher.month.fullName }}</h3>
 						<hr style="margin:0;padding:5px">
-						<p style="margin:0"><label>Shared in Ministry: <input style="margin-left:8px" class="sharedInMinistry" type="checkbox" :checked = "publisher.report.sharedInMinistry !== null" @change="handleCheckboxChange2($event.target, publisher.publisher, publisher.month)"></label></p>
-						<p style="margin:0"><label>Bible Studies: <input class="bibleStudies w3-input" type="number" min="0" max="999" style="width: 64px;" :value="publisher.report.bibleStudies" @change="handleInputChange2($event.target, publisher.publisher, publisher.month)"></label></p>
-						<p style="margin:0"><label>Auxiliary Pioneer: <input style="margin-left:8px" class="auxiliaryPioneer" type="checkbox" :checked = "publisher.report.auxiliaryPioneer !== null" @change="handleCheckboxChange2($event.target, publisher.publisher, publisher.month)"></label></p>
-						<p style="margin:0"><label>Hours (If pioneer or ﬁeld missionary): <input class="hours w3-input" type="number" min="0" max="999" style="width: 64px;" :value="publisher.report.hours" @change="handleInputChange2($event.target, publisher.publisher, publisher.month)"></label></p>
-						<p style="margin:0"><label>Remarks: <input class="remarks w3-input" type="text" style="width: 95%" :value="publisher.report.remarks" @change="handleInputChange2($event.target, publisher.publisher, publisher.month)"></label></p>
+						<p style="margin:0"><label>Shared in Ministry: <input style="margin-left:8px" :class="inputMode('sharedInMinistry')" type="checkbox" :checked = "publisher.report.sharedInMinistry !== null" @change="handleCheckboxChange2($event.target, publisher.publisher, publisher.month)"></label></p>
+						<p style="margin:0"><label>Bible Studies: <input :class="inputMode('bibleStudies w3-input')" type="number" min="0" max="999" style="width: 64px;" :value="publisher.report.bibleStudies" @change="handleInputChange2($event.target, publisher.publisher, publisher.month)"></label></p>
+						<p style="margin:0"><label>Auxiliary Pioneer: <input style="margin-left:8px" :class="inputMode('auxiliaryPioneer')" type="checkbox" :checked = "publisher.report.auxiliaryPioneer !== null" @change="handleCheckboxChange2($event.target, publisher.publisher, publisher.month)"></label></p>
+						<p style="margin:0"><label>Hours (If pioneer or ﬁeld missionary): <input :class="inputMode('hours w3-input')" type="number" min="0" max="999" style="width: 64px;" :value="publisher.report.hours" @change="handleInputChange2($event.target, publisher.publisher, publisher.month)"></label></p>
+						<p style="margin:0"><label>Remarks: <input :class="inputMode('remarks w3-input')" type="text" style="width: 95%" :value="publisher.report.remarks" @change="handleInputChange2($event.target, publisher.publisher, publisher.month)"></label></p>
 					</div>
 				</div>
 			</div>
@@ -1287,7 +1320,10 @@ function processMonthlyReport() {
             months: [{"abbr": "sept", "fullName": "September"}, {"abbr": "oct", "fullName": "October"}, {"abbr": "nov", "fullName": "November"}, {"abbr": "dec", "fullName": "December"}, {"abbr": "jan", "fullName": "January"}, {"abbr": "feb", "fullName": "February"}, {"abbr": "mar", "fullName": "March"}, {"abbr": "apr", "fullName": "April"}, {"abbr": "may", "fullName": "May"}, {"abbr": "jun", "fullName": "June"}, {"abbr": "jul", "fullName": "July"}, {"abbr": "aug", "fullName": "August"} ],
         },
         computed: {
-            allCharacters() {/*
+            inputMode(currentClass) {
+				return currentClass + ' ' + mode.replace('w3-card ','')
+			},
+			allCharacters() {/*
                 return getUniqueElementsByProperty(this.clickedSectionFilter,['ID'])*/
             },
             publishers() {
@@ -1346,6 +1382,9 @@ function processMonthlyReport() {
             },
         },
         methods: {
+			inputMode(currentClass) {
+				return currentClass + ' ' + mode.replace('w3-card ','')
+			},
 			mode() {
 				return mode
 			},
@@ -1541,11 +1580,11 @@ document.querySelector('#missingReport').innerHTML = `<template>
 							<p style="margin:0">{{ missingRecord(publisher) }}</p>
 							<div v-for="(lateReport) in missingRecord(publisher).split('; ')" class="w3-container detail" style="display:none">
 								<h5 style="margin:0">{{ lateReport }}</h5>
-								<p><label>Shared in Ministry: <input style="margin-left:8px" class="sharedInMinistry" type="checkbox"></label></p>
-								<p><label>Bible Studies: <input class="bibleStudies w3-input" type="number" min="0" max="999" style="width: 64px;"></label></p>
-								<p><label>Auxiliary Pioneer: <input style="margin-left:8px" class="auxiliaryPioneer" type="checkbox"></label></p>
-								<p><label>Hours (If pioneer or ﬁeld missionary): <input class="hours w3-input" type="number" min="0" max="999" style="width: 64px;"></label></p>
-								<p><label>Remarks: <input class="remarks w3-input" type="text" style="width: 200px"></label></p>
+								<p style="margin:0"><label>Shared in Ministry: <input style="margin-left:8px" :class="inputMode('sharedInMinistry')" type="checkbox"></label></p>
+								<p style="margin:0"><label>Bible Studies: <input :class="inputMode('bibleStudies w3-input')" type="number" min="0" max="999" style="width: 64px;"></label></p>
+								<p style="margin:0"><label>Auxiliary Pioneer: <input style="margin-left:8px" :class="inputMode('auxiliaryPioneer')" type="checkbox"></label></p>
+								<p style="margin:0"><label>Hours (If pioneer or ﬁeld missionary): <input :class="inputMode('hours w3-input')" type="number" min="0" max="999" style="width: 64px;"></label></p>
+								<p style="margin:0"><label>Remarks: <input :class="inputMode('remarks w3-input')" type="text" style="width: 200px"></label></p>
 								<hr style="margin:0; padding:0">
 							</div>
 						</div>
@@ -1581,6 +1620,9 @@ function processMissingReport() {
             },
         },
         methods: {
+			inputMode(currentClass) {
+				return currentClass + ' ' + mode.replace('w3-card ','')
+			},
 			mode() {
 				return mode
 			},
@@ -1686,7 +1728,7 @@ document.querySelector('#attendance').innerHTML = `<template>
 				<div style="padding-bottom:10px" :class="mode()">
 					<div class="w3-container main">
 						<h3>{{ meeting.name }} Meeting</h3>
-						<p v-for="(attendance) in meeting.attendance">{{ attendance.name.replace('Week', ' Week') }}: <input :class="attendance.name" type="number" min="0" max="9999" style="width: 60px;" :value="attendance.count" @change="handleInputChange(attendance, $event.target)"></p>
+						<p v-for="(attendance) in meeting.attendance">{{ attendance.name.replace('Week', ' Week') }}: <input :class="inputMode(attendance.name)" type="number" min="0" max="9999" style="width: 60px;" :value="attendance.count" @change="handleInputChange(attendance, $event.target)"></p>
 						<hr style="margin:0; padding:0">
 						<h5>Total Attendance: <strong>{{ totalAttendance(meeting) }}</strong></h5>
 						<h5>Average Attendance: <strong>{{ averageAttendance(meeting) }}</strong></h5>
@@ -1712,9 +1754,9 @@ document.querySelector('#attendance').innerHTML = `<template>
 							<tbody>
 								<tr v-for="(month, count) in months" :key="month.abbr + '|' + count + '|' + serviceYear">
 									<td>{{ month.fullName }}</td>
-									<td><input class="numberOfMeetings" type="number" min="0" max="5" style="width: 30px;" :value="meeting[serviceYear][month.abbr].numberOfMeetings" @change="handleRecordInputChange(meeting[serviceYear][month.abbr], $event.target)"></td>
-									<td><input class="totalAttendance" type="number" min="0" max="9999" style="width: 60px;" :value="meeting[serviceYear][month.abbr].totalAttendance" @change="handleRecordInputChange(meeting[serviceYear][month.abbr], $event.target)"></td>
-									<td><input class="averageAttendanceEachWeek" type="number" min="0" max="9999" style="width: 60px;" :value="meeting[serviceYear][month.abbr].averageAttendanceEachWeek" @change="handleRecordInputChange(meeting[serviceYear][month.abbr], $event.target)"></td>
+									<td><input :class="inputMode('numberOfMeetings')" type="number" min="0" max="5" style="width: 30px;" :value="meeting[serviceYear][month.abbr].numberOfMeetings" @change="handleRecordInputChange(meeting[serviceYear][month.abbr], $event.target)"></td>
+									<td><input :class="inputMode('totalAttendance')" type="number" min="0" max="9999" style="width: 60px;" :value="meeting[serviceYear][month.abbr].totalAttendance" @change="handleRecordInputChange(meeting[serviceYear][month.abbr], $event.target)"></td>
+									<td><input :class="inputMode('averageAttendanceEachWeek')" type="number" min="0" max="9999" style="width: 60px;" :value="meeting[serviceYear][month.abbr].averageAttendanceEachWeek" @change="handleRecordInputChange(meeting[serviceYear][month.abbr], $event.target)"></td>
 								</tr>
 							</tbody>
 						</table>
@@ -1787,6 +1829,9 @@ function processAttendance() {
             },
         },
         methods: {
+			inputMode(currentClass) {
+				return currentClass + ' ' + mode.replace('w3-card ','')
+			},
 			mode() {
 				return mode
 			},
@@ -1952,6 +1997,9 @@ function branchReportDetails() {
             },
         },
         methods: {
+			inputMode(currentClass) {
+				return currentClass + ' ' + mode.replace('w3-card ','')
+			},
 			mode() {
 				return mode
 			},
@@ -2046,65 +2094,65 @@ document.querySelector('#configuration').innerHTML = `<template>
 			<div class="w3-margin-bottom">
 				<div :class="mode()">
 					<div class="w3-container">
-						<h3 v-if="reset !== true" contenteditable="true" class="name">{{ configuration.congregationName }}</h3>
-						<h4 v-if="reset !== true" contenteditable="true" class="address">{{ configuration.address }}</h4>
-						<h4 v-if="reset !== true" contenteditable="true" class="email">{{ configuration.email }}</h4>
-						<h4 v-if="reset !== true" v-for="group in configuration.fieldServiceGroups" :key="group" contenteditable="true" class="fieldServiceGroups">{{ group }}</h>
+						<h3 v-if="reportEntry() && reset !== true" contenteditable="true" class="name">{{ configuration.congregationName }}</h3>
+						<h4 v-if="reportEntry() && reset !== true" contenteditable="true" class="address">{{ configuration.address }}</h4>
+						<h4 v-if="reportEntry() && reset !== true" contenteditable="true" class="email">{{ configuration.email }}</h4>
+						<h4 v-if="reportEntry() && reset !== true" v-for="group in configuration.fieldServiceGroups" :key="group" contenteditable="true" class="fieldServiceGroups">{{ group }}</h>
 						<h4 id="status1"></h4>
 						<h4 id="status2"></h4>
 						<h4 id="status3"></h4>
-						<p>
-							<button class="w3-button w3-black" @click="addGroup($event.target)" title="Add Field Service Group">Add Group</button>
-							<button class="w3-button w3-black" @click="removeGroup($event.target)" title="Remove Field Service Group">Remove Group</button>
+						<p v-if="reportEntry()">
+							<button :class="buttonMode('w3-button w3-dark-grey')" @click="addGroup($event.target)" title="Add Field Service Group">Add Group</button>
+							<button :class="buttonMode('w3-button w3-dark-grey')" @click="removeGroup($event.target)" title="Remove Field Service Group">Remove Group</button>
 						</p>
 						<label>Appearance: 
-						<select @change="displayMode($event.target)" class="appearance w3-input">
+						<select @change="displayMode($event.target)" :class="inputMode('appearance w3-input')">
 							<option :value="currentMode()">{{ currentMode() }}</option>
 							<option v-for="mode in ['System', 'Light', 'Dark'].filter(elem=>elem !== currentMode())" :value="mode">{{ mode }}</option>
 						</select></label>
 						<p>
-							<button class="w3-button w3-black" @click="saveConfiguration($event.target)"><i class="fas fa-save"> </i> Save</button>
-							<button class="w3-button w3-black" @click="resetConfiguration($event.target)">Reset</button>
-							<button class="w3-button w3-black" @click="backupData($event.target)">Backup</button>
+							<button v-if="reportEntry()" :class="buttonMode('w3-button w3-dark-grey')" @click="saveConfiguration($event.target)"><i class="fas fa-save"> </i> Save</button>
+							<button :class="buttonMode('w3-button w3-dark-grey')" @click="resetConfiguration($event.target)">Reset</button>
+							<button :class="buttonMode('w3-button w3-dark-grey')" @click="backupData($event.target)">Backup</button>
 						</p>
-						<p>
-							<button class="w3-button w3-black" @click="saveFile()"><i class="fas fa-save"> </i> Save File</button>
+						<p v-if="reportEntry()">
+							<button :class="buttonMode('w3-button w3-dark-grey')" @click="saveFile()"><i class="fas fa-save"> </i> Save File</button>
 							<input type="file" id="pdfFile" accept=".pdf">
 						</p>
 						<div>
 							<div class="main">
-								<button class="w3-button w3-black" @click="publisherDetail($event.target)">New Publisher</button>
-								<button class="w3-button w3-black" @click="reloadPage()">Reload</button>
+								<button v-if="reportEntry()" :class="buttonMode('w3-button w3-dark-grey')" @click="publisherDetail($event.target)">New Publisher</button>
+								<button :class="buttonMode('w3-button w3-dark-grey')" @click="reloadPage()">Reload</button>
 							</div>
-							<div class="detail" style="display:none; border: 1px solid gray; padding:5px">
-								<button class="w3-button w3-black" @click="publisherDetail($event.target)">Save</button>
-								<button class="w3-button w3-black" @click="cancel($event.target)">Cancel</button>
+							<div v-if="reportEntry()" class="detail" style="display:none; border: 1px solid gray; padding:5px">
+								<button :class="buttonMode('w3-button w3-dark-grey')" @click="publisherDetail($event.target)">Save</button>
+								<button :class="buttonMode('w3-button w3-dark-grey')" @click="cancel($event.target)">Cancel</button>
 								<h3 contenteditable="true" class="name">Publisher Name</h3>
 								<p>
-									<label>Date of Birth: <input v-if="publisher.dateOfBirth == null" type="date" class="dateOfBirth w3-input"><input v-if="publisher.dateOfBirth !== null" type="date" class="dateOfBirth w3-input"></label>
-									<select class="gender w3-input">
+									<label>Date of Birth: <input v-if="publisher.dateOfBirth == null" type="date" :class="inputMode('dateOfBirth w3-input')"><input v-if="publisher.dateOfBirth !== null" type="date" :class="inputMode('dateOfBirth w3-input')"></label>
+									<select :class="inputMode('gender w3-input')">
 										<option v-for="gender in ['Select Gender', 'Male', 'Female']" :value="gender">{{ gender }}</option>
 									</select>
 								</p>
 								<p>
-									<label>Date of Baptism: <input v-if="publisher.dateOfBaptism == null" type="date" class="dateOfBaptism w3-input"><input v-if="publisher.dateOfBaptism !== null" type="date" class="dateOfBaptism w3-input" :value="cleanDate(publisher.dateOfBaptism)"></label>
-									<select class="hope w3-input">
+									<label>Date of Baptism: <input v-if="publisher.dateOfBaptism == null" type="date" :class="inputMode('dateOfBaptism w3-input')"><input v-if="publisher.dateOfBaptism !== null" type="date" :class="inputMode('dateOfBaptism w3-input')" :value="cleanDate(publisher.dateOfBaptism)"></label>
+									<select :class="inputMode('hope w3-input')">
 										<option v-for="hope in hopes" :value="hope">{{ hope }}</option>
 									</select>
 								</p>
 								<label v-for="(privilege, index) in privileges" :key="index" class="w3-input"><input type="checkbox" :name="privilege" class="privileges" :checked=publisher.privilege.includes(privilege)> {{ privilege }}</label>
 								<p>
 									<label>Field Service Group: 
-									<select class="fieldServiceGroup w3-input">
+									<select :class="inputMode('fieldServiceGroup w3-input')">
 										<option value="">Select Group</option>
 										<option v-for="group in allGroups" :value="group">{{ group }}</option>
 									</select></label>
 								</p>
 								<div class="detail" style="padding:0 15px 15px 15px">
-									<p><label>Phone Number: <input class="contactPhoneNumber w3-input" type="tel" :value="publisher.contactInformation.phoneNumber"></label></p>
-									<p><label>Address:<input class="contactAddress w3-input" type="text" :value="publisher.contactInformation.address"></label></p>
-									<p><label>Emergency Contact: <input class="emergencyContactName w3-input" type="text" :value="publisher.emergencyContactInformation.name"></label></p>
-									<p><label>Contact Number: <input class="emergencyContactPhoneNumber w3-input" type="tel" :value="publisher.emergencyContactInformation.phoneNumber"></label></p>
+									<p><label>Phone Number: <input :class="inputMode('contactPhoneNumber w3-input')" type="tel" :value="publisher.contactInformation.phoneNumber"></label></p>
+									<p><label>Address:<input :class="inputMode('contactAddress w3-input')" type="text" :value="publisher.contactInformation.address"></label></p>
+									<p><label>Emergency Contact: <input :class="inputMode('emergencyContactName w3-input')" type="text" :value="publisher.emergencyContactInformation.name"></label></p>
+									<p><label>Contact Number: <input :class="inputMode('emergencyContactPhoneNumber w3-input')" type="tel" :value="publisher.emergencyContactInformation.phoneNumber"></label></p>
 								</div>
 								<div style="overflow-x: scroll;">
 									<table>
@@ -2141,8 +2189,8 @@ document.querySelector('#configuration').innerHTML = `<template>
 							</div>
 						</div>
 						<p>
-							<button class="w3-button w3-black" @click="exportData()">Export Data</button>
-							<button class="w3-button w3-black" @click="importData()">Import Data</button>
+							<button :class="buttonMode('w3-button w3-dark-grey')" @click="exportData()">Export Data</button>
+							<button :class="buttonMode('w3-button w3-dark-grey')" @click="importData()">Import Data</button>
 							<input type="file" id="dataFile" accept=".txt">
 						</p>
 					</div>
@@ -2177,6 +2225,12 @@ function processConfiguration() {
             }
         },
         methods: {
+			inputMode(currentClass) {
+				return currentClass + ' ' + mode.replace('w3-card ','')
+			},
+			buttonMode(currentClass) {
+				return currentClass + ' ' + mode.replace('w3-card ','').replace('white','light-grey').replace('black','dark-grey')
+			},
 			displayMode(event) {
 				//console.log(event.value)
 				var selectedMode
@@ -2244,6 +2298,9 @@ function processConfiguration() {
 			},
 			mode() {
 				return mode
+			},
+			reportEntry() {
+				return reportEntry
 			},
 			currentMode() {
 				return currentMode
