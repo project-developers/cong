@@ -622,6 +622,7 @@ function processNavigation() {
 					navigationVue.buttons[groupCount].title = 'GROUPS'
 				}
 
+				allPublishersVue.request = false
 				gotoView('configurationVue')
 			},
 			signOut() {
@@ -778,6 +779,7 @@ ${congregationVue.congregation.congregationName} Congregation`*/
 					navigationVue.buttons[groupCount].title = 'GROUPS'
 				}
 
+				allPublishersVue.request = false
 				gotoView('configurationVue')
 			},
 			signOut() {
@@ -1226,7 +1228,7 @@ function processAllPublishers() {
 				allPublishersVue.publisherName = ''
 
 				await shortWait()
-				
+
 				this.auto_grow()
 
 				window.location.href = mailtoLink;
