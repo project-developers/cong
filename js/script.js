@@ -1208,7 +1208,7 @@ function processAllPublishers() {
 				auto_grow(document.getElementById("publisherRequest").Subject);
 				auto_grow(document.getElementById("publisherRequest").Message);
 			},
-			sendMessage() {
+			async sendMessage() {
 				console.log('Message')
 				const messageContent = document.getElementById("publisherRequest")
 				var recipient = messageContent.Email.value;
@@ -1218,6 +1218,16 @@ function processAllPublishers() {
 								'?cc=' + encodeURIComponent(congregationVue.congregation.email) +
 								'&subject=' + encodeURIComponent(subject) +
 								'&body=' + encodeURIComponent(body);
+
+				await shortWait()
+
+				document.getElementById("publisherRequest").Name.value = ''
+				document.getElementById("publisherRequest").Email.value = ''
+				allPublishersVue.publisherName = ''
+
+				await shortWait()
+				
+				this.auto_grow()
 
 				window.location.href = mailtoLink;
 			},
