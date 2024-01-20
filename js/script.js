@@ -104,7 +104,7 @@ loginButton.addEventListener("click", (e) => {
 				
 				document.getElementById("home").style.display = 'none'
 				DBWorker.postMessage({ storeName: 'settings', action: "save", value: [currentUser]});
-				DBWorker.postMessage({ dbName: 'cong-' + currentUser.username, action: "init"});
+				DBWorker.postMessage({ dbName: 'cong-' + currentUser.username.toLowerCase(), action: "init"});
 				loginErrorMsg.style.opacity = 0;
 			}
 		} else {
@@ -130,7 +130,7 @@ loginButton.addEventListener("click", (e) => {
 
 				document.getElementById("home").style.display = 'none'
 				DBWorker.postMessage({ storeName: 'settings', action: "save", value: [currentUser]});
-				DBWorker.postMessage({ dbName: 'cong-' + currentUser.username, action: "init"});
+				DBWorker.postMessage({ dbName: 'cong-' + currentUser.username.toLowerCase(), action: "init"});
 				loginErrorMsg.style.opacity = 0;
 			} else if (currentUser.accesses.includes('sendReport')) {
 				console.log("You have successfully logged in.");
@@ -151,7 +151,7 @@ loginButton.addEventListener("click", (e) => {
 				
 				document.getElementById("home").style.display = 'none'
 				DBWorker.postMessage({ storeName: 'settings', action: "save", value: [currentUser]});
-				DBWorker.postMessage({ dbName: 'cong-' + currentUser.username, action: "init"});
+				DBWorker.postMessage({ dbName: 'cong-' + currentUser.username.toLowerCase(), action: "init"});
 				loginErrorMsg.style.opacity = 0;
 			}
 		}
@@ -171,7 +171,7 @@ loginButton.addEventListener("click", (e) => {
 		}
 		logged = true
 		document.getElementById("home").style.display = 'none'
-		DBWorker.postMessage({ dbName: 'cong-' + currentUser.username, action: "init"});
+		DBWorker.postMessage({ dbName: 'cong-' + currentUser.username.toLowerCase(), action: "init"});
 		loginErrorMsg.style.opacity = 0;
 		
     } else if (username.toLowerCase() === "reporter".toLowerCase() && password === "reportEntry") {
@@ -292,7 +292,7 @@ DBWorker.onmessage = async function (msg) {
 				})
 			}
 			if (resetCount === 0) {
-				window.indexedDB.deleteDatabase('cong-' + currentUser.username);
+				window.indexedDB.deleteDatabase('cong-' + currentUser.username.toLowerCase());
 				location.reload()
 			}
 		} else if (msgData.length == 3) {
@@ -301,7 +301,7 @@ DBWorker.onmessage = async function (msg) {
 			document.querySelector('#status2').innerHTML = `${resetCount} Remaining.`
 			document.querySelector('#status3').innerHTML = `Please wait . . .`
 			if (resetCount === 0) {
-				window.indexedDB.deleteDatabase('cong-' + currentUser.username);
+				window.indexedDB.deleteDatabase('cong-' + currentUser.username.toLowerCase());
 				location.reload()
 				/*
 				document.querySelector('#status1').innerHTML = ``
