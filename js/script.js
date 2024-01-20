@@ -352,6 +352,7 @@ DBWorker.onmessage = async function (msg) {
 						navigationVue.allGroups = msgData.value.filter(elem=>elem.name == "Congregation")[0].fieldServiceGroups
 						DBWorker.postMessage({ storeName: 'data', action: "readAll"});
 						DBWorker.postMessage({ storeName: 'attendance', action: "readAll"});
+						DBWorker.postMessage({ storeName: 'files', action: "readAll"});
 					}
 					if (msgData.value.filter(elem=>elem.name == "Display").length !== 0) {
 						console.log(msgData.value.filter(elem=>elem.name == "Display"))
@@ -398,6 +399,20 @@ DBWorker.onmessage = async function (msg) {
 					DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [{"name": "Late Reports", "month": formattedDate, "value": publisherRecords}]});
 					
 					console.log(publisherRecords)*/
+				}
+				break;
+			case "files":
+				{
+					//myFile = msgData.value
+					//console.log(msgData.value)
+					//console.log(msgData.value[0])
+					if (msgData.value.filter(elem=>elem.name == 'S-21_E.pdf').length !== 0) {
+						//console.log(msgData.value.filter(elem=>elem.name == 'S-21_E.pdf')[0])
+						if (!s21current) {
+							await getFieldByName(msgData.value.filter(elem=>elem.name == 'S-21_E.pdf')[0])
+						}
+					}
+
 				}
 				break;
 			case "settings":
@@ -448,6 +463,8 @@ DBWorker.onmessage = async function (msg) {
 		}
 	}
 }
+
+//var myFile;
 
 // style="padding:16px 0 0 2px; margin-top:1px"  style="margin-top:2px"
 
@@ -541,7 +558,23 @@ function processNavigation() {
 					
 					return 
 				}
-                //console.log(button)
+                
+				
+				if (allPublishersVue.transfer == true) {
+					selectedTransferPublishers.length = 0
+					var i = 0
+					document.querySelectorAll('#publisherRequest select').forEach(elem=>{
+						if (elem !== '') {
+							selectedTransferPublishers.push(allPublishersVue.publishers.filter(ele=>ele.name == elem.value)[0])
+						}
+						if (i !== 0) {
+							elem.parentNode.remove()
+						}
+						i++
+					})
+				}
+
+				configurationVue.display = false
 
 				if (button.innerHTML == "REPORTS") {
 					this.displayDropdown = true
@@ -620,14 +653,20 @@ function processNavigation() {
 					//allPublishersVue.request = true
 					allPublishersVue.display = false
 					await shortWait()
-					auto_grow(document.getElementById("publisherRequest").Subject);
+					//auto_grow(document.getElementById("publisherRequest").Subject);
 					auto_grow(document.getElementById("publisherRequest").Message);
 				} else if (button.innerHTML == "TRANSFER") {
-					//allPublishersVue.transfer = true
+					document.querySelectorAll('iframe').forEach(elem=>{
+						elem.remove()
+					})
+					allPublishersVue.preview = false
 					allPublishersVue.display = false
 					await shortWait()
 					auto_grow(document.getElementById("publisherRequest").Address);
 					auto_grow(document.getElementById("publisherRequest").LetterOfIntroduction);
+					if (selectedTransferPublishers.length !== 0) {
+						redoSelection(selectedTransferPublishers.shift())
+					}
 				} else if (button.innerHTML == "ALL" || button.innerHTML == "ACTIVE") {
 					fieldServiceGroupsVue.inactive()
 				} else {
@@ -645,7 +684,22 @@ function processNavigation() {
 					navigationVue.buttons[groupCount].title = 'GROUPS'
 				}
 
+				if (allPublishersVue.transfer == true) {
+					selectedTransferPublishers.length = 0
+					var i = 0
+					document.querySelectorAll('#publisherRequest select').forEach(elem=>{
+						if (elem !== '') {
+							selectedTransferPublishers.push(allPublishersVue.publishers.filter(ele=>ele.name == elem.value)[0])
+						}
+						if (i !== 0) {
+							elem.parentNode.remove()
+						}
+						i++
+					})
+				}
+
 				allPublishersVue.request = false
+				allPublishersVue.transfer = false
 				gotoView('configurationVue')
 			},
 			signOut() {
@@ -681,6 +735,20 @@ function processNavigation() {
 
 processNavigation()
 
+var selectedTransferPublishers = []
+
+async function redoSelection(selection) {
+	await shortWait()
+	await shortWait()
+	document.querySelectorAll('#publisherRequest select')[document.querySelectorAll('.fa-plus').length - 1].value = selection.name
+	if (selectedTransferPublishers.length !== 0) {
+		await shortWait()
+		await shortWait()
+		document.querySelectorAll('.fa-plus')[document.querySelectorAll('.fa-plus').length - 1].click()
+		
+		redoSelection(selectedTransferPublishers.shift())
+	}
+}
 
 document.querySelector('#mySidebar').innerHTML = `<template>
 	<a href="javascript:void(0)" onclick="w3_close()" class="w3-bar-item w3-button w3-large w3-padding-16">Close ×</a>
@@ -713,7 +781,21 @@ function processNavigation2() {
                 //console.log(button)
 				
 				w3_close()
+				if (allPublishersVue.transfer == true) {
+					selectedTransferPublishers.length = 0
+					var i = 0
+					document.querySelectorAll('#publisherRequest select').forEach(elem=>{
+						if (elem !== '') {
+							selectedTransferPublishers.push(allPublishersVue.publishers.filter(ele=>ele.name == elem.value)[0])
+						}
+						if (i !== 0) {
+							elem.parentNode.remove()
+						}
+						i++
+					})
+				}
 
+				configurationVue.display = false
 				
 				if (button.innerHTML == "REPORTS") {
 					navigationVue.displayDropdown = true
@@ -792,14 +874,20 @@ function processNavigation2() {
 					//allPublishersVue.request = true
 					allPublishersVue.display = false
 					await shortWait()
-					auto_grow(document.getElementById("publisherRequest").Subject);
+					//auto_grow(document.getElementById("publisherRequest").Subject);
 					auto_grow(document.getElementById("publisherRequest").Message);
 				} else if (button.innerHTML == "TRANSFER") {
-					//allPublishersVue.transfer = true
+					document.querySelectorAll('iframe').forEach(elem=>{
+						elem.remove()
+					})
+					allPublishersVue.preview = false
 					allPublishersVue.display = false
 					await shortWait()
 					auto_grow(document.getElementById("publisherRequest").Address);
 					auto_grow(document.getElementById("publisherRequest").LetterOfIntroduction);
+					if (selectedTransferPublishers.length !== 0) {
+						redoSelection(selectedTransferPublishers.shift())
+					}
 				} else if (button.innerHTML == "ALL" || button.innerHTML == "ACTIVE") {
 					fieldServiceGroupsVue.inactive()
 				} else {
@@ -820,7 +908,22 @@ function processNavigation2() {
 					navigationVue.buttons[groupCount].title = 'GROUPS'
 				}
 
+				if (allPublishersVue.transfer == true) {
+					selectedTransferPublishers.length = 0
+					var i = 0
+					document.querySelectorAll('#publisherRequest select').forEach(elem=>{
+						if (elem !== '') {
+							selectedTransferPublishers.push(allPublishersVue.publishers.filter(ele=>ele.name == elem.value)[0])
+						}
+						if (i !== 0) {
+							elem.parentNode.remove()
+						}
+						i++
+					})
+				}
+
 				allPublishersVue.request = false
+				allPublishersVue.transfer = false
 				gotoView('configurationVue')
 			},
 			signOut() {
@@ -1205,10 +1308,13 @@ document.querySelector('#allPublishers').innerHTML = `<template>
 			<p><textarea :class="inputMode('w3-input w3-border')" v-model="letterOfIntroduction" placeholder="Letter of Intrduction" required name="LetterOfIntroduction"></textarea></p>
 			<p>
 				<button @click="previewRecord()" class="w3-button w3-black" type="submit">
-					<i class="fa fa-paper-plane"></i> PREVIEW
+					PREVIEW
 				</button>
 				<button @click="transferRecord()" class="w3-button w3-black" type="submit">
-					<i class="fa fa-paper-plane"></i> TRANSFER RECORD
+					<i class="fa fa-paper-plane"></i> TRANSFER
+				</button>
+				<button @click="cancelTransfer()" class="w3-button w3-black" type="submit">
+					CANCEL
 				</button>
 			</p>
 		</form>
@@ -1217,27 +1323,22 @@ document.querySelector('#allPublishers').innerHTML = `<template>
 				<div id="content">
 					<h1 align="center">{{ congregation.congregationName.toUpperCase() }} CONGREGATION</h1>
 					<h3 align="center">{{ congregation.address.toUpperCase() }} {{ congregation.email.toUpperCase() }}</h3>
-					<p align="right">January 9, 2024</p>
+					<p align="right">{{ formatDateToFull() }}</p>
 
 					<p contenteditable="true" id="address" class="edit-content"></p>
-					<p contenteditable="true" id="email" class="edit-content"></p>
-					<br>
+										
 					<p>Dear Brothers,</p>
 					<p align="center" class="edit-content letterTitle" contenteditable="true">INTRODUCTION OF {{ publisherNameValue().toUpperCase() }}</p>
 					
-					<br>
 					<p class="closing">Your brothers,</p>
-					<p class="closing">{{ congregation.congregationName }} Congregation</p>
-
-					<br>
-
-					<div class="container">
+					
+					<div class="container" style="margin-top:30px">
 						<p class="element" align="center">Ernest Macfoy</p>
 						<p class="element" align="center">Theophilus Teknikio</p>
 						<p class="element" align="center">Bock Kamanda</p>
 					</div>
 
-					<div class="container">
+					<div class="container" style="margin-top:0">
 						<p class="element" align="center">CBOE</p>
 						<p class="element" align="center">Secretary</p>
 						<p class="element" align="center">Service overseer</p>
@@ -1246,6 +1347,7 @@ document.querySelector('#allPublishers').innerHTML = `<template>
 				</div>
 			</div>
 		</div>
+		
     </div>
 </template>`
 //(group == 'Pioneers' && publisher.privilege.some(item => privileges.slice(-3).includes(item)))
@@ -1257,6 +1359,8 @@ function processAllPublishers() {
 			publishers: [],
             status: ["Active", "Inactive"],
             display: false,
+			selectedPublisher: {},
+			pdfFile: '',
             request: false,
             transfer: false,
             preview: false,
@@ -1315,22 +1419,36 @@ function processAllPublishers() {
 			},
         },
 		watch: {
-			//publisherName: 'auto_grow',
+			//publisherName: 'addPublisher',
 			congregationAddress: 'updateAddress',
-			//email: 'updateEmail',
 			letterOfIntroduction: 'updateLetterBody'
 		},
         methods: {
+			/*addPublisher(event) {
+				if (event !== '') {
+					this.selectedTransferPublishers.push(event)
+				}
+			},*/
 			async previewRecord() {
+				downloadsArray = []
 				this.preview = true
 				await shortWait()
+				document.querySelector('#content').style.display = ''
 				await shortWait()
 				await shortWait()
 				document.querySelector('#address').innerText = document.getElementById("publisherRequest").Address.value
-				document.querySelector('#email').innerText = document.getElementById("publisherRequest").Email.value
-				document.getElementById("publisherRequest").LetterOfIntroduction.value.split('\n').forEach(elem=>{
+				document.querySelector('#address').innerText += '\n'
+				document.querySelector('#address').innerText += document.getElementById("publisherRequest").Email.value
+				document.getElementById("publisherRequest").LetterOfIntroduction.value.replaceAll('\n\n','\n').split('\n').forEach(elem=>{
 					document.querySelector('.letterTitle').insertAdjacentHTML('afterend', `<p class="indented-paragraph edit-content letterBody" contenteditable="true">${elem}</p>`);
 				})
+				document.querySelector('.closing').innerText += '\n'
+				document.querySelector('.closing').innerText += this.congregation.congregationName
+				document.querySelector('.closing').innerText += ' Congregation'
+				await shortWait()
+				await shortWait()
+				await shortWait()
+				convertToImage(document.querySelector('#content'))
 			},
 			updateLetterBody(event) {
 				this.auto_grow()
@@ -1345,10 +1463,8 @@ function processAllPublishers() {
 				//document.querySelector('#address').innerText = event
 				//this.auto_grow()
 			},
-			updateEmail(event) {
-				//this.auto_grow()
-				if (this.preview == false) { return }
-				document.querySelector('#email').innerText = event
+			cancelTransfer() {
+				console.log('Cancel')
 			},
 			async previewLetter(file) {
 				const reader = new FileReader();
@@ -1407,29 +1523,20 @@ function processAllPublishers() {
 			},
 			async transferRecord() {
 				console.log('Message')
-				convertToImage(document.querySelector('#content'))
-				await shortWait()
-				await shortWait()
-				await shortWait()
-				await shortWait()
-				await shortWait()
-				await shortWait()
-				await convertToPdf()
-				return
-				const messageContent = document.getElementById("publisherRequest")
-				var recipient = messageContent.Email.value;
-				var subject = messageContent.Subject.value;
-				var body = messageContent.Message.value;
-				var mailtoLink = 'mailto:' + encodeURIComponent(recipient) +
+				downloadsArray.forEach(async (elem)=>{
+					await downloadPreparedFiles(elem)
+				})
+				
+				var mailtoLink = 'mailto:' + encodeURIComponent(document.getElementById("publisherRequest").Email.value) +
 								'?cc=' + encodeURIComponent(congregationVue.congregation.email) +
-								'&subject=' + encodeURIComponent(subject) +
-								'&body=' + encodeURIComponent(body);
+								'&subject=' + encodeURIComponent(this.subject()) +
+								'&body=' + encodeURIComponent(this.transferMessage());
 
 				await shortWait()
 
-				document.getElementById("publisherRequest").Name.value = ''
-				document.getElementById("publisherRequest").Email.value = ''
-				allPublishersVue.publisherName = ''
+				//document.getElementById("publisherRequest").Name.value = ''
+				//document.getElementById("publisherRequest").Email.value = ''
+				//allPublishersVue.publisherName = ''
 
 				await shortWait()
 
@@ -1458,6 +1565,7 @@ ${congregationVue.congregation.congregationName} Congregation
 					} else {
 						gender = 'Sister'
 					}
+					this.selectedPublisher = found[0]
 					publisher = `${gender} ${this.publisherName.split(' ').slice(1).concat([toTitleCase(this.publisherName.split(' ')[0])]).join(' ')}`
 				} else {
 					publisher = this.publisherName
@@ -1482,6 +1590,7 @@ ${congregationVue.congregation.congregationName} Congregation
 					} else {
 						gender = 'Sister '
 					}
+					this.selectedPublisher = found[0]
 					return `${gender}${this.publisherName.split(' ').slice(1).concat([toTitleCase(this.publisherName.split(' ')[0])]).join(' ')}`
 				} else {
 					return this.publisherName
@@ -1505,6 +1614,7 @@ ${congregationVue.congregation.congregationName} Congregation
 							} else {
 								gender = 'Sister'
 							}
+							this.selectedPublisher = found[0]
 							publisher = `${gender} ${this.publisherName.split(' ').slice(1).concat([toTitleCase(this.publisherName.split(' ')[0])]).join(' ')}`
 						} else {
 							publisher = this.publisherName
@@ -1618,6 +1728,11 @@ ${congregationVue.congregation.congregationName} Congregation
                 const formattedDate = `${currentDate.getFullYear()}-${(currentDate.getMonth() + 1).toString().padStart(2, '0')}-${currentDate.getDate().toString().padStart(2, '0')}`;
 
                 return formattedDate
+            },
+			formatDateToFull() {
+				const options = { year: 'numeric', month: 'long', day: 'numeric' };
+				const formattedDate = new Date().toLocaleDateString(undefined, options);
+				return formattedDate
             },
             removePublisher(count, name, item) {
                 if (confirm('Are you sure you want to delete "' + name + '" records?\nPress "OK" to Delete')) {
@@ -3699,25 +3814,104 @@ function getUniqueElementsByProperty(arr, propNames) {
 function download(content, fileName, contentType) {
     var a = document.createElement("a");
     var file = new Blob([content], {type: contentType});
-    fieldServiceGroupsVue.pdfFile = URL.createObjectURL(file);
+    allPublishersVue.pdfFile = URL.createObjectURL(file);
     /*a.href = URL.createObjectURL(file);
     
     //a.download = fileName;
     //a.click();*/
 };
 
-async function fillPublisherRecord(publisher) {
+
+
+
+async function fillPublisherRecord(data) {
+	const publisher = data[0]
+	const period = data[1]
     // Get the form field by name
     //const fieldName = fieldNameInput.value;
-    const name = s21.getForm().getTextField('900_1_Text_SanSerif');
-    const dateOfBirth = s21.getForm().getTextField('900_2_Text_SanSerif');
-    const dateOfBaptism = s21.getForm().getTextField('900_5_Text_SanSerif');
-    const male = s21.getForm().getCheckBox('900_3_CheckBox');
-    const female = s21.getForm().getCheckBox('900_4_CheckBox');
+    const name = s21current.getForm().getTextField('900_1_Text_SanSerif');
+    const dateOfBirth = s21current.getForm().getTextField('900_2_Text_SanSerif');
+    const dateOfBaptism = s21current.getForm().getTextField('900_5_Text_SanSerif');
+    const male = s21current.getForm().getCheckBox('900_3_CheckBox');
+    const female = s21current.getForm().getCheckBox('900_4_CheckBox');
+    const otherSheep = s21current.getForm().getCheckBox('900_6_CheckBox');
+    const anointed = s21current.getForm().getCheckBox('900_7_CheckBox');
+    const elder = s21current.getForm().getCheckBox('900_8_CheckBox');
+    const ministerialServant = s21current.getForm().getCheckBox('900_9_CheckBox');
+    const regularPioneer = s21current.getForm().getCheckBox('900_10_CheckBox');
+    const specialPioneer = s21current.getForm().getCheckBox('900_11_CheckBox');
+    const fieldMissionary = s21current.getForm().getCheckBox('900_12_CheckBox');
+    const serviceYear = s21current.getForm().getTextField('900_13_Text_C_SanSerif');
+    const septPreached = s21current.getForm().getCheckBox('901_20_CheckBox');
+    const octPreached = s21current.getForm().getCheckBox('901_21_CheckBox');
+    const novPreached = s21current.getForm().getCheckBox('901_22_CheckBox');
+    const decPreached = s21current.getForm().getCheckBox('901_23_CheckBox');
+    const janPreached = s21current.getForm().getCheckBox('901_24_CheckBox');
+    const febPreached = s21current.getForm().getCheckBox('901_25_CheckBox');
+    const marPreached = s21current.getForm().getCheckBox('901_26_CheckBox');
+    const aprPreached = s21current.getForm().getCheckBox('901_27_CheckBox');
+    const mayPreached = s21current.getForm().getCheckBox('901_28_CheckBox');
+    const junPreached = s21current.getForm().getCheckBox('901_29_CheckBox');
+    const julPreached = s21current.getForm().getCheckBox('901_30_CheckBox');
+    const augPreached = s21current.getForm().getCheckBox('901_31_CheckBox');
+    const septAux = s21current.getForm().getCheckBox('903_20_CheckBox');
+    const octAux = s21current.getForm().getCheckBox('903_21_CheckBox');
+    const novAux = s21current.getForm().getCheckBox('903_22_CheckBox');
+    const decAux = s21current.getForm().getCheckBox('903_23_CheckBox');
+    const janAux = s21current.getForm().getCheckBox('903_24_CheckBox');
+    const febAux = s21current.getForm().getCheckBox('903_25_CheckBox');
+    const marAux = s21current.getForm().getCheckBox('903_26_CheckBox');
+    const aprAux = s21current.getForm().getCheckBox('903_27_CheckBox');
+    const mayAux = s21current.getForm().getCheckBox('903_28_CheckBox');
+    const junAux = s21current.getForm().getCheckBox('903_29_CheckBox');
+    const julAux = s21current.getForm().getCheckBox('903_30_CheckBox');
+    const augAux = s21current.getForm().getCheckBox('903_31_CheckBox');
+    const septBs = s21current.getForm().getTextField('902_20_Text_C_SanSerif');
+    const octBs = s21current.getForm().getTextField('902_21_Text_C_SanSerif');
+    const novBs = s21current.getForm().getTextField('902_22_Text_C_SanSerif');
+    const decBs = s21current.getForm().getTextField('902_23_Text_C_SanSerif');
+    const janBs = s21current.getForm().getTextField('902_24_Text_C_SanSerif');
+    const febBs = s21current.getForm().getTextField('902_25_Text_C_SanSerif');
+    const marBs = s21current.getForm().getTextField('902_26_Text_C_SanSerif');
+    const aprBs = s21current.getForm().getTextField('902_27_Text_C_SanSerif');
+    const mayBs = s21current.getForm().getTextField('902_28_Text_C_SanSerif');
+    const junBs = s21current.getForm().getTextField('902_29_Text_C_SanSerif');
+    const julBs = s21current.getForm().getTextField('902_30_Text_C_SanSerif');
+    const augBs = s21current.getForm().getTextField('902_31_Text_C_SanSerif');
+	const septHr = s21current.getForm().getField('904_20_S21_Value');
+    const octHr = s21current.getForm().getField('904_21_S21_Value');
+    const novHr = s21current.getForm().getField('904_22_S21_Value');
+    const decHr = s21current.getForm().getField('904_23_S21_Value');
+    const janHr = s21current.getForm().getField('904_24_S21_Value');
+    const febHr = s21current.getForm().getField('904_25_S21_Value');
+    const marHr = s21current.getForm().getField('904_26_S21_Value');
+    const aprHr = s21current.getForm().getField('904_27_S21_Value');
+    const mayHr = s21current.getForm().getField('904_28_S21_Value');
+    const junHr = s21current.getForm().getField('904_29_S21_Value');
+    const julHr = s21current.getForm().getField('904_30_S21_Value');
+    const augHr = s21current.getForm().getField('904_31_S21_Value');
+	const septRem = s21current.getForm().getTextField('905_20_Text_SanSerif');
+    const octRem = s21current.getForm().getTextField('905_21_Text_SanSerif');
+    const novRem = s21current.getForm().getTextField('905_22_Text_SanSerif');
+    const decRem = s21current.getForm().getTextField('905_23_Text_SanSerif');
+    const janRem = s21current.getForm().getTextField('905_24_Text_SanSerif');
+    const febRem = s21current.getForm().getTextField('905_25_Text_SanSerif');
+    const marRem = s21current.getForm().getTextField('905_26_Text_SanSerif');
+    const aprRem = s21current.getForm().getTextField('905_27_Text_SanSerif');
+    const mayRem = s21current.getForm().getTextField('905_28_Text_SanSerif');
+    const junRem = s21current.getForm().getTextField('905_29_Text_SanSerif');
+    const julRem = s21current.getForm().getTextField('905_30_Text_SanSerif');
+    const augRem = s21current.getForm().getTextField('905_31_Text_SanSerif');
 
+	name.setText(`${publisher.name == null ? '' : publisher.name}`)
+	dateOfBirth.setText(`${publisher.dateOfBirth == null ? '' : publisher.dateOfBirth}`)
+	dateOfBaptism.setText(`${publisher.dateOfBaptism == null ? '' : publisher.dateOfBaptism}`)
+
+/*
     name.setText(publisher.name)
     dateOfBirth.setText(publisher.dateOfBirth)
     dateOfBaptism.setText(publisher.dateOfBaptism)
+	*/
     if (publisher.gender == "Male") {
         male.check()
         female.uncheck()
@@ -3725,11 +3919,249 @@ async function fillPublisherRecord(publisher) {
         male.uncheck()
         female.check()
     }
+
+	if (publisher.hope == "Other Sheep") {
+        otherSheep.check()
+        anointed.uncheck()
+    } else if (publisher.gender == "Anointed") {
+        otherSheep.uncheck()
+        anointed.check()
+    }
+
+	if (publisher.privilege.includes("Elder")) {
+        elder.check()
+    } else {
+		elder.uncheck()
+	}
+
+	if (publisher.privilege.includes("Ministerial Servant")) {
+        ministerialServant.check()
+    } else {
+		ministerialServant.uncheck()
+	}
+
+	if (publisher.privilege.includes("Regular Pioneer")) {
+        regularPioneer.check()
+    } else {
+		regularPioneer.uncheck()
+	}
+
+	if (publisher.privilege.includes("Special Pioneer")) {
+        specialPioneer.check()
+    } else {
+		specialPioneer.uncheck()
+	}
+
+	if (publisher.privilege.includes("Field Missionary")) {
+        fieldMissionary.check()
+    } else {
+		fieldMissionary.uncheck()
+	}
+
+	//console.log(publisher.report[`${period}`])
+
+	serviceYear.setText(`${publisher.report[`${period}`].year}`)
+
+	if (publisher.report[`${period}`].sept.sharedInMinistry !== null) {
+        septPreached.check()
+    } else {
+		septPreached.uncheck()
+	}
+
+	if (publisher.report[`${period}`].oct.sharedInMinistry !== null) {
+        octPreached.check()
+    } else {
+		octPreached.uncheck()
+	}
+
+	if (publisher.report[`${period}`].nov.sharedInMinistry !== null) {
+        novPreached.check()
+    } else {
+		novPreached.uncheck()
+	}
+
+	if (publisher.report[`${period}`].dec.sharedInMinistry !== null) {
+        decPreached.check()
+    } else {
+		decPreached.uncheck()
+	}
+	
+	if (publisher.report[`${period}`].jan.sharedInMinistry !== null) {
+        janPreached.check()
+    } else {
+		janPreached.uncheck()
+	}
+	
+	if (publisher.report[`${period}`].feb.sharedInMinistry !== null) {
+        febPreached.check()
+    } else {
+		febPreached.uncheck()
+	}
+	
+	if (publisher.report[`${period}`].mar.sharedInMinistry !== null) {
+        marPreached.check()
+    } else {
+		marPreached.uncheck()
+	}
+	
+	if (publisher.report[`${period}`].apr.sharedInMinistry !== null) {
+        aprPreached.check()
+    } else {
+		aprPreached.uncheck()
+	}
+	
+	if (publisher.report[`${period}`].may.sharedInMinistry !== null) {
+        mayPreached.check()
+    } else {
+		mayPreached.uncheck()
+	}
+	
+	if (publisher.report[`${period}`].jun.sharedInMinistry !== null) {
+        junPreached.check()
+    } else {
+		junPreached.uncheck()
+	}
+	
+	if (publisher.report[`${period}`].jul.sharedInMinistry !== null) {
+        julPreached.check()
+    } else {
+		julPreached.uncheck()
+	}
+	
+	if (publisher.report[`${period}`].aug.sharedInMinistry !== null) {
+        augPreached.check()
+    } else {
+		augPreached.uncheck()
+	}
+
+	if (publisher.report[`${period}`].sept.auxiliaryPioneer !== null) {
+        septAux.check()
+    } else {
+		septAux.uncheck()
+	}
+
+	if (publisher.report[`${period}`].oct.auxiliaryPioneer !== null) {
+        octAux.check()
+    } else {
+		octAux.uncheck()
+	}
+
+	if (publisher.report[`${period}`].nov.auxiliaryPioneer !== null) {
+        novAux.check()
+    } else {
+		novAux.uncheck()
+	}
+
+	if (publisher.report[`${period}`].dec.auxiliaryPioneer !== null) {
+        decAux.check()
+    } else {
+		decAux.uncheck()
+	}
+	
+	if (publisher.report[`${period}`].jan.auxiliaryPioneer !== null) {
+        janAux.check()
+    } else {
+		janAux.uncheck()
+	}
+	
+	if (publisher.report[`${period}`].feb.auxiliaryPioneer !== null) {
+        febAux.check()
+    } else {
+		febAux.uncheck()
+	}
+	
+	if (publisher.report[`${period}`].mar.auxiliaryPioneer !== null) {
+        marAux.check()
+    } else {
+		marAux.uncheck()
+	}
+	
+	if (publisher.report[`${period}`].apr.auxiliaryPioneer !== null) {
+        aprAux.check()
+    } else {
+		aprAux.uncheck()
+	}
+	
+	if (publisher.report[`${period}`].may.auxiliaryPioneer !== null) {
+        mayAux.check()
+    } else {
+		mayAux.uncheck()
+	}
+	
+	if (publisher.report[`${period}`].jun.auxiliaryPioneer !== null) {
+        junAux.check()
+    } else {
+		junAux.uncheck()
+	}
+	
+	if (publisher.report[`${period}`].jul.auxiliaryPioneer !== null) {
+        julAux.check()
+    } else {
+		julAux.uncheck()
+	}
+	
+	if (publisher.report[`${period}`].aug.auxiliaryPioneer !== null) {
+        augAux.check()
+    } else {
+		augAux.uncheck()
+	}
+
+	septBs.setText(`${publisher.report[`${period}`].sept.bibleStudies == null ? '' : publisher.report[`${period}`].sept.bibleStudies}`)
+	octBs.setText(`${publisher.report[`${period}`].oct.bibleStudies == null ? '' : publisher.report[`${period}`].oct.bibleStudies}`)
+	novBs.setText(`${publisher.report[`${period}`].nov.bibleStudies == null ? '' : publisher.report[`${period}`].nov.bibleStudies}`)
+	decBs.setText(`${publisher.report[`${period}`].dec.bibleStudies == null ? '' : publisher.report[`${period}`].dec.bibleStudies}`)
+	janBs.setText(`${publisher.report[`${period}`].jan.bibleStudies == null ? '' : publisher.report[`${period}`].jan.bibleStudies}`)
+	febBs.setText(`${publisher.report[`${period}`].feb.bibleStudies == null ? '' : publisher.report[`${period}`].feb.bibleStudies}`)
+	marBs.setText(`${publisher.report[`${period}`].mar.bibleStudies == null ? '' : publisher.report[`${period}`].mar.bibleStudies}`)
+	aprBs.setText(`${publisher.report[`${period}`].apr.bibleStudies == null ? '' : publisher.report[`${period}`].apr.bibleStudies}`)
+	mayBs.setText(`${publisher.report[`${period}`].may.bibleStudies == null ? '' : publisher.report[`${period}`].may.bibleStudies}`)
+	junBs.setText(`${publisher.report[`${period}`].jun.bibleStudies == null ? '' : publisher.report[`${period}`].jun.bibleStudies}`)
+	julBs.setText(`${publisher.report[`${period}`].jul.bibleStudies == null ? '' : publisher.report[`${period}`].jul.bibleStudies}`)
+	augBs.setText(`${publisher.report[`${period}`].aug.bibleStudies == null ? '' : publisher.report[`${period}`].aug.bibleStudies}`)
+
+	septRem.setText(`${publisher.report[`${period}`].sept.remarks == null ? '' : publisher.report[`${period}`].sept.remarks}`)
+	octRem.setText(`${publisher.report[`${period}`].oct.remarks == null ? '' : publisher.report[`${period}`].oct.remarks}`)
+	novRem.setText(`${publisher.report[`${period}`].nov.remarks == null ? '' : publisher.report[`${period}`].nov.remarks}`)
+	decRem.setText(`${publisher.report[`${period}`].dec.remarks == null ? '' : publisher.report[`${period}`].dec.remarks}`)
+	janRem.setText(`${publisher.report[`${period}`].jan.remarks == null ? '' : publisher.report[`${period}`].jan.remarks}`)
+	febRem.setText(`${publisher.report[`${period}`].feb.remarks == null ? '' : publisher.report[`${period}`].feb.remarks}`)
+	marRem.setText(`${publisher.report[`${period}`].mar.remarks == null ? '' : publisher.report[`${period}`].mar.remarks}`)
+	aprRem.setText(`${publisher.report[`${period}`].apr.remarks == null ? '' : publisher.report[`${period}`].apr.remarks}`)
+	mayRem.setText(`${publisher.report[`${period}`].may.remarks == null ? '' : publisher.report[`${period}`].may.remarks}`)
+	junRem.setText(`${publisher.report[`${period}`].jun.remarks == null ? '' : publisher.report[`${period}`].jun.remarks}`)
+	julRem.setText(`${publisher.report[`${period}`].jul.remarks == null ? '' : publisher.report[`${period}`].jul.remarks}`)
+	augRem.setText(`${publisher.report[`${period}`].aug.remarks == null ? '' : publisher.report[`${period}`].aug.remarks}`)
+
+	septHr.setText(`${publisher.report[`${period}`].sept.hours == null ? '' : publisher.report[`${period}`].sept.hours}`)
+	octHr.setText(`${publisher.report[`${period}`].oct.hours == null ? '' : publisher.report[`${period}`].oct.hours}`)
+	novHr.setText(`${publisher.report[`${period}`].nov.hours == null ? '' : publisher.report[`${period}`].nov.hours}`)
+	decHr.setText(`${publisher.report[`${period}`].dec.hours == null ? '' : publisher.report[`${period}`].dec.hours}`)
+	janHr.setText(`${publisher.report[`${period}`].jan.hours == null ? '' : publisher.report[`${period}`].jan.hours}`)
+	febHr.setText(`${publisher.report[`${period}`].feb.hours == null ? '' : publisher.report[`${period}`].feb.hours}`)
+	marHr.setText(`${publisher.report[`${period}`].mar.hours == null ? '' : publisher.report[`${period}`].mar.hours}`)
+	aprHr.setText(`${publisher.report[`${period}`].apr.hours == null ? '' : publisher.report[`${period}`].apr.hours}`)
+	mayHr.setText(`${publisher.report[`${period}`].may.hours == null ? '' : publisher.report[`${period}`].may.hours}`)
+	junHr.setText(`${publisher.report[`${period}`].jun.hours == null ? '' : publisher.report[`${period}`].jun.hours}`)
+	julHr.setText(`${publisher.report[`${period}`].jul.hours == null ? '' : publisher.report[`${period}`].jul.hours}`)
+	augHr.setText(`${publisher.report[`${period}`].aug.hours == null ? '' : publisher.report[`${period}`].aug.hours}`)
+
     //name.setText(publisher.name)
     //name.setText(publisher.name)
     // Save the modified PDF
-    const modifiedPdfBytes = await s21.save();
-    download(modifiedPdfBytes, publisher.name + ".pdf", "application/pdf");
+    //const modifiedPdfBytes = await s21.save();
+	var newPdfViewer = document.createElement('iframe')
+	newPdfViewer.height = '600px'
+	newPdfViewer.width = '100%'
+	newPdfViewer.src = URL.createObjectURL(new Blob([await s21current.save()], { type: 'application/pdf' }));
+	document.getElementById("pdfViewer").appendChild(newPdfViewer)
+
+	downloadsArray.push([newPdfViewer.src, `${toTitleCase(period.replace('ServiceYear', ''))} Record Card - ${publisher.name}`])
+
+	if (recordsToCreate.length !== 0) {
+		fillPublisherRecord(recordsToCreate.shift())
+	}
+
+    //download(modifiedPdfBytes, publisher.name + ".pdf", "application/pdf");
 }
 
 /**
@@ -3750,11 +4182,11 @@ function updatePublisherRecord(publisher) {
     publisher.gender = "Male"
     
 
-    const name = s21.getForm().getTextField('900_1_Text_SanSerif');
-    const dateOfBirth = s21.getForm().getTextField('900_2_Text_SanSerif');
-    const dateOfBaptism = s21.getForm().getTextField('900_5_Text_SanSerif');
-    const male = s21.getForm().getCheckBox('900_3_CheckBox');
-    const female = s21.getForm().getCheckBox('900_4_CheckBox');
+    const name = s21current.getForm().getTextField('900_1_Text_SanSerif');
+    const dateOfBirth = s21current.getForm().getTextField('900_2_Text_SanSerif');
+    const dateOfBaptism = s21current.getForm().getTextField('900_5_Text_SanSerif');
+    const male = s21current.getForm().getCheckBox('900_3_CheckBox');
+    const female = s21current.getForm().getCheckBox('900_4_CheckBox');
 
     console.log(name.getText(), dateOfBirth.getText(), dateOfBaptism.getText(), male.isChecked(), female.isChecked())
 return
@@ -3773,11 +4205,11 @@ return
 
 // 900_1_Text_SanSerif
 
-var s21, s21form;
+var s21current, s21past;
 
-async function getFieldByName() {
-    const fileInput = document.getElementById('pdfFile');
-    const file = fileInput.files[0];
+async function getFieldByName(file) {
+    //const fileInput = document.getElementById('pdfFile');
+    //const file = fileInput.files[0];
 
     if (file) {
         const reader = new FileReader();
@@ -3786,11 +4218,27 @@ async function getFieldByName() {
             const pdfData = new Uint8Array(e.target.result);
 
             // Using pdf-lib to load the PDF document
-            s21 = await PDFLib.PDFDocument.load(pdfData);
+            s21current = await PDFLib.PDFDocument.load(pdfData);
+            //s21past = await PDFLib.PDFDocument.load(pdfData);
         };
 
         reader.readAsArrayBuffer(file);
-    }
+    } else {
+		const fileInput = document.getElementById('pdfFile');
+    	const file = fileInput.files[0];
+		
+		const reader = new FileReader();
+
+        reader.onload = async function (e) {
+            const pdfData = new Uint8Array(e.target.result);
+
+            // Using pdf-lib to load the PDF document
+            s21current = await PDFLib.PDFDocument.load(pdfData);
+            //s21past = await PDFLib.PDFDocument.load(pdfData);
+        };
+
+        reader.readAsArrayBuffer(file);
+	}
 }
 
 var myImage;
@@ -3805,14 +4253,16 @@ function convertToImage(content) {
 	  width: content.offsetWidth, // Set the width explicitly
 	  height: content.offsetHeight, // Set the height explicitly
 	  useCORS: true // Use CORS to load external images (optional, may be needed for some content)
-	}).then(function(canvas) {
+	}).then(async function(canvas) {
 	  // Convert the canvas to a data URL representing a PNG image
 	  const imageData = canvas.toDataURL('image/png');
 
 	  // Create an Image element with the generated image
-	  //const image = new Image();
-	  myImage = new Image();
-	  myImage.src = imageData;
+	  const image = new Image();
+	  //myImage = new Image();
+	  image.src = imageData;
+	  //myImage.src = imageData;
+	  await convertToPdf(image)
 
 	  //return image
 
@@ -3821,9 +4271,11 @@ function convertToImage(content) {
 	});
 }
 
-async function convertToPdf() {
+var downloadsArray = []
+
+async function convertToPdf(element) {
 	// Get the PNG image element from the page
-	const pngImageElement = myImage//document.getElementById('pngImage');
+	const pngImageElement = element//document.getElementById('pngImage');
 
 	// Create a PDF document
 	const pdfDoc = await PDFLib.PDFDocument.create();
@@ -3847,10 +4299,59 @@ async function convertToPdf() {
 	});
 
 	// Save the PDF
-	const pdfBytes = await pdfDoc.save();
-	download(pdfBytes, 'output.pdf', 'application/pdf');
-  }
+	//const pdfBytes = await pdfDoc.save();
+	//const pdfBytes = await response.arrayBuffer();
 
+    // Load the PDF with pdf-lib
+    //const pdfDoc = await PDFLib.PDFDocument.load(pdfBytes);
+
+	document.querySelector('#content').innerHTML = ''
+	document.querySelector('#content').style.display = 'none'
+
+	var newPdfViewer = document.createElement('iframe')
+	newPdfViewer.height = '600px'
+	newPdfViewer.width = '100%'
+	newPdfViewer.src = URL.createObjectURL(new Blob([await pdfDoc.save()], { type: 'application/pdf' }));
+	document.getElementById("pdfViewer").appendChild(newPdfViewer)
+
+	downloadsArray.push([newPdfViewer.src, `Letter of Introduction - ${allPublishersVue.selectedPublisher.name}`])
+	
+	document.querySelectorAll('#publisherRequest select').forEach(elem=>{
+		if (elem !== '') {
+			recordsToCreate.push([allPublishersVue.publishers.filter(ele=>ele.name == elem.value)[0], 'currentServiceYear'])
+			recordsToCreate.push([allPublishersVue.publishers.filter(ele=>ele.name == elem.value)[0], 'lastServiceYear'])
+		}
+	})
+
+	await shortWait()
+	await shortWait()
+	await shortWait()
+
+	if (recordsToCreate.length !== 0) {
+		fillPublisherRecord(recordsToCreate.shift())
+	}
+/*
+	await fillPublisherRecord(currentPublisher[0], 'currentServiceYear')
+
+	await shortWait()
+	await shortWait()
+	await shortWait()
+	await shortWait()
+	await shortWait()
+
+	await fillPublisherRecord(currentPublisher[0], 'lastServiceYear')*/
+
+    // Embed the PDF in an iframe
+    //const pdfViewer = document.getElementById("pdfViewer");
+    //document.getElementById("pdfViewer").src = URL.createObjectURL(new Blob([await pdfDoc.save()], { type: 'application/pdf' }));
+
+	//document.getElementById("pdfViewer").parentNode.appendChild(newPdfViewer)
+	//download(pdfBytes, 'output.pdf', 'application/pdf');
+}
+
+var recordsToCreate = []
+
+/*
   function download(data, filename, type) {
 	const file = new Blob([data], { type });
 	const a = document.createElement('a');
@@ -3863,7 +4364,17 @@ async function convertToPdf() {
 	  document.body.removeChild(a);
 	  window.URL.revokeObjectURL(url);
 	}, 0);
-  }
+  }*/
+
+async function downloadPreparedFiles(data) {
+	const a = document.createElement('a');
+	a.href = data[0];
+	a.download = data[1];
+	a.click();
+	await shortWait()
+	await shortWait()
+	await shortWait()
+}
 
 // Function to create a PDF
 async function createPDF(content) {
