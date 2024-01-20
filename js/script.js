@@ -626,10 +626,8 @@ function processNavigation() {
 					//allPublishersVue.transfer = true
 					allPublishersVue.display = false
 					await shortWait()
-					auto_grow(document.getElementById("publisherRequest").Subject);
 					auto_grow(document.getElementById("publisherRequest").Address);
 					auto_grow(document.getElementById("publisherRequest").LetterOfIntroduction);
-					auto_grow(document.getElementById("publisherRequest").Message);
 				} else if (button.innerHTML == "ALL" || button.innerHTML == "ACTIVE") {
 					fieldServiceGroupsVue.inactive()
 				} else {
@@ -800,10 +798,8 @@ function processNavigation2() {
 					//allPublishersVue.transfer = true
 					allPublishersVue.display = false
 					await shortWait()
-					auto_grow(document.getElementById("publisherRequest").Subject);
 					auto_grow(document.getElementById("publisherRequest").Address);
 					auto_grow(document.getElementById("publisherRequest").LetterOfIntroduction);
-					auto_grow(document.getElementById("publisherRequest").Message);
 				} else if (button.innerHTML == "ALL" || button.innerHTML == "ACTIVE") {
 					fieldServiceGroupsVue.inactive()
 				} else {
@@ -1204,49 +1200,51 @@ document.querySelector('#allPublishers').innerHTML = `<template>
 					<i style="color:#2b6549" onclick="addRecord(this)" class="fa fa-plus"></i>
 				</span>
 			</p>
-			<p><input :class="inputMode('w3-input w3-border')" type="text" placeholder="Congregation Email" required name="Email"></p>
+			<p><input :class="inputMode('w3-input w3-border')" v-model="email" type="text" placeholder="Congregation Email" required name="Email"></p>
 			<p><textarea :class="inputMode('w3-input w3-border')" v-model="congregationAddress" type="text" placeholder="Congregation Address" required name="Address"></textarea></p>
-			<p><textarea :class="inputMode('w3-input w3-border')" @keyup="auto_grow" placeholder="Subject" required name="Subject" :value="subject()"></textarea></p>
-			<p><textarea :class="inputMode('w3-input w3-border')" @keyup="auto_grow" placeholder="Letter of Intrduction" required name="LetterOfIntroduction" :value="letterOfIntroduction()"></textarea></p>
-			<p><textarea :class="inputMode('w3-input w3-border')" @keyup="auto_grow" placeholder="Message" required name="Message" :value="transferMessage()"></textarea></p>
+			<p><textarea :class="inputMode('w3-input w3-border')" v-model="letterOfIntroduction" placeholder="Letter of Intrduction" required name="LetterOfIntroduction"></textarea></p>
 			<p>
+				<button @click="previewRecord()" class="w3-button w3-black" type="submit">
+					<i class="fa fa-paper-plane"></i> PREVIEW
+				</button>
 				<button @click="transferRecord()" class="w3-button w3-black" type="submit">
 					<i class="fa fa-paper-plane"></i> TRANSFER RECORD
 				</button>
 			</p>
 		</form>
-		<div id="content" contenteditable="true">
-			<h1 align="center">NEW ENGLAND CONGREGATION</h1>
-			<h3 align="center">14 HANNESON STREET NEW ENGLAND VILLE CONGXXX@YYY.org</h3>
-			<p align="right">DATE</p>
+		<div v-if="preview == true" class="zoom-container" id="zoomContainer">
+			<div class="zoom-content" id="zoomContent">
+				<div id="content">
+					<h1 align="center">{{ congregation.congregationName.toUpperCase() }} CONGREGATION</h1>
+					<h3 align="center">{{ congregation.address.toUpperCase() }} {{ congregation.email.toUpperCase() }}</h3>
+					<p align="right">January 9, 2024</p>
 
-			<p>
-				The Body of Elders<br>
-				Hill Station Congregation<br>
-				Aboyomi Cole Avenue<br>
-				Freetown<br>
-				Western
-				{{ addressContent() }}
-			</p>
-			<p>Dear Brothers,</p>
-			<p align="center">INTRODUCTION OF BROTHER ...</p>
-			<p class="indented-paragraph">We would like to introduce to you Sister . . . She </p>
-			<p class="indented-paragraph"></p>
-			<p>Your brothers,</p>
-			<p>New England Congregation</p>
+					<p contenteditable="true" id="address" class="edit-content"></p>
+					<p contenteditable="true" id="email" class="edit-content"></p>
+					<br>
+					<p>Dear Brothers,</p>
+					<p align="center" class="edit-content letterTitle" contenteditable="true">INTRODUCTION OF {{ publisherNameValue().toUpperCase() }}</p>
+					
+					<br>
+					<p class="closing">Your brothers,</p>
+					<p class="closing">{{ congregation.congregationName }} Congregation</p>
 
-			<div class="container">
-				<p class="element" align="center">CBOE</p>
-				<p class="element" align="center">Secre</p>
-				<p class="element" align="center">SO</p>
+					<br>
+
+					<div class="container">
+						<p class="element" align="center">Ernest Macfoy</p>
+						<p class="element" align="center">Theophilus Teknikio</p>
+						<p class="element" align="center">Bock Kamanda</p>
+					</div>
+
+					<div class="container">
+						<p class="element" align="center">CBOE</p>
+						<p class="element" align="center">Secretary</p>
+						<p class="element" align="center">Service overseer</p>
+					</div>    
+
+				</div>
 			</div>
-
-			<div class="container">
-				<p class="element" align="center">CBOE</p>
-				<p class="element" align="center">Secre</p>
-				<p class="element" align="center">SO</p>
-			</div>    
-
 		</div>
     </div>
 </template>`
@@ -1261,8 +1259,11 @@ function processAllPublishers() {
             display: false,
             request: false,
             transfer: false,
+            preview: false,
             publisherName: '',
 			congregationAddress: '',
+			email: '',
+			letterOfIntroduction: '',
             categories: [],
             hopes: ['Anointed', 'Other Sheep', 'Unbaptized Publisher'],
             privileges: ['Elder', 'Ministerial Servant', 'Regular Pioneer', 'Special Pioneer', 'Field Missionary'],
@@ -1273,7 +1274,7 @@ function processAllPublishers() {
 				if (configurationVue.configuration) {
 					return configurationVue.configuration
 				} else {
-					return { "congregationName": null, "address": null }
+					return { "congregationName": null, "address": null, "email": null }
 				}
             },
 			searchTerms() {
@@ -1314,16 +1315,40 @@ function processAllPublishers() {
 			},
         },
 		watch: {
-			publisherName: 'auto_grow',
-			congregationAddress: 'auto_grow'
+			//publisherName: 'auto_grow',
+			congregationAddress: 'updateAddress',
+			//email: 'updateEmail',
+			letterOfIntroduction: 'updateLetterBody'
 		},
         methods: {
-			addressContent() {
-				if (document.getElementById("publisherRequest")) {
-					return document.getElementById("publisherRequest").Address.value.replace(/\n/g, '<br>')
-				} else {
-					return ''
-				}
+			async previewRecord() {
+				this.preview = true
+				await shortWait()
+				await shortWait()
+				await shortWait()
+				document.querySelector('#address').innerText = document.getElementById("publisherRequest").Address.value
+				document.querySelector('#email').innerText = document.getElementById("publisherRequest").Email.value
+				document.getElementById("publisherRequest").LetterOfIntroduction.value.split('\n').forEach(elem=>{
+					document.querySelector('.letterTitle').insertAdjacentHTML('afterend', `<p class="indented-paragraph edit-content letterBody" contenteditable="true">${elem}</p>`);
+				})
+			},
+			updateLetterBody(event) {
+				this.auto_grow()
+				//if (this.preview == false) { return }
+				//console.log(event)
+				//document.querySelector('#letterBody').innerText = event
+				
+			},
+			updateAddress(event) {
+				this.auto_grow()
+				//if (this.preview == false) { return }
+				//document.querySelector('#address').innerText = event
+				//this.auto_grow()
+			},
+			updateEmail(event) {
+				//this.auto_grow()
+				if (this.preview == false) { return }
+				document.querySelector('#email').innerText = event
 			},
 			async previewLetter(file) {
 				const reader = new FileReader();
@@ -1354,10 +1379,8 @@ function processAllPublishers() {
 				return mode.replace('w3-card','w3-border')
 			},
 			auto_grow() {
-				auto_grow(document.getElementById("publisherRequest").Subject);
 				auto_grow(document.getElementById("publisherRequest").Address);
 				auto_grow(document.getElementById("publisherRequest").LetterOfIntroduction);
-				auto_grow(document.getElementById("publisherRequest").Message);
 			},
 			async sendMessage() {
 				console.log('Message')
@@ -1384,6 +1407,14 @@ function processAllPublishers() {
 			},
 			async transferRecord() {
 				console.log('Message')
+				convertToImage(document.querySelector('#content'))
+				await shortWait()
+				await shortWait()
+				await shortWait()
+				await shortWait()
+				await shortWait()
+				await shortWait()
+				await convertToPdf()
 				return
 				const messageContent = document.getElementById("publisherRequest")
 				var recipient = messageContent.Email.value;
@@ -1441,8 +1472,8 @@ ${congregationVue.congregation.congregationName} Congregation
 
 `.replace('[Publisher]', publisher)
 			},
-			letterOfIntroduction() {
-				var publisher = ''
+			publisherNameValue() {
+				//var publisher
 				var found = allPublishersVue.publishers.filter(elem=>elem.name == this.publisherName)
 				var gender = ''
 				if (found.length !== 0) {
@@ -1451,21 +1482,10 @@ ${congregationVue.congregation.congregationName} Congregation
 					} else {
 						gender = 'Sister '
 					}
-					publisher = `${gender}${this.publisherName.split(' ').slice(1).concat([toTitleCase(this.publisherName.split(' ')[0])]).join(' ')}`
+					return `${gender}${this.publisherName.split(' ').slice(1).concat([toTitleCase(this.publisherName.split(' ')[0])]).join(' ')}`
 				} else {
-					publisher = this.publisherName
+					return this.publisherName
 				}
-				return `Dear Brothers,
-
-INTRODUCTION OF [Publisher]
-				
-	We are happy to introduce to you [Publisher2]
-
-Your brothers,
-${congregationVue.congregation.congregationName} Congregation
-
-
-`.replace('[Publisher]', publisher.toUpperCase()).replace('[Publisher2]', `${gender}${this.publisherName.split(' ').slice(1).concat([toTitleCase(this.publisherName.split(' ')[0])]).join(' ')}`)
 			},
 			subject() {
 				
@@ -3801,6 +3821,50 @@ function convertToImage(content) {
 	});
 }
 
+async function convertToPdf() {
+	// Get the PNG image element from the page
+	const pngImageElement = myImage//document.getElementById('pngImage');
+
+	// Create a PDF document
+	const pdfDoc = await PDFLib.PDFDocument.create();
+	const page = pdfDoc.addPage();
+	const { width, height } = page.getSize();
+
+	// Convert the PNG image to an ArrayBuffer
+	const pngImageBlob = await fetch(pngImageElement.src).then(response => response.blob());
+	const pngImageArrayBuffer = await new Response(pngImageBlob).arrayBuffer();
+
+	// Embed the PNG image in the PDF
+	const pngImage = await pdfDoc.embedPng(pngImageArrayBuffer);
+	const pngDims = pngImage.scale(0.375);
+
+	// Draw the image on the PDF page
+	page.drawImage(pngImage, {
+	  x: 0,
+	  y: 0,
+	  width: pngDims.width,
+	  height: pngDims.height,
+	});
+
+	// Save the PDF
+	const pdfBytes = await pdfDoc.save();
+	download(pdfBytes, 'output.pdf', 'application/pdf');
+  }
+
+  function download(data, filename, type) {
+	const file = new Blob([data], { type });
+	const a = document.createElement('a');
+	const url = URL.createObjectURL(file);
+	a.href = url;
+	a.download = filename;
+	document.body.appendChild(a);
+	a.click();
+	setTimeout(() => {
+	  document.body.removeChild(a);
+	  window.URL.revokeObjectURL(url);
+	}, 0);
+  }
+
 // Function to create a PDF
 async function createPDF(content) {
 	// Create a new PDF document
@@ -3856,3 +3920,111 @@ async function createPDF(content) {
 	//link.download = 'sample.pdf';
 	//link.click();
 }
+
+/*
+const zoomContainer = document.getElementById('zoomContainer');
+const zoomContent = document.getElementById('zoomContent');
+*/
+
+let scale = 1;
+let isDragging = false;
+let startX, startY, translateX = 0, translateY = 0;
+/*
+zoomContainer.addEventListener('mousedown', (event) => {
+  isDragging = true;
+  startX = event.clientX - zoomContainer.offsetLeft;
+  startY = event.clientY - zoomContainer.offsetTop;
+  zoomContainer.style.cursor = 'grabbing';
+});
+
+document.addEventListener('mousemove', (event) => {
+  if (!isDragging) return;
+
+  const x = event.clientX - startX;
+  const y = event.clientY - startY;
+
+  translateX = x;
+  translateY = y;
+
+  updateTransform();
+});
+
+document.addEventListener('mouseup', () => {
+  isDragging = false;
+  zoomContainer.style.cursor = 'grab';
+});
+
+zoomContainer.addEventListener('wheel', (event) => {
+  event.preventDefault();
+  const delta = event.deltaY || event.detail || event.wheelDelta;
+
+  // Adjust the scaling factor based on the direction of the scroll
+  scale += delta > 0 ? -0.1 : 0.1;
+
+  // Limit the scale to a reasonable range
+  scale = Math.min(Math.max(0.3, scale), 3);
+
+  updateTransform();
+});*/
+
+function updateTransform() {
+  zoomContent.style.transform = `scale(${scale}) translate(${translateX}px, ${translateY}px)`;
+}
+
+
+/*
+const zoomContainer = document.getElementById('zoomContainer');
+const zoomContent = document.getElementById('zoomContent');
+
+let scale = 1;
+let isDragging = false;
+let startX, startY, translateX = 0, translateY = 0;
+
+zoomContainer.addEventListener('mousedown', (event) => {
+	isDragging = true;
+	startX = event.clientX - zoomContainer.offsetLeft;
+	startY = event.clientY - zoomContainer.offsetTop;
+	zoomContainer.style.cursor = 'grabbing';
+});
+
+document.addEventListener('mousemove', (event) => {
+	if (!isDragging) return;
+
+	const x = event.clientX - startX;
+	const y = event.clientY - startY;
+
+	translateX = x;
+	translateY = y;
+
+	updateTransform(event.clientX, event.clientY);
+});
+
+document.addEventListener('mouseup', () => {
+	isDragging = false;
+	zoomContainer.style.cursor = 'grab';
+});
+
+zoomContainer.addEventListener('wheel', (event) => {
+	event.preventDefault();
+	const delta = event.deltaY || event.detail || event.wheelDelta;
+
+	// Adjust the scaling factor based on the direction of the scroll
+	scale += delta > 0 ? -0.1 : 0.1;
+
+	// Limit the scale to a reasonable range
+	scale = Math.min(Math.max(0.3, scale), 3);
+
+	updateTransform(event.clientX, event.clientY);
+});
+
+function updateTransform(mouseX, mouseY) {
+	const boundingRect = zoomContainer.getBoundingClientRect();
+	const offsetX = mouseX - boundingRect.left;
+	const offsetY = mouseY - boundingRect.top;
+
+	const originX = (offsetX - translateX) / scale;
+	const originY = (offsetY - translateY) / scale;
+
+	zoomContent.style.transform = `scale(${scale}) translate(${translateX}px, ${translateY}px)`;
+	zoomContent.style.transformOrigin = `${originX}px ${originY}px`;
+}*/
