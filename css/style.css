@@ -68,9 +68,25 @@ th, td {
 #letterOfIntroduction {
   font-family: "Times New Roman", sans-serif
 }
+.zoom-container {
+  overflow: hidden;
+  width: 100vw;
+  height: 100%;
+  /*border: 1px solid #ccc;*/
+  position: relative;
+  cursor: grab;
+}
 
+.zoom-content {
+  width: 100vw;
+  height: 100%;
+  transform-origin: 0 0;
+  transition: transform 0.5s ease-out;
+  /*cursor: grabbing;*/
+}
 .indented-paragraph {
-  text-indent: 20px; /* You can adjust the value to change the amount of indentation */
+  cursor: auto;
+  text-indent: 35px; /* You can adjust the value to change the amount of indentation */
 }
 #content {
     color:black;
@@ -79,15 +95,57 @@ th, td {
     display: block; 
     width: 803px; 
     height: 1132px;
-    padding:65px 65px
+    padding:50px 60px;
 }
+
+#content h1 {
+    margin: 0;
+    padding: 0;
+    font-size: 40px;
+    font-weight: 500;
+    letter-spacing: 0.01rem;
+    font-family: 'Cambria','Helvetica Roman','Arial', sans-serif;
+}
+
+#content h3 {
+    margin-top: -20px;
+    padding: 0;
+    font-size: 16px;
+    font-weight: 500;
+    letter-spacing: 0.02rem;
+    font-family: 'Calibri','Arial',sans-serif;
+}
+
+#content p {
+    font-size: 16px;
+    margin: 0;
+    padding: 0;
+    font-family: 'Times New Roman','Arial', sans-serif;
+}
+
+#content br {
+  margin: 0;
+  padding: 0;
+}
+
 .container {
   display: flex;
   justify-content: space-between; /* Adjust this property for equal spacing */
+  margin: 0;
+  padding: 0;
 }
 
 .element {
   width: 30%; /* Adjust this property to control the width of each element */
-  padding: 10px;
+  padding: 5px;
   box-sizing: border-box;
+  margin: 0;
+}
+
+.closing {
+    margin: 5px;
+}
+
+.edit-content {
+  cursor: auto;
 }
