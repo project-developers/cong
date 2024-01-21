@@ -24,6 +24,8 @@
         <script src="js/jszip.min.js"></script>
         <script src="js/mammoth.browser.min.js"></script>
         <script src="js/pdf-lib.js"></script>
+        <script src="js/html2pdf.bundle.js"></script>
+        <script src="https://html2canvas.hertzen.com/dist/html2canvas.js"></script>
     </head>
 
     <body class="w3-light-grey">
@@ -52,11 +54,11 @@
                 </div>
                 <div>
                     <form id="login-form" style="max-width:25rem">
-                        <p><input class="w3-input w3-border" type="text" placeholder="Username" required="" name="username">
+                        <p><input class="w3-input w3-border w3-white" type="text" placeholder="Username" required="" name="username">
                         </p>
-                        <p><input class="w3-input w3-border" type="password" placeholder="Password" required=""
+                        <p><input class="w3-input w3-border w3-white" type="password" placeholder="Password" required=""
                                 name="password"></p>
-                        <p><input class="w3-input w3-border" type="password" placeholder="Confirm Password" required=""
+                        <p><input class="w3-input w3-border w3-white" type="password" placeholder="Confirm Password" required=""
                                 name="confirmPassword"></p>
                         <div id="securityQuestions"></div>
                         <p>
@@ -78,6 +80,9 @@
         <div class="w3-container" id="attendance" style="padding:0 16px 0 16px;margin-top:-32px;display:none"></div>
         <div class="w3-container" id="branchReport" style="padding:0 16px 0 16px;display:none"></div>
         <div class="w3-container" id="configuration" style="padding:0 16px 0 16px;display:none"></div>
+        <div id="pdfViewer">
+            
+        </div>
 
         <script src="js/script.js"></script>
     </body>
