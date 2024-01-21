@@ -572,6 +572,9 @@ function processNavigation() {
 						}
 						i++
 					})
+					document.querySelectorAll('iframe').forEach(elem=>{
+						elem.remove()
+					})
 				}
 
 				configurationVue.display = false
@@ -656,9 +659,6 @@ function processNavigation() {
 					//auto_grow(document.getElementById("publisherRequest").Subject);
 					auto_grow(document.getElementById("publisherRequest").Message);
 				} else if (button.innerHTML == "TRANSFER") {
-					document.querySelectorAll('iframe').forEach(elem=>{
-						elem.remove()
-					})
 					allPublishersVue.preview = false
 					allPublishersVue.display = false
 					await shortWait()
@@ -695,6 +695,9 @@ function processNavigation() {
 							elem.parentNode.remove()
 						}
 						i++
+					})
+					document.querySelectorAll('iframe').forEach(elem=>{
+						elem.remove()
 					})
 				}
 
@@ -793,6 +796,9 @@ function processNavigation2() {
 						}
 						i++
 					})
+					document.querySelectorAll('iframe').forEach(elem=>{
+						elem.remove()
+					})
 				}
 
 				configurationVue.display = false
@@ -877,9 +883,6 @@ function processNavigation2() {
 					//auto_grow(document.getElementById("publisherRequest").Subject);
 					auto_grow(document.getElementById("publisherRequest").Message);
 				} else if (button.innerHTML == "TRANSFER") {
-					document.querySelectorAll('iframe').forEach(elem=>{
-						elem.remove()
-					})
 					allPublishersVue.preview = false
 					allPublishersVue.display = false
 					await shortWait()
@@ -919,6 +922,9 @@ function processNavigation2() {
 							elem.parentNode.remove()
 						}
 						i++
+					})
+					document.querySelectorAll('iframe').forEach(elem=>{
+						elem.remove()
 					})
 				}
 
@@ -1305,7 +1311,7 @@ document.querySelector('#allPublishers').innerHTML = `<template>
 			</p>
 			<p><input :class="inputMode('w3-input w3-border')" v-model="email" type="text" placeholder="Congregation Email" required name="Email"></p>
 			<p><textarea :class="inputMode('w3-input w3-border')" v-model="congregationAddress" type="text" placeholder="Congregation Address" required name="Address"></textarea></p>
-			<p><textarea :class="inputMode('w3-input w3-border')" v-model="letterOfIntroduction" placeholder="Letter of Intrduction" required name="LetterOfIntroduction"></textarea></p>
+			<p><textarea :class="inputMode('w3-input w3-border')" v-model="letterOfIntroduction" placeholder="Letter of Introduction body" required name="LetterOfIntroduction"></textarea></p>
 			<p>
 				<button @click="previewRecord()" class="w3-button w3-black" type="submit">
 					PREVIEW
@@ -1430,6 +1436,7 @@ function processAllPublishers() {
 				}
 			},*/
 			async previewRecord() {
+				if (this.publisherName == '') { return }
 				downloadsArray = []
 				this.preview = true
 				await shortWait()
@@ -1439,7 +1446,7 @@ function processAllPublishers() {
 				document.querySelector('#address').innerText = document.getElementById("publisherRequest").Address.value
 				document.querySelector('#address').innerText += '\n'
 				document.querySelector('#address').innerText += document.getElementById("publisherRequest").Email.value
-				document.getElementById("publisherRequest").LetterOfIntroduction.value.replaceAll('\n\n','\n').split('\n').forEach(elem=>{
+				document.getElementById("publisherRequest").LetterOfIntroduction.value.replaceAll('\n\n','\n').split('\n').reverse().forEach(elem=>{
 					document.querySelector('.letterTitle').insertAdjacentHTML('afterend', `<p class="indented-paragraph edit-content letterBody" contenteditable="true">${elem}</p>`);
 				})
 				document.querySelector('.closing').innerText += '\n'
@@ -1451,20 +1458,30 @@ function processAllPublishers() {
 				convertToImage(document.querySelector('#content'))
 			},
 			updateLetterBody(event) {
-				this.auto_grow()
-				//if (this.preview == false) { return }
-				//console.log(event)
-				//document.querySelector('#letterBody').innerText = event
-				
+				this.auto_grow()				
 			},
 			updateAddress(event) {
 				this.auto_grow()
-				//if (this.preview == false) { return }
-				//document.querySelector('#address').innerText = event
-				//this.auto_grow()
 			},
-			cancelTransfer() {
+			async cancelTransfer() {
 				console.log('Cancel')
+				document.querySelectorAll('iframe').forEach(elem=>{
+					elem.parentNode.remove()
+				})
+				await shortWait()
+				await shortWait()
+				this.transfer = false
+				this.publisherName = ''
+				this.congregationAddress = ''
+				this.email = ''
+				this.letterOfIntroduction = ''
+				await shortWait()
+				await shortWait()
+				this.transfer = true
+				await shortWait()
+				await shortWait()
+				document.querySelector('#content').innerHTML = ''
+				document.querySelector('#content').style.display = 'none'
 			},
 			async previewLetter(file) {
 				const reader = new FileReader();
@@ -1522,10 +1539,11 @@ function processAllPublishers() {
 				window.location.href = mailtoLink;
 			},
 			async transferRecord() {
-				console.log('Message')
-				downloadsArray.forEach(async (elem)=>{
+				if (this.publisherName == '') { return }
+				//console.log('Message')
+				/*downloadsArray.forEach(async (elem)=>{
 					await downloadPreparedFiles(elem)
-				})
+				})*/
 				
 				var mailtoLink = 'mailto:' + encodeURIComponent(document.getElementById("publisherRequest").Email.value) +
 								'?cc=' + encodeURIComponent(congregationVue.congregation.email) +
@@ -4149,11 +4167,19 @@ async function fillPublisherRecord(data) {
     //name.setText(publisher.name)
     // Save the modified PDF
     //const modifiedPdfBytes = await s21.save();
+	var newPdfholder = document.createElement('div')
+	var newPdfbutton = document.createElement('button')
 	var newPdfViewer = document.createElement('iframe')
 	newPdfViewer.height = '600px'
 	newPdfViewer.width = '100%'
 	newPdfViewer.src = URL.createObjectURL(new Blob([await s21current.save()], { type: 'application/pdf' }));
-	document.getElementById("pdfViewer").appendChild(newPdfViewer)
+	newPdfbutton.innerHTML = `<a href="${newPdfViewer.src}" style="text-decoration:none" download="${toTitleCase(period.replace('ServiceYear', ''))} Record Card - ${publisher.name}"><i class="fas fa-download"></i></a>`
+	newPdfbutton.classList.value = "w3-button w3-black download-button"
+	newPdfholder.style.margin = "15px"
+	newPdfbutton.style.margin = "10px 0"
+	newPdfholder.appendChild(newPdfbutton)
+	newPdfholder.appendChild(newPdfViewer)
+	document.getElementById("pdfViewer").appendChild(newPdfholder)
 
 	downloadsArray.push([newPdfViewer.src, `${toTitleCase(period.replace('ServiceYear', ''))} Record Card - ${publisher.name}`])
 
@@ -4308,11 +4334,25 @@ async function convertToPdf(element) {
 	document.querySelector('#content').innerHTML = ''
 	document.querySelector('#content').style.display = 'none'
 
+	var newPdfholder = document.createElement('div')
+	var newPdfbutton = document.createElement('button')
+	var downloadAllbutton = document.createElement('button')
 	var newPdfViewer = document.createElement('iframe')
 	newPdfViewer.height = '600px'
 	newPdfViewer.width = '100%'
 	newPdfViewer.src = URL.createObjectURL(new Blob([await pdfDoc.save()], { type: 'application/pdf' }));
-	document.getElementById("pdfViewer").appendChild(newPdfViewer)
+	newPdfbutton.innerHTML = `<a href="${newPdfViewer.src}" style="text-decoration:none" download="Letter of Introduction - ${allPublishersVue.selectedPublisher.name}"><i class="fas fa-download"></i></a>`
+	downloadAllbutton.innerHTML = `<span onclick="downloadAll()">Download All</span>`
+	newPdfbutton.classList.value = "w3-button w3-black download-button"
+	newPdfholder.style.margin = "15px"
+	newPdfbutton.style.margin = "10px 0"
+	downloadAllbutton.classList.value = "w3-button w3-black"
+	downloadAllbutton.style.margin = "10px 5px"
+	
+	newPdfholder.appendChild(newPdfbutton)
+	newPdfholder.appendChild(downloadAllbutton)
+	newPdfholder.appendChild(newPdfViewer)
+	document.getElementById("pdfViewer").appendChild(newPdfholder)
 
 	downloadsArray.push([newPdfViewer.src, `Letter of Introduction - ${allPublishersVue.selectedPublisher.name}`])
 	
@@ -4330,41 +4370,20 @@ async function convertToPdf(element) {
 	if (recordsToCreate.length !== 0) {
 		fillPublisherRecord(recordsToCreate.shift())
 	}
-/*
-	await fillPublisherRecord(currentPublisher[0], 'currentServiceYear')
+}
 
-	await shortWait()
-	await shortWait()
-	await shortWait()
-	await shortWait()
-	await shortWait()
-
-	await fillPublisherRecord(currentPublisher[0], 'lastServiceYear')*/
-
-    // Embed the PDF in an iframe
-    //const pdfViewer = document.getElementById("pdfViewer");
-    //document.getElementById("pdfViewer").src = URL.createObjectURL(new Blob([await pdfDoc.save()], { type: 'application/pdf' }));
-
-	//document.getElementById("pdfViewer").parentNode.appendChild(newPdfViewer)
-	//download(pdfBytes, 'output.pdf', 'application/pdf');
+async function downloadAll() {
+	document.querySelectorAll('.download-button a').forEach(async (elem)=>{
+		await shortWait()
+		await shortWait()
+		elem.click()
+		await shortWait()
+		await shortWait()
+		await shortWait()
+	})
 }
 
 var recordsToCreate = []
-
-/*
-  function download(data, filename, type) {
-	const file = new Blob([data], { type });
-	const a = document.createElement('a');
-	const url = URL.createObjectURL(file);
-	a.href = url;
-	a.download = filename;
-	document.body.appendChild(a);
-	a.click();
-	setTimeout(() => {
-	  document.body.removeChild(a);
-	  window.URL.revokeObjectURL(url);
-	}, 0);
-  }*/
 
 async function downloadPreparedFiles(data) {
 	const a = document.createElement('a');
@@ -4431,111 +4450,3 @@ async function createPDF(content) {
 	//link.download = 'sample.pdf';
 	//link.click();
 }
-
-/*
-const zoomContainer = document.getElementById('zoomContainer');
-const zoomContent = document.getElementById('zoomContent');
-*/
-
-let scale = 1;
-let isDragging = false;
-let startX, startY, translateX = 0, translateY = 0;
-/*
-zoomContainer.addEventListener('mousedown', (event) => {
-  isDragging = true;
-  startX = event.clientX - zoomContainer.offsetLeft;
-  startY = event.clientY - zoomContainer.offsetTop;
-  zoomContainer.style.cursor = 'grabbing';
-});
-
-document.addEventListener('mousemove', (event) => {
-  if (!isDragging) return;
-
-  const x = event.clientX - startX;
-  const y = event.clientY - startY;
-
-  translateX = x;
-  translateY = y;
-
-  updateTransform();
-});
-
-document.addEventListener('mouseup', () => {
-  isDragging = false;
-  zoomContainer.style.cursor = 'grab';
-});
-
-zoomContainer.addEventListener('wheel', (event) => {
-  event.preventDefault();
-  const delta = event.deltaY || event.detail || event.wheelDelta;
-
-  // Adjust the scaling factor based on the direction of the scroll
-  scale += delta > 0 ? -0.1 : 0.1;
-
-  // Limit the scale to a reasonable range
-  scale = Math.min(Math.max(0.3, scale), 3);
-
-  updateTransform();
-});*/
-
-function updateTransform() {
-  zoomContent.style.transform = `scale(${scale}) translate(${translateX}px, ${translateY}px)`;
-}
-
-
-/*
-const zoomContainer = document.getElementById('zoomContainer');
-const zoomContent = document.getElementById('zoomContent');
-
-let scale = 1;
-let isDragging = false;
-let startX, startY, translateX = 0, translateY = 0;
-
-zoomContainer.addEventListener('mousedown', (event) => {
-	isDragging = true;
-	startX = event.clientX - zoomContainer.offsetLeft;
-	startY = event.clientY - zoomContainer.offsetTop;
-	zoomContainer.style.cursor = 'grabbing';
-});
-
-document.addEventListener('mousemove', (event) => {
-	if (!isDragging) return;
-
-	const x = event.clientX - startX;
-	const y = event.clientY - startY;
-
-	translateX = x;
-	translateY = y;
-
-	updateTransform(event.clientX, event.clientY);
-});
-
-document.addEventListener('mouseup', () => {
-	isDragging = false;
-	zoomContainer.style.cursor = 'grab';
-});
-
-zoomContainer.addEventListener('wheel', (event) => {
-	event.preventDefault();
-	const delta = event.deltaY || event.detail || event.wheelDelta;
-
-	// Adjust the scaling factor based on the direction of the scroll
-	scale += delta > 0 ? -0.1 : 0.1;
-
-	// Limit the scale to a reasonable range
-	scale = Math.min(Math.max(0.3, scale), 3);
-
-	updateTransform(event.clientX, event.clientY);
-});
-
-function updateTransform(mouseX, mouseY) {
-	const boundingRect = zoomContainer.getBoundingClientRect();
-	const offsetX = mouseX - boundingRect.left;
-	const offsetY = mouseY - boundingRect.top;
-
-	const originX = (offsetX - translateX) / scale;
-	const originY = (offsetY - translateY) / scale;
-
-	zoomContent.style.transform = `scale(${scale}) translate(${translateX}px, ${translateY}px)`;
-	zoomContent.style.transformOrigin = `${originX}px ${originY}px`;
-}*/
