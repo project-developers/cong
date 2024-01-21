@@ -1410,11 +1410,6 @@ function processAllPublishers() {
             },
 			regularPioneers() {
 				var categories = [{"name": "Pioneers","value": this.publishers.filter(elem=>elem.privilege.includes("Regular Pioneer"))}]
-				/*this.allGroups.forEach(elem=>{
-					const groupPublishers = this.publishers.filter(elem=>elem.fieldServiceGroup == elem)
-					console.log(groupPublishers,elem,this.publishers)
-					categories.push({"name": elem,"value": groupPublishers})
-				})*/
 				return categories
 			},
 			activePublishers() {
