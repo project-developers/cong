@@ -573,7 +573,7 @@ function processNavigation() {
 						i++
 					})
 					document.querySelectorAll('iframe').forEach(elem=>{
-						elem.remove()
+						elem.parentNode.remove()
 					})
 				}
 
@@ -697,7 +697,7 @@ function processNavigation() {
 						i++
 					})
 					document.querySelectorAll('iframe').forEach(elem=>{
-						elem.remove()
+						elem.parentNode.remove()
 					})
 				}
 
@@ -797,7 +797,7 @@ function processNavigation2() {
 						i++
 					})
 					document.querySelectorAll('iframe').forEach(elem=>{
-						elem.remove()
+						elem.parentNode.remove()
 					})
 				}
 
@@ -924,7 +924,7 @@ function processNavigation2() {
 						i++
 					})
 					document.querySelectorAll('iframe').forEach(elem=>{
-						elem.remove()
+						elem.parentNode.remove()
 					})
 				}
 
@@ -1305,8 +1305,8 @@ document.querySelector('#allPublishers').innerHTML = `<template>
 					<option value="">Select Publisher</option>
 					<option v-for="publisher in publishers" :key="publisher.name" :value="publisher.name">{{ publisher.name }}</option>
 				</select>
-				<span style="height:40px;" title="Add Publisher" class="w3-button w3-black">
-					<i style="color:#2b6549" onclick="addRecord(this)" class="fa fa-plus"></i>
+				<span style="height:40px;padding:0" title="Add Publisher" class="w3-button w3-black">
+					<i style="color:#2b6549;padding:13px" onclick="addRecord(this)" class="fa fa-plus"></i>
 				</span>
 			</p>
 			<p><input :class="inputMode('w3-input w3-border')" v-model="email" type="text" placeholder="Congregation Email" required name="Email"></p>
@@ -1604,7 +1604,13 @@ ${congregationVue.congregation.congregationName} Congregation
 						gender = 'Sister '
 					}
 					this.selectedPublisher = found[0]
-					return `${gender}${this.publisherName.split(' ').slice(1).concat([toTitleCase(this.publisherName.split(' ')[0])]).join(' ')}`
+					var surfix = '';
+					if (this.publisherName.includes(' Jnr')) {
+						surfix = ' Jnr'
+					} else if (this.publisherName.includes(' Snr')) {
+						surfix = ' Snr'
+					}
+					return `${gender}${this.publisherName.replace(' Jnr', '').replace(' Snr', '').split(' ').slice(1).concat([toTitleCase(this.publisherName.replace(' Jnr', '').replace(' Snr', '').split(' ')[0])]).join(' ')}${surfix}`
 				} else {
 					return this.publisherName
 				}
@@ -1623,12 +1629,18 @@ ${congregationVue.congregation.congregationName} Congregation
 						if (found.length !== 0) {
 							var gender = ''
 							if (found[0].gender == 'Male') {
-								gender = 'Brother'
+								gender = 'Brother '
 							} else {
-								gender = 'Sister'
+								gender = 'Sister '
 							}
 							this.selectedPublisher = found[0]
-							publisher = `${gender} ${this.publisherName.split(' ').slice(1).concat([toTitleCase(this.publisherName.split(' ')[0])]).join(' ')}`
+							var surfix = '';
+							if (this.publisherName.includes(' Jnr')) {
+								surfix = ' Jnr'
+							} else if (this.publisherName.includes(' Snr')) {
+								surfix = ' Snr'
+							}
+							publisher = `${gender}${this.publisherName.replace(' Jnr', '').replace(' Snr', '').split(' ').slice(1).concat([toTitleCase(this.publisherName.replace(' Jnr', '').replace(' Snr', '').split(' ')[0])]).join(' ')}${surfix}`
 						} else {
 							publisher = this.publisherName
 						}
@@ -1744,7 +1756,7 @@ ${congregationVue.congregation.congregationName} Congregation
             },
 			formatDateToFull() {
 				const options = { year: 'numeric', month: 'long', day: 'numeric' };
-				const formattedDate = new Date().toLocaleDateString(undefined, options);
+				const formattedDate = new Date().toLocaleDateString('en-US', options);
 				return formattedDate
             },
             removePublisher(count, name, item) {
@@ -1780,8 +1792,8 @@ function addRecord(event) {
 	var clonedElement = element.cloneNode(true);
 
 	if (!element.querySelector('.fa-minus')) {
-		clonedElement.insertAdjacentHTML('beforeend', `<span style="margin-left:2px;height:40px;" title="Remove Publisher" class="w3-button w3-black">
-	<i style="color:#b02c07" onclick="removeRecord(this)" class="fa fa-minus"></i>
+		clonedElement.insertAdjacentHTML('beforeend', `<span style="margin-left:2px;height:40px;;padding:0" title="Remove Publisher" class="w3-button w3-black">
+	<i style="color:#b02c07;padding:13px" onclick="removeRecord(this)" class="fa fa-minus"></i>
 </span>`);
 	}
 
