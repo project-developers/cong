@@ -86,11 +86,6 @@ th, td {
   /*cursor: grabbing;*/
 }
 
-.indented-paragraph {
-  cursor: auto;
-  text-indent: 35px; /* You can adjust the value to change the amount of indentation */
-}
-
 #content {
     color:black;
     background:white;
@@ -123,8 +118,14 @@ th, td {
 
 #content p {
     font-size: 18px;
-    line-height: 1.5;
+    line-height: 1.3;
     font-family: 'Times New Roman','Arial', sans-serif;
+}
+
+.indented-paragraph {
+  cursor: auto;
+  margin-top: 5px;
+  text-indent: 35px; /* You can adjust the value to change the amount of indentation */
 }
 
 #content br {
