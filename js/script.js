@@ -220,8 +220,22 @@ var currentUser = { "name": "currentUser", "username": null, "password": null, "
 var allUsers;
 
 var navigationVue, navigationVue2, allPublishersVue, congregationVue, configurationVue, branchReportVue, contactInformationVue, fieldServiceGroupsVue, monthlyReportVue, missingReportVue;
-var allButtons = [{"title": "CONG", "function": "congregationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "REPORTS", "function": "missingReportVue"}, {"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "REPORTS", "function": "missingReportVue"}, {"title": "BRANCH", "function": "branchReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "SETTINGS", "function": "configurationVue"}]
-
+var allButtons = [
+	{"title": "CONG", "function": "congregationVue"}, 
+	{"title": "RECORDS", "function": "allPublishersVue"}, 
+	{"title": "REQUEST", "function": "allPublishersVue"}, 
+	{"title": "TRANSFER", "function": "allPublishersVue"}, 
+	{"title": "GROUPS", "function": "fieldServiceGroupsVue"}, 
+	{"title": "ACTIVE", "function": "fieldServiceGroupsVue"}, 
+	{"title": "ALL", "function": "fieldServiceGroupsVue"}, 
+	{"title": "CONTACTS", "function": "contactInformationVue"}, 
+	{"title": "REPORTS", "function": "missingReportVue"}, 
+	{"title": "CURRENT", "function": "monthlyReportVue"}, 
+	{"title": "REPORTS", "function": "missingReportVue"}, 
+	{"title": "BRANCH", "function": "branchReportVue"}, 
+	{"title": "ATTENDANCE", "function": "attendanceVue"}, 
+	{"title": "SETTINGS", "function": "configurationVue"}
+]
 //var CongregationData = JSON.parse(localStorage.getItem('CongregationData'));
 
 function createWorker(script, fn) {
@@ -474,6 +488,7 @@ document.querySelector('#navigation').innerHTML = `<template>
 	<!-- Right-sided navbar links -->
 	<div class="w3-right w3-hide-small">
 		<a v-for="(button, count) in buttons.slice(1)" class="w3-bar-item w3-button" @click="openButton($event.target)">{{ button.title }}</a>
+		<a v-if="logged() == true && displayDropdown == true && showDownloadButton()" class="w3-bar-item w3-button" @click="downloadContent()"><i title="Download" class="fa fa-download"></i></a>
 		<a v-if="logged() == true" class="w3-bar-item w3-button" @click="openSettings()"><i class="fa fa-cog"></i></a>
 		<a v-if="logged() == true" class="w3-bar-item w3-button" @click="signOut()"><i class="fa fa-sign-out-alt"></i></a>
 		<div v-if="logged() == true && displayDropdown == true">
@@ -527,6 +542,98 @@ function processNavigation() {
             
         },
         methods: {
+			showDownloadButton() {
+				return allPublishersVue.display == true ||	fieldServiceGroupsVue.display == true || contactInformationVue.display == true
+			},
+			async downloadContent() {
+				console.log(currentView)
+				console.log(allButtons.filter(elem=>elem.title == currentView))
+				var allGroupsBackup = [].concat(allPublishersVue.allGroups)
+				var restoreAllGroups = [].concat(allPublishersVue.allGroups)
+				var backupMode = currentMode
+				if (backupMode !== 'Light') {
+					configurationVue.displayMode({"value": 'Light'})
+					await shortWait()
+					await shortWait()
+					await shortWait()
+					await shortWait()
+				}
+
+				if (allButtons.filter(elem=>elem.title == currentView)[0].function == "fieldServiceGroupsVue") {
+				
+					var i = 1
+					while (allGroupsBackup.length !== 0) {
+						this.allGroups = allGroupsBackup.splice(0, 3)
+						await shortWait()
+						await shortWait()
+						console.log(allGroupsBackup)
+						var fileName
+						if (fieldServiceGroupsVue.active !== true) {
+							fileName = 'Field Service Groups - ' + i
+						} else {
+							fileName = 'Field Service Groups - ALL - ' + i
+						}
+						generatePDF(document.getElementById('fieldServiceGroups'), fileName)
+						i++
+						await shortWait()
+						await shortWait()
+					}
+					
+					this.allGroups = restoreAllGroups
+					await shortWait()
+					await shortWait()
+				
+				} else if (allButtons.filter(elem=>elem.title == currentView)[0].function == "allPublishersVue") {
+				
+					await shortWait()
+					await shortWait()
+					console.log(allGroupsBackup)
+					var fileName = 'All Publishers'
+					generatePDF(document.getElementById('allPublishers'), fileName)
+					await shortWait()
+					await shortWait()
+					
+					await shortWait()
+					await shortWait()
+				
+				} else if (allButtons.filter(elem=>elem.title == currentView)[0].function == "contactInformationVue") {
+				
+					await shortWait()
+					await shortWait()
+					console.log(allGroupsBackup)
+					var fileName = 'Contact Information'
+					generatePDF(document.getElementById('contactInformation'), fileName)
+					await shortWait()
+					await shortWait()
+
+					await shortWait()
+					await shortWait()
+				
+				}
+
+				if (backupMode !== 'Light') {
+					configurationVue.displayMode({"value": backupMode})
+				}
+				/*
+				console.log(currentView)
+				console.log(allButtons.filter(elem=>elem.title == currentView))
+				fieldServiceGroupsVue.preview = true
+				await shortWait()
+				document.querySelector('#content').style.display = ''
+				document.querySelector('#content').style.height = '803px'
+				document.querySelector('#content').style.width = '1132px'
+				document.querySelector('#content').style.padding = '60px 50px'
+				await shortWait()
+				await shortWait()
+				document.querySelectorAll('.element').forEach(elem=>{
+					elem.style.width = '23%'
+				})
+				document.querySelector('.zoom-content').style.height = '100%'
+				document.querySelector('.zoom-container').style.height = '100%'
+				document.getElementById('zoomContent').style.transform = `scale(${0.70}) translate(${0}px, ${0}px)`;
+				*/
+				//document.querySelector('#pdfPrep').parentNode.parentNode.style.display = ''
+			},
 			inputMode() {
 				return 'w3-bar-item w3-search ' + mode.replace('w3-card ','')
 			},
@@ -558,7 +665,8 @@ function processNavigation() {
 					
 					return 
 				}
-                
+
+				currentView = button.innerHTML                
 				
 				if (allPublishersVue.transfer == true) {
 					selectedTransferPublishers.length = 0
@@ -656,8 +764,6 @@ function processNavigation() {
 					//allPublishersVue.request = true
 					allPublishersVue.display = false
 					await shortWait()
-					//auto_grow(document.getElementById("publisherRequest").Subject);
-					auto_grow(document.getElementById("publisherRequest").Message);
 				} else if (button.innerHTML == "TRANSFER") {
 					allPublishersVue.preview = false
 					allPublishersVue.display = false
@@ -736,6 +842,8 @@ function processNavigation() {
     })
 }
 
+var currentView;
+
 processNavigation()
 
 var selectedTransferPublishers = []
@@ -757,6 +865,7 @@ document.querySelector('#mySidebar').innerHTML = `<template>
 	<a href="javascript:void(0)" onclick="w3_close()" class="w3-bar-item w3-button w3-large w3-padding-16">Close ×</a>
     <a v-for="(button) in buttons()" v-if="button.title !== 'ACTIVE' && button.title !== 'ALL' && button.title !== 'REQUEST' && button.title !== 'TRANSFER'" @click="openButton($event.target)" class="w3-bar-item w3-button">{{ button.title }}</a>
     <a v-else @click="openButton($event.target)" :class="mode()">{{ button.title }}</a>
+	<a v-if="logged() == true && displayDropdown == true" class="w3-bar-item w3-button" @click="downloadContent()"><i title="Download" class="fa fa-download"></i></a>
 	<a v-if="logged() == true" class="w3-bar-item w3-button" @click="openSettings()"><i class="fa fa-cog"></i> Settings</a>
 	<a v-if="logged() == true" class="w3-bar-item w3-button" @click="signOut()"><i class="fa fa-sign-out-alt"></i> Sign Out</a>
 </template>`
@@ -777,12 +886,15 @@ function processNavigation2() {
             },
         },
         methods: {
+			downloadContent() {
+				console.log(currentView)
+			},
 			mode() {
 				return 'w3-bar-item w3-button ' + mode.replace('w3-card ','')
 			},
 			async openButton(button) {
                 //console.log(button)
-				
+				currentView = button.innerHTML
 				w3_close()
 				if (allPublishersVue.transfer == true) {
 					selectedTransferPublishers.length = 0
@@ -880,8 +992,6 @@ function processNavigation2() {
 					//allPublishersVue.request = true
 					allPublishersVue.display = false
 					await shortWait()
-					//auto_grow(document.getElementById("publisherRequest").Subject);
-					auto_grow(document.getElementById("publisherRequest").Message);
 				} else if (button.innerHTML == "TRANSFER") {
 					allPublishersVue.preview = false
 					allPublishersVue.display = false
@@ -1288,8 +1398,8 @@ document.querySelector('#allPublishers').innerHTML = `<template>
 		<form action="javascript:void(0)" id="publisherRequest">
 			<p><input v-model="publisherName" :class="inputMode('w3-input w3-border')" type="text" placeholder="Publisher Name" required name="Name"></p>
 			<p><input :class="inputMode('w3-input w3-border')" type="text" placeholder="Congregation Email" required name="Email"></p>
-			<p><textarea :class="inputMode('w3-input w3-border')" @keyup="auto_grow" placeholder="Subject" required name="Subject" :value="subject()"></textarea></p>
-			<p><textarea :class="inputMode('w3-input w3-border')" @keyup="auto_grow" placeholder="Message" required name="Message" :value="message()"></textarea></p>
+			<!--p><textarea :class="inputMode('w3-input w3-border')" @keyup="auto_grow" placeholder="Subject" required name="Subject" :value="subject()"></textarea></p>
+			<p><textarea :class="inputMode('w3-input w3-border')" @keyup="auto_grow" placeholder="Message" required name="Message" :value="message()"></textarea></p-->
 			<p>
 				<button @click="sendMessage()" class="w3-button w3-black" type="submit">
 					<i class="fa fa-paper-plane"></i> SEND MESSAGE
@@ -1339,9 +1449,9 @@ document.querySelector('#allPublishers').innerHTML = `<template>
 					<p class="closing">Your brothers,</p>
 					
 					<div class="container" style="margin-top:30px">
-						<p class="element" align="center">Ernest Macfoy</p>
-						<p class="element" align="center">Theophilus Teknikio</p>
-						<p class="element" align="center">Bock Kamanda</p>
+						<p class="element" align="center">{{ congregation.cboe }}</p>
+						<p class="element" align="center">{{ congregation.sec }}</p>
+						<p class="element" align="center">{{ congregation.so }}</p>
 					</div>
 
 					<div class="container" style="margin-top:0">
@@ -1512,14 +1622,15 @@ function processAllPublishers() {
 			},
 			async sendMessage() {
 				console.log('Message')
+				if (this.publisherName == '') { return }
 				const messageContent = document.getElementById("publisherRequest")
 				var recipient = messageContent.Email.value;
-				var subject = messageContent.Subject.value;
-				var body = messageContent.Message.value;
+				//var subject = messageContent.Subject.value;
+				//var body = messageContent.Message.value;
 				var mailtoLink = 'mailto:' + encodeURIComponent(recipient) +
 								'?cc=' + encodeURIComponent(congregationVue.congregation.email) +
-								'&subject=' + encodeURIComponent(subject) +
-								'&body=' + encodeURIComponent(body);
+								'&subject=' + encodeURIComponent(this.subject()) +
+								'&body=' + encodeURIComponent(this.message());
 
 				await shortWait()
 
@@ -1529,7 +1640,7 @@ function processAllPublishers() {
 
 				await shortWait()
 
-				this.auto_grow()
+				//this.auto_grow()
 
 				window.location.href = mailtoLink;
 			},
@@ -1792,9 +1903,19 @@ function addRecord(event) {
 	var clonedElement = element.cloneNode(true);
 
 	if (!element.querySelector('.fa-minus')) {
-		clonedElement.insertAdjacentHTML('beforeend', `<span style="margin-left:2px;height:40px;;padding:0" title="Remove Publisher" class="w3-button w3-black">
+		if (element.querySelector('.fieldServiceGroups')) {
+			clonedElement.insertAdjacentHTML('beforeend', `<span style="margin-left:2px;height:40px;;padding:0" title="Remove Group" class="w3-button w3-black">
 	<i style="color:#b02c07;padding:13px" onclick="removeRecord(this)" class="fa fa-minus"></i>
 </span>`);
+		} else {
+			clonedElement.insertAdjacentHTML('beforeend', `<span style="margin-left:2px;height:40px;;padding:0" title="Remove Publisher" class="w3-button w3-black">
+	<i style="color:#b02c07;padding:13px" onclick="removeRecord(this)" class="fa fa-minus"></i>
+</span>`);
+		}
+	}
+
+	if (element.querySelector('.fieldServiceGroups')) {
+		saveConfiguration()
 	}
 
 	element.insertAdjacentElement('afterend', clonedElement);
@@ -1802,24 +1923,35 @@ function addRecord(event) {
 
 function removeRecord(event) {
 	event.parentNode.parentNode.remove()
+	if (document.querySelector('.fieldServiceGroups')) {
+		saveConfiguration()
+	}
 }
 
 
 document.querySelector('#fieldServiceGroups').innerHTML = `<template>
 	<div v-if="display == true">
-		<h2 class="w3-center">FIELD SERVICE GROUPS</h2>
-		<div class="w3-row-padding w3-grayscale" style="margin-top:4px">
-			<div v-for="(group) in allGroups" :key="group" class="w3-col l3 m6 w3-margin-bottom">
-				<div :class="mode()">
-					<div class="w3-container main">
-						<h3 class="w3-center">{{ group }}</h3>
-						<hr>
-						<h5 v-for="(publisher, count) in groupPublishers(group)" :key="publisher + '|' + count" style="cursor:pointer" v-if="(publisher.fieldServiceGroup == selectedGroup || selectedGroup == 'All Groups') && publisher.name.toLowerCase().includes(searchTerms.toLowerCase())">{{ count + 1 }} | {{ publisher.name }}</h5>
-					</div>
-				</div>
+		<h2 class="w3-center">FIELD SERVICE GROUPS {{ active !== true ? '' : '(ALL)'}}</h2>		
+		<div style="display:flex;flex-wrap:wrap">
+			<div v-for="(group) in allGroups" :key="group" class="element" align="center" style="padding: 10px;margin: 5px;border: 1px solid gray">
+				<h3 class="w3-center" style="margin:0;">{{ group }}</h3>
+				<table>
+					<thead>
+						<tr>
+							<th>S/No</th>
+							<th>Publishers</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr v-for="(publisher, count) in groupPublishers(group)" :key="publisher + '|' + count" style="cursor:pointer" v-if="(publisher.fieldServiceGroup == selectedGroup || selectedGroup == 'All Groups') && publisher.name.toLowerCase().includes(searchTerms.toLowerCase())">
+							<td>{{ count + 1 }}</td>
+							<td>{{ publisher.name }}</td>
+						</tr>
+					</tbody>	
+				<table>
 			</div>
-		</div>		
-    </div>
+		</div>
+	</div>
 </template>`
 
 function processFieldServiceGroups() {
@@ -2090,7 +2222,7 @@ function processMonthlyReport() {
 				return mode
 			},
 			publisherDetail(publisher, item) {
-                if (item.parentNode.className == 'main') {
+                if (item.parentNode.className.split(' ')[0] == 'main') {
                     item.parentNode.parentNode.querySelector('.main').style.display = 'none'
                     item.parentNode.parentNode.querySelector('.detail').style.display = ''
                 } else {
@@ -2175,12 +2307,12 @@ function processMonthlyReport() {
 					record.modified = this.cleanDate(new Date())
 				}
 				if (event.checked) {
-					record[`${event.className}`] = true
+					record[`${event.className.split(' ')[0]}`] = true
 				} else {
-					record[`${event.className}`] = null
+					record[`${event.className.split(' ')[0]}`] = null
 				}
 				DBWorker.postMessage({ storeName: 'data', action: "save", value: [publisher]});
-				//console.log(publisher, event, event.checked, publisher[`${event.className}`])
+				//console.log(publisher, event, event.checked, publisher[`${event.className.split(' ')[0]}`])
 			},
 			handleInputChange(record, event, publisher) {
 				this.saved++
@@ -2193,17 +2325,17 @@ function processMonthlyReport() {
 				//console.log(event.value)
 				if (event.value !== '') {
 					//event.innerHTML = ''
-					if (event.className !== 'remarks') {
-						event.value == '0' ? record[`${event.className}`] = null : record[`${event.className}`] = Number(event.value)
+					if (event.className.split(' ')[0] !== 'remarks') {
+						event.value == '0' ? record[`${event.className.split(' ')[0]}`] = null : record[`${event.className.split(' ')[0]}`] = Number(event.value)
 					} else {
-						record[`${event.className}`] = event.value
+						record[`${event.className.split(' ')[0]}`] = event.value
 					}
 				} else {
-					record[`${event.className}`] = null
+					record[`${event.className.split(' ')[0]}`] = null
 				}
 				//console.log(record, publisher)
 				DBWorker.postMessage({ storeName: 'data', action: "save", value: [publisher]});
-				//console.log(publisher, event, event.checked, publisher[`${event.className}`])
+				//console.log(publisher, event, event.checked, publisher[`${event.className.split(' ')[0]}`])
 			},
 			handleCheckboxChange2(event, publisher, month) {
 				this.saved++
@@ -2220,12 +2352,12 @@ function processMonthlyReport() {
 					} else {
 						publisher.report.currentServiceYear[`${month.abbr}`].modified = this.cleanDate(new Date())
 					}
-					publisher.report.currentServiceYear[`${month.abbr}`][`${event.className}`] = true
+					publisher.report.currentServiceYear[`${month.abbr}`][`${event.className.split(' ')[0]}`] = true
 				} else {
-					publisher.report.currentServiceYear[`${month.abbr}`][`${event.className}`] = null
+					publisher.report.currentServiceYear[`${month.abbr}`][`${event.className.split(' ')[0]}`] = null
 				}
 				DBWorker.postMessage({ storeName: 'data', action: "save", value: [publisher]});
-				//console.log(publisher, event, event.checked, publisher[`${event.className}`])
+				//console.log(publisher, event, event.checked, publisher[`${event.className.split(' ')[0]}`])
 			},
 			handleInputChange2(event, publisher, month) {
 				this.saved++
@@ -2237,17 +2369,17 @@ function processMonthlyReport() {
 				}
 				if (event.value !== '') {
 					//event.innerHTML = ''
-					if (event.className !== 'remarks') {
-						event.value == '0' ? publisher.report.currentServiceYear[`${month.abbr}`][`${event.className}`] = null : publisher.report.currentServiceYear[`${month.abbr}`][`${event.className}`] = Number(event.value)
+					if (event.className.split(' ')[0] !== 'remarks') {
+						event.value == '0' ? publisher.report.currentServiceYear[`${month.abbr}`][`${event.className.split(' ')[0]}`] = null : publisher.report.currentServiceYear[`${month.abbr}`][`${event.className.split(' ')[0]}`] = Number(event.value)
 					} else {
-						publisher.report.currentServiceYear[`${month.abbr}`][`${event.className}`] = event.value
+						publisher.report.currentServiceYear[`${month.abbr}`][`${event.className.split(' ')[0]}`] = event.value
 					}
 				} else {
-					publisher.report.currentServiceYear[`${month.abbr}`][`${event.className}`] = null
+					publisher.report.currentServiceYear[`${month.abbr}`][`${event.className.split(' ')[0]}`] = null
 				}
 				//console.log(record, publisher)
 				DBWorker.postMessage({ storeName: 'data', action: "save", value: [publisher]});
-				//console.log(publisher, event, event.checked, publisher[`${event.className}`])
+				//console.log(publisher, event, event.checked, publisher[`${event.className.split(' ')[0]}`])
 			},
             sumHours(publisher) {
                 var totalHours = 0
@@ -2587,9 +2719,9 @@ function processAttendance() {
 			},
 			handleRecordInputChange(attendance, event) {
 				if (event.value == '' || event.value == '0') {
-					attendance[`${event.className}`] = null
+					attendance[`${event.className.split(' ')[0]}`] = null
 				} else {
-					attendance[`${event.className}`] = Number(event.value)
+					attendance[`${event.className.split(' ')[0]}`] = Number(event.value)
 				}
 				DBWorker.postMessage({ storeName: 'attendance', action: "save", value: [this.meetingAttendanceRecord]});
 			},
@@ -2788,6 +2920,10 @@ async function shortWait() {
     await new Promise((e) => setTimeout(e, 50));
 }
 
+function saveConfiguration() {
+	configurationVue.saveConfiguration()
+}
+
 document.querySelector('#configuration').innerHTML = `<template>
     <div v-if="display == true">
 		<h2 class="w3-center">SETTINGS</h2>
@@ -2795,27 +2931,57 @@ document.querySelector('#configuration').innerHTML = `<template>
 			<div class="w3-margin-bottom">
 				<div :class="mode()">
 					<div class="w3-container">
-						<h3 v-if="reportEntry() && reset !== true" contenteditable="true" class="name">{{ configuration.congregationName }}</h3>
-						<h4 v-if="reportEntry() && reset !== true" contenteditable="true" class="address">{{ configuration.address }}</h4>
-						<h4 v-if="reportEntry() && reset !== true" contenteditable="true" class="email">{{ configuration.email }}</h4>
-						<h4 v-if="reportEntry() && reset !== true" v-for="group in configuration.fieldServiceGroups" :key="group" contenteditable="true" class="fieldServiceGroups">{{ group }}</h>
+						
+						<p v-if="reportEntry() && reset !== true" style="margin-top:15px"><label>Congregation Name: </label></p>
+						<p v-if="reportEntry() && reset !== true"><input :class="inputMode('name w3-input')" type="text" :value="configuration.congregationName" @change="saveConfiguration()"></p>
+						<p v-if="reportEntry() && reset !== true"><label v-if="reportEntry() && reset !== true">Congregation Address: </label></p>
+						<p v-if="reportEntry() && reset !== true"><input :class="inputMode('address w3-input')" type="text" :value="configuration.address" @change="saveConfiguration()"></p>
+						<p v-if="reportEntry() && reset !== true"><label v-if="reportEntry() && reset !== true">Congregation Email: </label></p>
+						<p v-if="reportEntry() && reset !== true"><input :class="inputMode('email w3-input')" type="text" :value="configuration.email" @change="saveConfiguration()"></p>
+						
+						<p v-if="reportEntry() && reset !== true"><label>Field Service Groups:</label></p>
+						<p v-if="reportEntry() && reset !== true" v-for="(group, count) in configuration.fieldServiceGroups" :key="group">
+							<input :class="inputMode('fieldServiceGroups w3-input')" type="text" :value="group" onchange="saveConfiguration()">
+							<span style="height:40px;padding:0" title="Add Group" class="w3-button w3-black">
+								<i style="color:#2b6549;padding:13px" onclick="addRecord(this)" class="fa fa-plus"></i>
+							</span>
+							<span v-if="count !== 0" style="margin-left:2px;height:40px;;padding:0" title="Remove Group" class="w3-button w3-black">
+								<i style="color:#b02c07;padding:13px" onclick="removeRecord(this)" class="fa fa-minus"></i>
+							</span>
+						</p>
+						<p v-if="reportEntry() && reset !== true"><label>Coordinator:</label></p>
+						<p v-if="reportEntry() && reset !== true && elders().length !== 0">
+							<select @change="saveConfiguration()" :class="inputMode('cboe w3-input')" value="MACFOY Ernest">
+								<option v-if="!elders().includes(configuration.cboe)" value="">Select Coordinator</option>
+								<option v-if="elders().includes(configuration.cboe)" :value="configuration.cboe">{{ configuration.cboe }}</option>
+								<option v-for="elder in elders().filter(elem=>elem !== configuration.cboe)" :value="elder">{{ elder }}</option>
+							</select>
+						</p>
+						<p v-if="reportEntry() && reset !== true"><label>Secretary:</label></p>
+						<p v-if="reportEntry() && reset !== true && elders().length !== 0">
+							<select @change="saveConfiguration()" :class="inputMode('sec w3-input')">
+								<option v-if="!elders().includes(configuration.sec)" value="">Select Secretary</option>
+								<option v-if="elders().includes(configuration.sec)" :value="configuration.sec">{{ configuration.sec }}</option>
+								<option v-for="elder in elders().filter(elem=>elem !== configuration.sec)" :value="elder">{{ elder }}</option>
+							</select>
+						</p>
+						<p v-if="reportEntry() && reset !== true"><label>Service Overseer:</label></p>
+						<p v-if="reportEntry() && reset !== true && elders().length !== 0">
+							<select @change="saveConfiguration()" :class="inputMode('so w3-input')">
+								<option v-if="!elders().includes(configuration.so)" value="">Select Service Overseer</option>
+								<option v-if="elders().includes(configuration.so)" :value="configuration.so">{{ configuration.so }}</option>
+								<option v-for="elder in elders().filter(elem=>elem !== configuration.so)" :value="elder">{{ elder }}</option>
+							</select>
+						</p>
+
 						<h4 id="status1"></h4>
 						<h4 id="status2"></h4>
 						<h4 id="status3"></h4>
-						<p v-if="reportEntry()">
-							<button :class="buttonMode('w3-button w3-dark-grey')" @click="addGroup($event.target)" title="Add Field Service Group">Add Group</button>
-							<button :class="buttonMode('w3-button w3-dark-grey')" @click="removeGroup($event.target)" title="Remove Field Service Group">Remove Group</button>
-						</p>
 						<label>Appearance: 
 						<select @change="displayMode($event.target)" :class="inputMode('appearance w3-input')">
 							<option :value="currentMode()">{{ currentMode() }}</option>
 							<option v-for="mode in ['System', 'Light', 'Dark'].filter(elem=>elem !== currentMode())" :value="mode">{{ mode }}</option>
 						</select></label>
-						<p>
-							<button v-if="reportEntry()" :class="buttonMode('w3-button w3-dark-grey')" @click="saveConfiguration($event.target)"><i class="fas fa-save"> </i> Save</button>
-							<button :class="buttonMode('w3-button w3-dark-grey')" @click="resetConfiguration($event.target)">Reset</button>
-							<button :class="buttonMode('w3-button w3-dark-grey')" @click="backupData($event.target)">Backup</button>
-						</p>
 						<p v-if="reportEntry()">
 							<button :class="buttonMode('w3-button w3-dark-grey')" @click="saveFile()"><i class="fas fa-save"> </i> Save File</button>
 							<input type="file" id="pdfFile" accept=".pdf">
@@ -2823,7 +2989,8 @@ document.querySelector('#configuration').innerHTML = `<template>
 						<div>
 							<div class="main">
 								<button v-if="reportEntry()" :class="buttonMode('w3-button w3-dark-grey')" @click="publisherDetail($event.target)">New Publisher</button>
-								<button :class="buttonMode('w3-button w3-dark-grey')" @click="reloadPage()">Reload</button>
+								<button :class="buttonMode('w3-button w3-dark-grey')" @click="backupData($event.target)">Backup</button>
+								<button :class="buttonMode('w3-button w3-dark-grey')" @click="resetConfiguration($event.target)">Reset</button>
 							</div>
 							<div v-if="reportEntry()" class="detail" style="display:none; border: 1px solid gray; padding:5px">
 								<button :class="buttonMode('w3-button w3-dark-grey')" @click="publisherDetail($event.target)">Save</button>
@@ -2835,6 +3002,7 @@ document.querySelector('#configuration').innerHTML = `<template>
 										<option v-for="gender in ['Select Gender', 'Male', 'Female']" :value="gender">{{ gender }}</option>
 									</select>
 								</p>
+								
 								<p>
 									<label>Date of Baptism: <input v-if="publisher.dateOfBaptism == null" type="date" :class="inputMode('dateOfBaptism w3-input')"><input v-if="publisher.dateOfBaptism !== null" type="date" :class="inputMode('dateOfBaptism w3-input')" :value="cleanDate(publisher.dateOfBaptism)"></label>
 									<select :class="inputMode('hope w3-input')">
@@ -2893,6 +3061,7 @@ document.querySelector('#configuration').innerHTML = `<template>
 							<label v-if="reportEntry()"><input class="export" type="checkbox" checked="true"> All</label>
 							<button :class="buttonMode('w3-button w3-dark-grey')" @click="exportData()">Export</button>
 							<button :class="buttonMode('w3-button w3-dark-grey')" @click="importData()">Import</button>
+							<button :class="buttonMode('w3-button w3-dark-grey')" @click="reloadPage()"><i class="fas fa-sync"></i> Reload</button>
 							<hr>
 							<input type="file" id="dataFile" accept=".txt">
 						</p>
@@ -2928,6 +3097,9 @@ function processConfiguration() {
             }
         },
         methods: {
+			elders() {
+				return allPublishersVue.publishers.filter(elem=>elem.privilege.includes('Elder')).map(elem=>elem.name)
+			},
 			inputMode(currentClass) {
 				return currentClass + ' ' + mode.replace('w3-card ','')
 			},
@@ -3035,31 +3207,48 @@ Thanks a lot
 
 				window.location.href = mailtoLink;
 			},
-            exportData() {
+            async exportData() {
                 var a = document.createElement("a");
 				var file;
 				if (document.querySelector('.export').checked)  {
 					file = new Blob([JSON.stringify({"configuration":configurationVue.configuration, "data":allPublishersVue.publishers, "attendance": [attendanceVue.currentMonth, attendanceVue.meetingAttendanceRecord]})], {type: 'text/plain'});
+					await shortWait()
+					await shortWait()
 				} else {
 					var currentConfiguration = JSON.parse(JSON.stringify(configurationVue.configuration))
+					await shortWait()
+					await shortWait()
+
 					delete currentConfiguration.address
 					delete currentConfiguration.email
 					var currentData = JSON.parse(JSON.stringify(allPublishersVue.publishers))
+					await shortWait()
+					await shortWait()
+
 					currentData.forEach(elem=>{
 						delete elem.contactInformation
 						delete elem.dateOfBaptism
 						delete elem.dateOfBirth
 						delete elem.emergencyContactInformation
 					})
+					await shortWait()
+					await shortWait()
+					await shortWait()
+					await shortWait()
+
 					file = new Blob([JSON.stringify({"configuration":currentConfiguration, "data":currentData, "attendance": [attendanceVue.currentMonth, attendanceVue.meetingAttendanceRecord]})], {type: 'text/plain'});
 				}
+
+				await shortWait()
+				await shortWait()
+
 				a.href = URL.createObjectURL(file);
 				
 				a.download = 'congData-' + new Date() + '.txt';
 				a.click();
 				//window.indexedDB.deleteDatabase('congRec');
             },
-            importData() {
+            async importData() {
 				if (!document.querySelector('#dataFile').files[0]) {
 					alert('Please select file to import')
 					return
@@ -3067,18 +3256,53 @@ Thanks a lot
                 var reader = new FileReader();
 
 				// When the FileReader has loaded the file...
-				reader.onload = function() {
+				reader.onload = async function() {
 					var result = JSON.parse(this.result)
-					configurationVue.configuration = result.configuration
-					navigationVue.allGroups = result.configuration.fieldServiceGroups
-					allPublishersVue.publishers = result.data
+					
+					var cleanupDataBase = allPublishersVue.publishers.filter((elem) => {
+						return result.data.findIndex(ele=>ele.name === elem.name) == -1
+					});
+
+					await shortWait()
+					await shortWait()
+
+
+					if (!result.data[0].contactInformation) {
+						allPublishersVue.publishers.forEach(elem=>{
+							elem.report = result.data.filter(ele=>ele.name === elem.name)[0].report
+						})
+						await shortWait()
+						await shortWait()
+
+					} else {
+						configurationVue.configuration = result.configuration
+						navigationVue.allGroups = result.configuration.fieldServiceGroups
+						allPublishersVue.publishers = result.data
+					}
+
+					await shortWait()
+					await shortWait()
+
+
 					attendanceVue.currentMonth = result.attendance[0]
 					attendanceVue.meetingAttendanceRecord = result.attendance[1]
 
 					DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [result.configuration]});
 					DBWorker.postMessage({ storeName: 'data', action: "save", value: result.data});
 					DBWorker.postMessage({ storeName: 'attendance', action: "save", value: result.attendance});
-                	configured = true
+
+					await shortWait()
+					await shortWait()
+					await shortWait()
+					await shortWait()
+
+
+					console.log(cleanupDataBase)
+					cleanupDataBase.forEach(item=>{
+						DBWorker.postMessage({ storeName: 'data', action: "deleteItem", value: item.name});
+					})
+
+					configured = true
 					if (currentUser.accesses.includes('secretary')) {
 						gotoView('congregationVue')
 					} else if (currentUser.accesses.includes('sendReport')) {
@@ -3095,14 +3319,14 @@ Thanks a lot
                 }*/
                 
                 var allGroups = []
-                element.parentNode.querySelectorAll('.fieldServiceGroups').forEach(elem=>{
-                    allGroups.push(elem.innerHTML)
+                document.querySelectorAll('.fieldServiceGroups').forEach(elem=>{
+                    allGroups.push(elem.value)
                 })
 
                 allGroups.sort()
 
-                this.configuration = {"name": "Congregation", "congregationName": element.parentNode.querySelector('.name').innerHTML, "address": element.parentNode.querySelector('.address').innerHTML, "email": element.parentNode.querySelector('.email').innerHTML, "fieldServiceGroups": allGroups}
-                DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [this.configuration]});
+				var currentConfiguration = { "name": "Congregation", "congregationName": document.querySelector('.name').value, "address": document.querySelector('.address').value, "email": document.querySelector('.email').value, "fieldServiceGroups": allGroups, "cboe": document.querySelector('.cboe').value, "sec": document.querySelector('.sec').value, "so":  document.querySelector('.so').value }
+                DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [currentConfiguration]});
                 configured = true
             },
             async resetConfiguration() {
@@ -3184,7 +3408,7 @@ Thanks a lot
 			},
 			publisherDetail(item) {
 				var publisher = JSON.parse(JSON.stringify(newPublisherRecord))
-                if (item.parentNode.className == 'main') {
+                if (item.parentNode.className.split(' ')[0] == 'main') {
                     item.parentNode.parentNode.querySelector('.main').style.display = 'none'
                     item.parentNode.parentNode.querySelector('.detail').style.display = ''
                 } else {
@@ -3278,7 +3502,7 @@ contactInformation()
 branchReportDetails()
 configurationVue.displayMode({"value": "System"})
 
-var defaultConfiguration = {"congregationName": "Congregation Name", "name": "Congregation", "address": "Congregation Address", "email": "Congregation Email", "fieldServiceGroups": ["Group 1", "Group 2", "Group 3"]}
+var defaultConfiguration = { "congregationName": "", "name": "Congregation", "address": "", "email": "", "fieldServiceGroups": ["Group 1"], "cboe": "", "sec": "", "so": "" }
 
 var currentMonthAttendance = {
 	"name": "Monthly",
@@ -4272,6 +4496,23 @@ async function getFieldByName(file) {
 
         reader.readAsArrayBuffer(file);
 	}
+}
+
+function generatePDF(element, fileName, orientation) {
+	// Get the HTML element to be saved as PDF
+	//const element = document.getElementById('content');
+
+	// Configure the options for pdf generation
+	const options = {
+	  margin: 10,
+	  filename: fileName + '.pdf',
+	  image: { type: 'jpeg', quality: 0.98 },
+	  html2canvas: { scale: 2 },
+	  jsPDF: { unit: 'mm', format: 'a4', orientation: orientation ? orientation : 'portrait' }
+	};
+
+	// Use html2pdf library to generate PDF
+	html2pdf().from(element).set(options).save();
 }
 
 var myImage;
