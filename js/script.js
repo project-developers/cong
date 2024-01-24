@@ -7,7 +7,7 @@ loginForm.confirmPassword.style.display = 'none';
 document.getElementById("securityQuestions").style.display = 'none';
 loginErrorMsg.style.opacity = 0;
 var logged = false, reportEntry = false;
-var hiddenElements = ["congregation", "allPublishers", "contactInformation", "fieldServiceGroups", "monthlyReport", "missingReport", "attendance", "branchReport", "configuration"]
+var hiddenElements = ["congregation", "allParticipants", "allPublishers", "allAssignments", "schedule", "contactInformation", "fieldServiceGroups", "monthlyReport", "missingReport", "attendance", "branchReport", "configuration"]
 var securityQuestions = [
 	{value: "What was the name of your first CO?".replaceAll(' ',''), label: "What was the name of your first CO?"},
 	{value: "In which city did you start preaching?".replaceAll(' ',''), label: "In which city did you start preaching?"},
@@ -43,8 +43,8 @@ function createRadioButtons(containerId, options) {
 	container.appendChild(answerInput);
 }
 
-function getSelectedOption() {
-	var radioButtons = document.getElementsByName("securityGroup");
+function getSelectedOption(radioButtons) {
+	//var radioButtons = document.getElementsByName("securityGroup");
 
 	for (var i = 0; i < radioButtons.length; i++) {
 		if (radioButtons[i].checked) {
@@ -69,26 +69,19 @@ loginButton.addEventListener("click", (e) => {
 		if ('' == username || ' ' == username || username.includes(' ') || username.toLowerCase() == 'reporter') {
 			loginErrorMsg.innerHTML = 'Please enter a different username.'
 			
-		} else if ('No option selected' == getSelectedOption() || '' == document.querySelector('#answer').value.toLowerCase()) {
+		} else if ('No option selected' == getSelectedOption(document.getElementsByName("securityGroup")) || '' == document.querySelector('#answer').value.toLowerCase()) {
 			loginErrorMsg.innerHTML = 'Please select question and enter answer.'
 		} else if (loginForm.password.value !== loginForm.confirmPassword.value) {
 			loginErrorMsg.innerHTML = 'Password is not the same.'
 		} else if (allUsers.findIndex(elem=>elem.username.toLowerCase() == username.toLowerCase()) !== -1) {
 			var existingUser = allUsers.filter(elem=>elem.username.toLowerCase() == username.toLowerCase())[0]
-			console.log(existingUser)
-			console.log(existingUser.accesses.findIndex(str => currentUser.accesses.includes(str)) !== -1)
 			if (existingUser.accesses.findIndex(str => currentUser.accesses.includes(str)) !== -1) {
 				loginErrorMsg.innerHTML = 'User already exists. Please enter a different username.'
 			} else if (existingUser.password !== password) {
 				loginErrorMsg.innerHTML = 'Invalid password.'
-			} else if (existingUser.selectedQuestion !== getSelectedOption() || existingUser.answer.trim() !== document.querySelector('#answer').value.toLowerCase().trim()) {
+			} else if (existingUser.selectedQuestion !== getSelectedOption(document.getElementsByName("securityGroup")) || existingUser.answer.trim() !== document.querySelector('#answer').value.toLowerCase().trim()) {
 				loginErrorMsg.innerHTML = 'Invalid question and/or answer.'
 			} else {
-				if (currentUser.accesses.includes('secretary')) {
-					reportEntry = true
-				} else if (currentUser.accesses.includes('sendReport')) {
-					reportEntry = false
-				}
 				console.log("You have successfully logged in.");
 				document.getElementById("securityQuestions").style.display = 'none';
 				loginForm.username.value = ''
@@ -110,9 +103,9 @@ loginButton.addEventListener("click", (e) => {
 		} else {
 			currentUser.username = loginForm.username.value
 			currentUser.password = loginForm.password.value
-			currentUser.selectedQuestion = getSelectedOption()
+			currentUser.selectedQuestion = getSelectedOption(document.getElementsByName("securityGroup"))
 			currentUser.answer = document.querySelector('#answer').value.toLowerCase().trim()
-			if (currentUser.accesses.includes('secretary')) {
+			if (currentUser.currentProfile == 'Secretary') {
 				console.log("You have successfully logged in.");
 				document.getElementById("securityQuestions").style.display = 'none';
 				loginForm.username.value = ''
@@ -124,7 +117,7 @@ loginButton.addEventListener("click", (e) => {
 					document.getElementById(`${elem}`).style.display = ''
 				})
 				logged = true
-				reportEntry = true
+				//reportEntry = true
 
 				allUsers.push(currentUser)
 
@@ -132,7 +125,7 @@ loginButton.addEventListener("click", (e) => {
 				DBWorker.postMessage({ storeName: 'settings', action: "save", value: [currentUser]});
 				DBWorker.postMessage({ dbName: 'cong-' + currentUser.username.toLowerCase(), action: "init"});
 				loginErrorMsg.style.opacity = 0;
-			} else if (currentUser.accesses.includes('sendReport')) {
+			} else if (currentUser.currentProfile == 'Secretary - Assistant') {
 				console.log("You have successfully logged in.");
 				document.getElementById("securityQuestions").style.display = 'none';
 				loginForm.username.value = ''
@@ -144,7 +137,29 @@ loginButton.addEventListener("click", (e) => {
 					document.getElementById(`${elem}`).style.display = ''
 				})
 				logged = true
-				reportEntry = false
+				//reportEntry = false
+				navigationVue.displayDropdown = true
+
+				allUsers.push(currentUser)
+				
+				document.getElementById("home").style.display = 'none'
+				DBWorker.postMessage({ storeName: 'settings', action: "save", value: [currentUser]});
+				DBWorker.postMessage({ dbName: 'cong-' + currentUser.username.toLowerCase(), action: "init"});
+				loginErrorMsg.style.opacity = 0;
+			}
+			if (currentUser.currentProfile == 'Life and Ministry Overseer' || currentUser.currentProfile == 'Life and Ministry Assistant') {
+				console.log("You have successfully logged in.");
+				document.getElementById("securityQuestions").style.display = 'none';
+				loginForm.username.value = ''
+				loginForm.password.value = ''
+				loginForm.confirmPassword.value = ''
+				loginForm.confirmPassword.style.display = 'none';
+				currentUser.name = currentUser.username
+				hiddenElements.forEach(elem=>{
+					document.getElementById(`${elem}`).style.display = ''
+				})
+				logged = true
+				//reportEntry = false
 				navigationVue.displayDropdown = true
 
 				allUsers.push(currentUser)
@@ -164,15 +179,57 @@ loginButton.addEventListener("click", (e) => {
 		hiddenElements.forEach(elem=>{
 			document.getElementById(`${elem}`).style.display = ''
 		})
-		if (currentUser.accesses.includes('secretary')) {
-			reportEntry = true
-		} else if (currentUser.accesses.includes('sendReport')) {
-			reportEntry = false
+		if (currentUser.currentProfile == 'Secretary') {
+			//reportEntry = true
+		} else if (currentUser.currentProfile == 'Secretary - Assistant') {
+			//reportEntry = false
 		}
 		logged = true
 		document.getElementById("home").style.display = 'none'
 		DBWorker.postMessage({ dbName: 'cong-' + currentUser.username.toLowerCase(), action: "init"});
 		loginErrorMsg.style.opacity = 0;
+		
+    } else if (username.toLowerCase() === "lifeAndMinistry".toLowerCase() && password === "handler") {
+		navigationVue.buttons = [
+			{
+				"title": "BACK",
+				"function": "missingReportVue"
+			}
+		]
+		loginButton.innerText = 'Create Account'
+		document.getElementById("securityQuestions").style.display = '';
+        loginErrorMsg.innerHTML = 'You will need to create an account to continue:'
+		loginForm.username.value="";
+		loginForm.password.value="";
+		loginForm.confirmPassword.style.display = '';
+		loginForm.username.select()
+		loginButton.value = 'Create Account'
+		currentUser.accesses = ['lmo']
+		currentUser.currentProfile = 'Life and Ministry Overseer'
+		configurationVue.reportEntry = 'lmo'
+		configurationVue.selectedProfile = 'Life and Ministry Overseer'
+		loginErrorMsg.style.opacity = 1;
+		
+    } else if (username.toLowerCase() === "lifeAndMinistry".toLowerCase() && password === "assist") {
+		navigationVue.buttons = [
+			{
+				"title": "BACK",
+				"function": "missingReportVue"
+			}
+		]
+		loginButton.innerText = 'Create Account'
+		document.getElementById("securityQuestions").style.display = '';
+        loginErrorMsg.innerHTML = 'You will need to create an account to continue:'
+		loginForm.username.value="";
+		loginForm.password.value="";
+		loginForm.confirmPassword.style.display = '';
+		loginForm.username.select()
+		loginButton.value = 'Create Account'
+		currentUser.accesses = ['lma']
+		currentUser.currentProfile = 'Life and Ministry Assistant'
+		configurationVue.reportEntry = 'lma'
+		configurationVue.selectedProfile = 'Life and Ministry Assistant'
+		loginErrorMsg.style.opacity = 1;
 		
     } else if (username.toLowerCase() === "reporter".toLowerCase() && password === "reportEntry") {
 		navigationVue.buttons = [
@@ -190,6 +247,9 @@ loginButton.addEventListener("click", (e) => {
 		loginForm.username.select()
 		loginButton.value = 'Create Account'
 		currentUser.accesses = ['sendReport']
+		currentUser.currentProfile = 'Secretary - Assistant'
+		configurationVue.reportEntry = 'sendReport'
+		configurationVue.selectedProfile = 'Secretary - Assistant'
 		loginErrorMsg.style.opacity = 1;
 		
     } else if (username.toLowerCase() === "reporter".toLowerCase() && password === "super") {
@@ -208,6 +268,9 @@ loginButton.addEventListener("click", (e) => {
 		loginForm.username.select()
 		loginButton.value = 'Create Account'
 		currentUser.accesses = ['secretary']
+		currentUser.currentProfile = 'Secretary'
+		configurationVue.reportEntry = 'secretary'
+		configurationVue.selectedProfile = 'Secretary'
 		loginErrorMsg.style.opacity = 1;
 		
     } else {
@@ -219,7 +282,7 @@ loginButton.addEventListener("click", (e) => {
 var currentUser = { "name": "currentUser", "username": null, "password": null, "accesses": [], "selectedQuestion": null, "answer": null }
 var allUsers;
 
-var navigationVue, navigationVue2, allPublishersVue, congregationVue, configurationVue, branchReportVue, contactInformationVue, fieldServiceGroupsVue, monthlyReportVue, missingReportVue;
+var navigationVue, navigationVue2, allPublishersVue, congregationVue, configurationVue, branchReportVue, contactInformationVue, fieldServiceGroupsVue, monthlyReportVue, missingReportVue, allAssignmentsVue, scheduleVue;
 var allButtons = [
 	{"title": "CONG", "function": "congregationVue"}, 
 	{"title": "RECORDS", "function": "allPublishersVue"}, 
@@ -231,9 +294,11 @@ var allButtons = [
 	{"title": "CONTACTS", "function": "contactInformationVue"}, 
 	{"title": "REPORTS", "function": "missingReportVue"}, 
 	{"title": "CURRENT", "function": "monthlyReportVue"}, 
-	{"title": "REPORTS", "function": "missingReportVue"}, 
+	{"title": "ASSIGNMENTS", "function": "allAssignmentsVue"},
+	{"title": "SCHEDULE", "function": "scheduleVue"},
 	{"title": "BRANCH", "function": "branchReportVue"}, 
-	{"title": "ATTENDANCE", "function": "attendanceVue"}, 
+	{"title": "ATTENDANCE", "function": "attendanceVue"},
+	{"title": "PARTICIPANTS", "function": "allParticipantsVue"},
 	{"title": "SETTINGS", "function": "configurationVue"}
 ]
 //var CongregationData = JSON.parse(localStorage.getItem('CongregationData'));
@@ -260,35 +325,6 @@ var currentMonth = `${new Date().getFullYear()}-${(new Date().getMonth() + 1).to
 var reportButtons = [{"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "REPORTS", "function": "missingReportVue"}, {"title": "BRANCH", "function": "branchReportVue"}]
 var currentMode = 'System';
 var mode = 'w3-card w3-white';
-/*
-if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-	mode = 'w3-card w3-black'
-} else {
-	mode = 'w3-card w3-white'
-}*/
-/*
-document.body.querySelectorAll('.w3-white').forEach(elem=>{
-	elem.classList.toggle("w3-white");
-	elem.classList.toggle("w3-yellow");
-})
-document.body.querySelectorAll('.w3-black').forEach(elem=>{
-	elem.classList.toggle("w3-black");
-	elem.classList.toggle("w3-blue");
-})
-document.body.querySelectorAll('.w3-yellow').forEach(elem=>{
-	elem.classList.toggle("w3-black");
-	elem.classList.toggle("w3-yellow");
-})
-document.body.querySelectorAll('.w3-blue').forEach(elem=>{
-	elem.classList.toggle("w3-blue");
-	elem.classList.toggle("w3-white");
-})
-document.body.querySelectorAll('.w3-light-grey').forEach(elem=>{
-	elem.classList.toggle("w3-dark-grey");
-	elem.classList.toggle("w3-light-grey");
-})
-document.body.classList.toggle("w3-dark-grey");
-document.body.classList.toggle("w3-light-grey");*/
 
 DBWorker.onmessage = async function (msg) {
     var msgData = msg.data;
@@ -317,11 +353,6 @@ DBWorker.onmessage = async function (msg) {
 			if (resetCount === 0) {
 				window.indexedDB.deleteDatabase('cong-' + currentUser.username.toLowerCase());
 				location.reload()
-				/*
-				document.querySelector('#status1').innerHTML = ``
-				document.querySelector('#status2').innerHTML = ``
-				document.querySelector('#status3').innerHTML = `Completed`*/
-				//configurationVue.configuration = defaultConfiguration
 			}
 		}
 		return
@@ -330,6 +361,10 @@ DBWorker.onmessage = async function (msg) {
 			case "configuration":
 				{
 					//console.log(msgData.value)
+					if (msgData.value.filter(elem=>elem.name == "Current Profile").length !== 0) {
+						currentUser.currentProfile = msgData.value.filter(elem=>elem.name == "Current Profile")[0].value
+						configurationVue.selectedProfile = msgData.value.filter(elem=>elem.name == "Current Profile")[0].value
+					}
 					if (msgData.value.filter(elem=>elem.name == "Congregation").length == 0) {
 						configurationVue.display = true
 						configured = false
@@ -339,23 +374,43 @@ DBWorker.onmessage = async function (msg) {
 						
 						//configurationVue.configuration = result.configuration
 						navigationVue.allGroups = configurationVue.configuration.fieldServiceGroups
-						if (currentUser.accesses.includes('secretary')) {
-							//congregationVue.display = true
+						if (currentUser.currentProfile == 'Secretary') {
 							navigationVue.buttons = [{"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
-						} else if (currentUser.accesses.includes('sendReport')) {
-							navigationVue.buttons = [{"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH", "function": "branchReportVue"}]
-							//navigationVue.displayDropdown = true
-							//missingReportVue.display = true
-						}
-					}
-					if (msgData.value.filter(elem=>elem.name == "Congregation").length !== 0) {
-						if (currentUser.accesses.includes('secretary')) {
+							configurationVue.reportEntry = 'secretary'
 							congregationVue.display = true
-							navigationVue.buttons = [{"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
-						} else if (currentUser.accesses.includes('sendReport')) {
+						} else if (currentUser.currentProfile == 'Secretary - Assistant') {
+							configurationVue.reportEntry = 'sendReport'
 							navigationVue.buttons = [{"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH", "function": "branchReportVue"}]
 							navigationVue.displayDropdown = true
 							missingReportVue.display = true
+						} else if (currentUser.currentProfile == 'Life and Ministry Overseer') {
+							configurationVue.reportEntry = 'lmo'
+							navigationVue.buttons = [{"title": "SCHEDULE", "function": "scheduleVue"}, {"title": "PARTICIPANTS", "function": "allParticipantsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}]
+							allAssignmentsVue.display = true
+						} else if (currentUser.currentProfile == 'Life and Ministry Assistant') {
+							configurationVue.reportEntry = 'lma'
+							navigationVue.buttons = [{"title": "SCHEDULE", "function": "scheduleVue"}, {"title": "PARTICIPANTS", "function": "allParticipantsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}]
+							allAssignmentsVue.display = true
+						}
+					}
+					if (msgData.value.filter(elem=>elem.name == "Congregation").length !== 0) {
+						if (currentUser.currentProfile == 'Secretary') {
+							configurationVue.reportEntry = 'secretary'
+							navigationVue.buttons = [{"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+							congregationVue.display = true
+						} else if (currentUser.currentProfile == 'Secretary - Assistant') {
+							configurationVue.reportEntry = 'sendReport'
+							navigationVue.buttons = [{"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH", "function": "branchReportVue"}]
+							navigationVue.displayDropdown = true
+							missingReportVue.display = true
+						} else if (currentUser.currentProfile == 'Life and Ministry Overseer') {
+							configurationVue.reportEntry = 'lmo'
+							navigationVue.buttons = [{"title": "SCHEDULE", "function": "scheduleVue"}, {"title": "PARTICIPANTS", "function": "allParticipantsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}]
+							allAssignmentsVue.display = true
+						} else if (currentUser.currentProfile == 'Life and Ministry Assistant') {
+							configurationVue.reportEntry = 'lma'
+							navigationVue.buttons = [{"title": "SCHEDULE", "function": "scheduleVue"}, {"title": "PARTICIPANTS", "function": "allParticipantsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}]
+							allAssignmentsVue.display = true
 						}
 
 						configured = true
@@ -367,29 +422,12 @@ DBWorker.onmessage = async function (msg) {
 						DBWorker.postMessage({ storeName: 'data', action: "readAll"});
 						DBWorker.postMessage({ storeName: 'attendance', action: "readAll"});
 						DBWorker.postMessage({ storeName: 'files', action: "readAll"});
+						DBWorker.postMessage({ storeName: 'lifeAndMinistryAssignments', action: "readAll"});
+						DBWorker.postMessage({ storeName: 'lifeAndMinistryEnrolments', action: "readAll"});
 					}
 					if (msgData.value.filter(elem=>elem.name == "Display").length !== 0) {
-						console.log(msgData.value.filter(elem=>elem.name == "Display"))
+						//console.log(msgData.value.filter(elem=>elem.name == "Display"))
 						currentMode = msgData.value.filter(elem=>elem.name == "Display")[0].value
-						/*
-						if (msgData.value.filter(elem=>elem.name == "Display")[0].value !== 'System') {
-							currentMode = msgData.value.filter(elem=>elem.name == "Display")[0].value
-						} else {
-							if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-								currentMode = 'Dark'
-							} else {
-								currentMode = 'Light'
-							}
-						}*/
-		/*
-						if ((mode == 'w3-card w3-black' && currentMode == 'Dark') || (mode == 'w3-card w3-white' && currentMode == 'Light')) {
-							return
-						} else if (mode == 'w3-card w3-black') {
-							mode = 'w3-card w3-white'
-						} else {
-							mode = 'w3-card w3-black'
-						}*/
-						//mode = msgData.value.filter(elem=>elem.name == "Display")[0].value
 						configurationVue.displayMode({"value": currentMode})
 					}
 				}
@@ -397,28 +435,12 @@ DBWorker.onmessage = async function (msg) {
 			case "data":
 				{
 					allPublishersVue.publishers = msgData.value
-					/*
-					var publisherRecords = []
-					allPublishersVue.publishers.forEach(publisher=>{
-						monthlyReportVue.months.slice(0, monthlyReportVue.months.findIndex(elem=>elem.abbr == monthlyReportVue.month.abbr)).forEach(elem=>{
-							if (publisher.report.currentServiceYear[`${elem.abbr}`].sharedInMinistry == null) {
-								publisherRecords.push({'publisher': publisher, 'name': publisher.name, 'month': elem, 'fieldServiceGroup': publisher.fieldServiceGroup, 'contactInformation': publisher.contactInformation, 'dateOfBirth': publisher.dateOfBirth, 'report':publisher.report.currentServiceYear[`${elem.abbr}`]})
-							}
-						})
-					})
-
-					const currentDate = new Date();
-					const formattedDate = `${currentDate.getFullYear()}-${(currentDate.getMonth() + 1).toString().padStart(2, '0')}`;
-
-					DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [{"name": "Late Reports", "month": formattedDate, "value": publisherRecords}]});
-					
-					console.log(publisherRecords)*/
 				}
 				break;
 			case "files":
 				{
 					//myFile = msgData.value
-					//console.log(msgData.value)
+					console.log(msgData.value)
 					//console.log(msgData.value[0])
 					if (msgData.value.filter(elem=>elem.name == 'S-21_E.pdf').length !== 0) {
 						//console.log(msgData.value.filter(elem=>elem.name == 'S-21_E.pdf')[0])
@@ -467,6 +489,20 @@ DBWorker.onmessage = async function (msg) {
 						//console.log(msgData)
 						missingReportVue.saved--
 					}
+				}
+				break;
+			case "lifeAndMinistryAssignments":
+				{
+					console.log(msgData.value)					
+					allAssignmentsVue.allAssignments = msgData.value
+					
+				}
+				break;
+			case "lifeAndMinistryEnrolments":
+				{
+					console.log(msgData.value)
+					allParticipantsVue.enrolments = msgData.value
+					
 				}
 				break;
 			case "done":
@@ -597,42 +633,28 @@ function processNavigation() {
 					await shortWait()
 				
 				} else if (allButtons.filter(elem=>elem.title == currentView)[0].function == "contactInformationVue") {
-				
+					var i = 1
+					while (allGroupsBackup.length !== 0) {
+						this.allGroups = allGroupsBackup.splice(0, 1)
+						await shortWait()
+						await shortWait()
+						console.log(allGroupsBackup)
+						var fileName = 'Contact Information - ' + this.allGroups[0]
+						generatePDF(document.getElementById('contactInformation'), fileName)
+						i++
+						await shortWait()
+						await shortWait()
+					}
+					
+					this.allGroups = restoreAllGroups
 					await shortWait()
 					await shortWait()
-					console.log(allGroupsBackup)
-					var fileName = 'Contact Information'
-					generatePDF(document.getElementById('contactInformation'), fileName)
-					await shortWait()
-					await shortWait()
-
-					await shortWait()
-					await shortWait()
-				
+					
 				}
 
 				if (backupMode !== 'Light') {
 					configurationVue.displayMode({"value": backupMode})
 				}
-				/*
-				console.log(currentView)
-				console.log(allButtons.filter(elem=>elem.title == currentView))
-				fieldServiceGroupsVue.preview = true
-				await shortWait()
-				document.querySelector('#content').style.display = ''
-				document.querySelector('#content').style.height = '803px'
-				document.querySelector('#content').style.width = '1132px'
-				document.querySelector('#content').style.padding = '60px 50px'
-				await shortWait()
-				await shortWait()
-				document.querySelectorAll('.element').forEach(elem=>{
-					elem.style.width = '23%'
-				})
-				document.querySelector('.zoom-content').style.height = '100%'
-				document.querySelector('.zoom-container').style.height = '100%'
-				document.getElementById('zoomContent').style.transform = `scale(${0.70}) translate(${0}px, ${0}px)`;
-				*/
-				//document.querySelector('#pdfPrep').parentNode.parentNode.style.display = ''
 			},
 			inputMode() {
 				return 'w3-bar-item w3-search ' + mode.replace('w3-card ','')
@@ -716,7 +738,11 @@ function processNavigation() {
 					this.displayDropdown = true
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
-					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+					if (currentUser.currentProfile == 'Life and Ministry Overseer' || currentUser.currentProfile == 'Life and Ministry Assistant') {
+						this.buttons = [{"title": "ASSIGNMENTS", "function": "allAssignmentsVue"}, {"title": "SCHEDULE", "function": "scheduleVue"}, {"title": "PARTICIPANTS", "function": "allParticipantsVue"}]
+					} else {
+						this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+					}
 				} else if (button.innerHTML == "RECORDS") {
 					this.displayDropdown = true
 					allPublishersVue.request = false
@@ -747,6 +773,21 @@ function processNavigation() {
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
 					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "ACTIVE", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+				} else if (button.innerHTML == "PARTICIPANTS") {
+					this.displayDropdown = true
+					allPublishersVue.request = false
+					allPublishersVue.transfer = false
+					this.buttons = [{"title": "ASSIGNMENTS", "function": "allAssignmentsVue"}, {"title": "SCHEDULE", "function": "scheduleVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}]
+				} else if (button.innerHTML == "ASSIGNMENTS") {
+					this.displayDropdown = true
+					allPublishersVue.request = false
+					allPublishersVue.transfer = false
+					this.buttons = [{"title": "SCHEDULE", "function": "scheduleVue"}, {"title": "PARTICIPANTS", "function": "allParticipantsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}]
+				} else if (button.innerHTML == "SCHEDULE") {
+					this.displayDropdown = true
+					allPublishersVue.request = false
+					allPublishersVue.transfer = false
+					this.buttons = [{"title": "ASSIGNMENTS", "function": "allAssignmentsVue"}, {"title": "PARTICIPANTS", "function": "allParticipantsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}]
 				} else {
 					this.displayDropdown = false
 					allPublishersVue.request = false
@@ -754,9 +795,7 @@ function processNavigation() {
 					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
 				}
 
-				if (currentUser.accesses.includes('secretary')) {
-
-				} else if (currentUser.accesses.includes('sendReport')) {
+				if (currentUser.currentProfile == 'Secretary - Assistant') {
 					this.buttons.pop()
 				}
 
@@ -809,6 +848,7 @@ function processNavigation() {
 
 				allPublishersVue.request = false
 				allPublishersVue.transfer = false
+				navigationVue.displayDropdown = false
 				gotoView('configurationVue')
 			},
 			signOut() {
@@ -865,7 +905,7 @@ document.querySelector('#mySidebar').innerHTML = `<template>
 	<a href="javascript:void(0)" onclick="w3_close()" class="w3-bar-item w3-button w3-large w3-padding-16">Close ×</a>
     <a v-for="(button) in buttons()" v-if="button.title !== 'ACTIVE' && button.title !== 'ALL' && button.title !== 'REQUEST' && button.title !== 'TRANSFER'" @click="openButton($event.target)" class="w3-bar-item w3-button">{{ button.title }}</a>
     <a v-else @click="openButton($event.target)" :class="mode()">{{ button.title }}</a>
-	<a v-if="logged() == true && displayDropdown == true" class="w3-bar-item w3-button" @click="downloadContent()"><i title="Download" class="fa fa-download"></i></a>
+	<a v-if="logged() == true && displayDropdown == true && showDownloadButton()" class="w3-bar-item w3-button" @click="downloadContent()"><i title="Download" class="fa fa-download"></i> Download</a>
 	<a v-if="logged() == true" class="w3-bar-item w3-button" @click="openSettings()"><i class="fa fa-cog"></i> Settings</a>
 	<a v-if="logged() == true" class="w3-bar-item w3-button" @click="signOut()"><i class="fa fa-sign-out-alt"></i> Sign Out</a>
 </template>`
@@ -886,8 +926,83 @@ function processNavigation2() {
             },
         },
         methods: {
-			downloadContent() {
+			showDownloadButton() {
+				return allPublishersVue.display == true ||	fieldServiceGroupsVue.display == true || contactInformationVue.display == true
+			},
+			async downloadContent() {
 				console.log(currentView)
+				console.log(allButtons.filter(elem=>elem.title == currentView))
+				var allGroupsBackup = [].concat(allPublishersVue.allGroups)
+				var restoreAllGroups = [].concat(allPublishersVue.allGroups)
+				var backupMode = currentMode
+				if (backupMode !== 'Light') {
+					configurationVue.displayMode({"value": 'Light'})
+					await shortWait()
+					await shortWait()
+					await shortWait()
+					await shortWait()
+				}
+
+				if (allButtons.filter(elem=>elem.title == currentView)[0].function == "fieldServiceGroupsVue") {
+				
+					var i = 1
+					while (allGroupsBackup.length !== 0) {
+						this.allGroups = allGroupsBackup.splice(0, 3)
+						await shortWait()
+						await shortWait()
+						console.log(allGroupsBackup)
+						var fileName
+						if (fieldServiceGroupsVue.active !== true) {
+							fileName = 'Field Service Groups - ' + i
+						} else {
+							fileName = 'Field Service Groups - ALL - ' + i
+						}
+						generatePDF(document.getElementById('fieldServiceGroups'), fileName)
+						i++
+						await shortWait()
+						await shortWait()
+					}
+					
+					this.allGroups = restoreAllGroups
+					await shortWait()
+					await shortWait()
+				
+				} else if (allButtons.filter(elem=>elem.title == currentView)[0].function == "allPublishersVue") {
+				
+					await shortWait()
+					await shortWait()
+					console.log(allGroupsBackup)
+					var fileName = 'All Publishers'
+					generatePDF(document.getElementById('allPublishers'), fileName)
+					await shortWait()
+					await shortWait()
+					
+					await shortWait()
+					await shortWait()
+				
+				} else if (allButtons.filter(elem=>elem.title == currentView)[0].function == "contactInformationVue") {
+					var i = 1
+					while (allGroupsBackup.length !== 0) {
+						this.allGroups = allGroupsBackup.splice(0, 1)
+						await shortWait()
+						await shortWait()
+						console.log(allGroupsBackup)
+						var fileName = 'Contact Information - ' + this.allGroups[0]
+						generatePDF(document.getElementById('contactInformation'), fileName)
+						i++
+						await shortWait()
+						await shortWait()
+					}
+					
+					this.allGroups = restoreAllGroups
+					await shortWait()
+					await shortWait()
+					
+				}
+
+				if (backupMode !== 'Light') {
+					configurationVue.displayMode({"value": backupMode})
+				}
 			},
 			mode() {
 				return 'w3-bar-item w3-button ' + mode.replace('w3-card ','')
@@ -944,7 +1059,11 @@ function processNavigation2() {
 					navigationVue.displayDropdown = true
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
-					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+					if (currentUser.currentProfile == 'Life and Ministry Overseer' || currentUser.currentProfile == 'Life and Ministry Assistant') {
+						navigationVue.buttons = [{"title": "ASSIGNMENTS", "function": "allAssignmentsVue"}, {"title": "SCHEDULE", "function": "scheduleVue"}, {"title": "PARTICIPANTS", "function": "allParticipantsVue"}]
+					} else {
+						navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+					}
 				} else if (button.innerHTML == "RECORDS") {
 					navigationVue.displayDropdown = true
 					allPublishersVue.request = false
@@ -975,6 +1094,16 @@ function processNavigation2() {
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
 					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "ACTIVE", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+				} else if (button.innerHTML == "PARTICIPANTS") {
+					navigationVue.displayDropdown = true
+					allPublishersVue.request = false
+					allPublishersVue.transfer = false
+					navigationVue.buttons = [{"title": "ASSIGNMENTS", "function": "allAssignmentsVue"}, {"title": "SCHEDULE", "function": "scheduleVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}]
+				} else if (button.innerHTML == "SCHEDULE") {
+					navigationVue.displayDropdown = true
+					allPublishersVue.request = false
+					allPublishersVue.transfer = false
+					navigationVue.buttons = [{"title": "ASSIGNMENTS", "function": "allAssignmentsVue"}, {"title": "PARTICIPANTS", "function": "allParticipantsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}]
 				} else {
 					navigationVue.displayDropdown = false
 					allPublishersVue.request = false
@@ -982,9 +1111,7 @@ function processNavigation2() {
 					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
 				}
 
-				if (currentUser.accesses.includes('secretary')) {
-
-				} else if (currentUser.accesses.includes('sendReport')) {
+				if (currentUser.currentProfile == 'Secretary - Assistant') {
 					navigationVue.buttons.pop()
 				}
 
@@ -1040,6 +1167,7 @@ function processNavigation2() {
 
 				allPublishersVue.request = false
 				allPublishersVue.transfer = false
+				navigationVue.displayDropdown = false
 				gotoView('configurationVue')
 			},
 			signOut() {
@@ -1114,11 +1242,14 @@ function w3_close() {
 function gotoView(button) {
 	congregationVue.display = false
 	allPublishersVue.display = false
+	allParticipantsVue.display = false
 	fieldServiceGroupsVue.display = false
     configurationVue.display = false
 	monthlyReportVue.display = false
 	missingReportVue.display = false
 	attendanceVue.display = false
+	allAssignmentsVue.display = false
+	scheduleVue.display = false
 	contactInformationVue.display = false
 	branchReportVue.display = false
 	if (button == "congregationVue" || button == "configurationVue") {
@@ -1172,7 +1303,7 @@ document.querySelector('#allPublishers').innerHTML = `<template>
 		<div v-for="(category) in regularPioneers">
 			<h2 class="w3-center">{{ category.name }}</h2>
 			<div class="w3-row-padding w3-grayscale" style="margin-top:4px">
-				<div v-for="(publisher, count) in category.value" :key="publisher + '|' + count" v-if="(publisher.fieldServiceGroup == selectedGroup || selectedGroup == 'All Groups') && publisher.name.toLowerCase().includes(searchTerms.toLowerCase())" class="w3-col l3 m6 w3-margin-bottom">
+				<div v-for="(publisher, count) in category.value" :key="publisher + '|' + count" v-if="(publisher.fieldServiceGroup == selectedGroup || selectedGroup == 'All Groups') && publisher.name.toLowerCase().includes(searchTerms.toLowerCase())" class="w3-col l2 m4 w3-margin-bottom">
 					<div :class="mode()">
 						<div class="w3-container main">
 							<h5 @click="publisherDetail(publisher, $event.target)">{{ publisher.name }}</h5>
@@ -1247,7 +1378,7 @@ document.querySelector('#allPublishers').innerHTML = `<template>
 		<div v-for="(group) in allGroups">
 			<h2 class="w3-center">{{ group }}</h2>
 			<div class="w3-row-padding w3-grayscale" style="margin-top:4px">
-				<div v-for="(publisher, count) in activePublishers" v-if="publisher.fieldServiceGroup == group && (group == selectedGroup || selectedGroup == 'All Groups') && publisher.name.toLowerCase().includes(searchTerms.toLowerCase())" :key="publisher + '|' + count" class="w3-col l3 m6 w3-margin-bottom">
+				<div v-for="(publisher, count) in activePublishers" v-if="publisher.fieldServiceGroup == group && (group == selectedGroup || selectedGroup == 'All Groups') && publisher.name.toLowerCase().includes(searchTerms.toLowerCase())" :key="publisher + '|' + count" class="w3-col l2 m4 w3-margin-bottom">
 					<div :class="mode()">
 						<div class="w3-container main">
 							<h5 @click="publisherDetail(publisher, $event.target)">{{ publisher.name }}</h5>
@@ -1321,7 +1452,7 @@ document.querySelector('#allPublishers').innerHTML = `<template>
 		</div>
 		<h2 class="w3-center">Inactive Publishers</h2>
 		<div class="w3-row-padding w3-grayscale" style="margin-top:4px">
-			<div v-for="(publisher, count) in inactivePublishers" :key="publisher + '|' + count" v-if="(publisher.fieldServiceGroup == selectedGroup || selectedGroup == 'All Groups') && publisher.name.toLowerCase().includes(searchTerms.toLowerCase())" class="w3-col l3 m6 w3-margin-bottom">
+			<div v-for="(publisher, count) in inactivePublishers" :key="publisher + '|' + count" v-if="(publisher.fieldServiceGroup == selectedGroup || selectedGroup == 'All Groups') && publisher.name.toLowerCase().includes(searchTerms.toLowerCase())" class="w3-col l2 m4 w3-margin-bottom">
 				<div :class="mode()">
 					<div class="w3-container main">
 						<h5 @click="publisherDetail(publisher, $event.target)">{{ publisher.name }}</h5>
@@ -1333,6 +1464,7 @@ document.querySelector('#allPublishers').innerHTML = `<template>
 						</div>
 						<h2 contenteditable="true" class="name">{{ publisher.name }}</h2>
 						<p>
+						<label :class="inputMode('w3-input')"><input type="checkbox" name="reactivated" :class="inputMode('reactivated')" :checked=publisher.reactivated> Reactivated</label>
 							<label>Date of Birth: <input v-if="publisher.dateOfBirth == null" type="date" :class="inputMode('dateOfBirth w3-input')"><input v-if="publisher.dateOfBirth !== null" type="date" :class="inputMode('dateOfBirth w3-input')" :value="cleanDate(publisher.dateOfBirth)"></label>
 							<select :class="inputMode('gender w3-input')" :v-model="publisher.gender">
 								<option v-if="publisher.gender !== 'Male' && publisher.gender !== 'Female'" value="">Select Gender</option>
@@ -1819,6 +1951,14 @@ ${congregationVue.congregation.congregationName} Congregation
                     allPrivileges.sort()
 
                     publisher.privilege = allPrivileges
+					if (item.parentNode.parentNode.parentNode.querySelector('.reactivated')) {
+						if (item.parentNode.parentNode.parentNode.querySelector('.reactivated').checked) {
+                            publisher.reactivated = true
+                        } else {
+							publisher.reactivated = false
+							delete publisher.reactivated
+						}
+					}
 
                     this.months.forEach(elem=>{
                         const currentItem = item.parentNode.parentNode.querySelector(`.${elem.abbr}`)
@@ -1929,6 +2069,204 @@ function removeRecord(event) {
 }
 
 
+document.querySelector('#allParticipants').innerHTML = `<template>
+	<div v-if="display == true">
+		<h2 class="w3-center">ALL PARTICIPANTS</h2>
+		<div v-for="(category) in regularPioneers">
+			<h2 class="w3-center">{{ category.name }}</h2>
+			<div class="w3-row-padding w3-grayscale" style="margin-top:4px">
+				<div v-for="(publisher, count) in category.value" :key="publisher + '|' + count" v-if="(publisher.fieldServiceGroup == selectedGroup || selectedGroup == 'All Groups') && publisher.name.toLowerCase().includes(searchTerms.toLowerCase())" class="w3-col l2 m4 w3-margin-bottom">
+					<div :class="mode()">
+						<div class="w3-container main">
+							<h5 @click="publisherDetail(publisher, $event.target)">{{ publisher.name }}</h5>
+						</div>
+						<div class="detail" style="display:none; padding:15px">
+							<div style="display:flex; justify-content:space-between">
+								<i @click="publisherDetail(publisher, $event.target)" class="fas fa-chevron-left"></i>
+							</div>
+							<h2 class="name">{{ publisher.name }}</h2>
+							<label v-if="!publisher.privilege.includes('Elder') && !publisher.privilege.includes('Ministerial Servant')" :class="inputMode('w3-input')"><input type="checkbox" name="exemplary" :class="inputMode('exemplary')" :checked=publisher.exemplary> Exemplary</label>
+							<label>{{ publisher.gender }}</label>
+								
+							<p>{{ publisher.hope }}</p>
+								
+							<label v-for="(privilege, index) in publisher.privilege" :key="index" :class="inputMode('w3-input')">{{ privilege }}</label>
+							<p>
+								<label>Field Service Group:</label>
+								<label :class="inputMode('w3-input')">{{ publisher.fieldServiceGroup }}</label>
+							</p>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div v-for="(group) in allGroups">
+			<h2 class="w3-center">{{ group }}</h2>
+			<div class="w3-row-padding w3-grayscale" style="margin-top:4px">
+				<div v-for="(publisher, count) in activePublishers" v-if="publisher.fieldServiceGroup == group && (group == selectedGroup || selectedGroup == 'All Groups') && publisher.name.toLowerCase().includes(searchTerms.toLowerCase())" :key="publisher + '|' + count" class="w3-col l2 m4 w3-margin-bottom">
+					<div :class="mode()">
+						<div class="w3-container main">
+							<h5 @click="publisherDetail(publisher, $event.target)">{{ publisher.name }}</h5>
+						</div>
+						<div class="detail" style="display:none; padding:15px">
+							<div style="display:flex; justify-content:space-between">
+								<i @click="publisherDetail(publisher, $event.target)" class="fas fa-chevron-left"></i>
+							</div>
+							<h2 class="name">{{ publisher.name }}</h2>
+							<label v-if="!publisher.privilege.includes('Elder') && !publisher.privilege.includes('Ministerial Servant')" :class="inputMode('w3-input')"><input type="checkbox" name="exemplary" :class="inputMode('exemplary')" :checked=publisher.exemplary> Exemplary</label>
+							<label>{{ publisher.gender }}</label>
+								
+							<p>{{ publisher.hope }}</p>
+								
+							<label v-for="(privilege, index) in publisher.privilege" :key="index" :class="inputMode('w3-input')">{{ privilege }}</label>
+							<p>
+								<label>Field Service Group:</label>
+								<label :class="inputMode('w3-input')">{{ publisher.fieldServiceGroup }}</label>
+							</p>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<h2 class="w3-center">Enrolments</h2>
+		<div class="w3-row-padding w3-grayscale" style="margin-top:4px">
+			<div v-for="(publisher, count) in enrolments" :key="publisher + '|' + count" v-if="publisher.name.toLowerCase().includes(searchTerms.toLowerCase())" class="w3-col l2 m4 w3-margin-bottom">
+				<div :class="mode()">
+					<div class="w3-container main">
+						<h5 @click="publisherDetail(publisher, $event.target)">{{ publisher.name }}</h5>
+					</div>
+					<div class="detail" style="display:none; padding:15px">
+						<div style="display:flex; justify-content:space-between">
+							<i @click="publisherDetail(publisher, $event.target)" class="fas fa-chevron-left"></i>
+							<i @click="removePublisher(count, publisher.name, $event.target)" class="fas fa-trash-alt"></i>
+						</div>
+						<h2 contenteditable="true" class="name">{{ publisher.name }}</h2>
+						<p>
+							<select :class="inputMode('gender w3-input')" :v-model="publisher.gender">
+								<option v-if="publisher.gender !== 'Male' && publisher.gender !== 'Female'" value="">Select Gender</option>
+								<option v-if="publisher.gender == 'Male' || publisher.gender == 'Female'" :value="publisher.gender">{{ publisher.gender }}</option>
+								<option v-for="gender in ['Male', 'Female'].filter(elem=>elem !== publisher.gender)" :value="gender">{{ gender }}</option>
+							</select>
+						</p>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+    </div>
+</template>`
+//(group == 'Pioneers' && publisher.privilege.some(item => privileges.slice(-3).includes(item)))
+function processAllParticipants() {
+
+    allParticipantsVue = new Vue({
+        el: document.querySelector('#allParticipants'),
+        data: {
+			display: false,
+			pdfFile: '',
+            categories: [],
+			enrolments: [],
+        },
+        computed: {
+			publishers() {
+                return allPublishersVue.publishers.filter(elem=>elem.active == true)
+            },/*
+			enrolments() {
+                return allParticipantsVue.lifeAndMinistry.enrolments
+            },*/
+			searchTerms() {
+                return navigationVue.searchTerms
+            },
+			selectedGroup() {
+                return navigationVue.fieldServiceGroup
+            },
+			allGroups() {
+				return navigationVue.allGroups
+            },
+			regularPioneers() {
+				var categories = [{"name": "Pioneers","value": this.publishers.filter(elem=>elem.privilege.includes("Regular Pioneer"))}]
+				return categories
+			},
+			activePublishers() {
+				return this.publishers.filter(elem=>!elem.privilege.includes("Regular Pioneer") && elem.active == true)
+			},
+			inactivePublishers() {
+				return this.publishers.filter(elem=>elem.active !== true)
+			},
+        },
+        methods: {
+			currentProfile() {
+				return configurationVue.reportEntry
+			},
+			buttonMode(currentClass) {
+				return currentClass + ' ' + mode.replace('w3-card ','').replace('white','light-grey').replace('black','dark-grey')
+			},
+			searchMode() {
+				return mode.replace('w3-card','w3-border')
+			},
+			inputMode(currentClass) {
+				return currentClass + ' ' + mode.replace('w3-card ','')
+			},
+			mode() {
+				return mode
+			},
+            publisherDetail(publisher, item) {
+				if (item.parentNode.classList.value.includes('main')) {
+                    item.parentNode.parentNode.querySelector('.main').style.display = 'none'
+                    item.parentNode.parentNode.querySelector('.detail').style.display = ''
+                } else {
+					if (item.parentNode.parentNode.querySelector('.name').innerHTML.trim() == '' || item.parentNode.parentNode.querySelector('.name').innerHTML.trim().replaceAll('&nbsp;','').replaceAll('nbsp;','').replaceAll('&amp;','').replaceAll(' ','') == '') {
+						alert("Please enter Name")
+						return
+					}
+
+					if (publisher.hope) {
+						if (item.parentNode.parentNode.parentNode.querySelector('.exemplary')) {
+							if (item.parentNode.parentNode.parentNode.querySelector('.exemplary').checked) {
+								publisher.exemplary = true
+							} else {
+								publisher.exemplary = false
+								delete publisher.exemplary
+							}
+						}
+						DBWorker.postMessage({ storeName: 'data', action: "save", value: [publisher]});
+						item.parentNode.parentNode.parentNode.querySelector('.detail').style.display = 'none'
+                    	item.parentNode.parentNode.parentNode.querySelector('.main').style.display = ''
+						return
+					}
+					
+                    publisher.name = item.parentNode.parentNode.querySelector('.name').innerHTML
+                    publisher.gender = item.parentNode.parentNode.querySelector('.gender').value
+					
+                    item.parentNode.parentNode.parentNode.querySelector('.detail').style.display = 'none'
+                    item.parentNode.parentNode.parentNode.querySelector('.main').style.display = ''
+                    DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [{"name": "Life and Ministry", "enrolments": allParticipantsVue.enrolments}]});
+                }
+			},          
+			cleanDate(date) {
+                const currentDate = new Date(date);
+
+                const formattedDate = `${currentDate.getFullYear()}-${(currentDate.getMonth() + 1).toString().padStart(2, '0')}-${currentDate.getDate().toString().padStart(2, '0')}`;
+
+                return formattedDate
+            },
+			formatDateToFull() {
+				const options = { year: 'numeric', month: 'long', day: 'numeric' };
+				const formattedDate = new Date().toLocaleDateString('en-US', options);
+				return formattedDate
+            },
+            removePublisher(count, name, item) {
+                if (confirm('Are you sure you want to delete "' + name + '" records?\nPress "OK" to Delete')) {
+					item.parentNode.parentNode.parentNode.querySelector('.detail').style.display = 'none'
+					item.parentNode.parentNode.parentNode.querySelector('.main').style.display = ''
+					this.enrolments.splice(count, 1)
+					DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [{"name": "Life and Ministry", "enrolments": allParticipantsVue.enrolments}]});
+				}
+            }
+        }
+    })
+}
+
+
 document.querySelector('#fieldServiceGroups').innerHTML = `<template>
 	<div v-if="display == true">
 		<h2 class="w3-center">FIELD SERVICE GROUPS {{ active !== true ? '' : '(ALL)'}}</h2>		
@@ -2003,21 +2341,37 @@ document.querySelector('#contactInformation').innerHTML = `<template>
 		<div v-for="(group) in allGroups" :key="group" v-if="(selectedGroup == group || selectedGroup == 'All Groups') && groupPublishers(group).filter(elem=>elem.name.toLowerCase().includes(searchTerms.toLowerCase())).length !== 0">
 			<h2 class="w3-center">{{ group }}</h2>
 			<div class="w3-row-padding w3-grayscale" style="margin-top:4px">
-				<div v-for="(publisher, count) in groupPublishers(group)" :key="publisher + '|' + count" style="cursor:pointer" v-if="publisher.fieldServiceGroup == group && (publisher.name.toLowerCase().includes(searchTerms.toLowerCase()))" class="w3-col l3 m6 w3-margin-bottom">
+				<div v-for="(publisher, count) in groupPublishers(group)" :key="publisher + '|' + count" style="cursor:pointer" v-if="publisher.fieldServiceGroup == group && (publisher.name.toLowerCase().includes(searchTerms.toLowerCase()))" class="w3-col l2 m4 w3-margin-bottom">
 					<div :class="mode()">
 						<h5 @click="publisherDetail($event.target, publisher)" style="padding:10px 15px;margin:0">{{ publisher.name }}</h5>
-						<div class="w3-container main" style="padding:0 15px">
-							<p v-if="publisher.contactInformation.phoneNumber !== null" v-for="(number) in getEachNumber(publisher.contactInformation.phoneNumber)" @click="call(number)" title="Call Number"><i class="fas fa-phone"></i> {{ number }}</p>
-							<p v-if="publisher.contactInformation.address !== null" title="Address"><i class="fas fa-home"></i> {{ publisher.contactInformation.address }}</p>
-							<p v-if="publisher.emergencyContactInformation.name !== null" title="Emergency Contact"><i class="fas fa-user"></i> {{ publisher.emergencyContactInformation.name }}</p>
-							<p v-if="publisher.emergencyContactInformation.phoneNumber !== null" v-for="(number) in getEachNumber(publisher.emergencyContactInformation.phoneNumber)" @click="call(number)" title="Call Emergency Number"><i class="fas fa-address-book"></i> {{ number }}</p>
+						<div class="w3-container main" style="padding:0 15px 10px 15px">
+							<p style="margin:0" v-if="publisher.contactInformation.phoneNumber !== null" v-for="(number) in getEachNumber(publisher.contactInformation.phoneNumber)" @click="call(number)" title="Call Number"><i class="fas fa-phone"></i> {{ number }}</p>
+							<p style="margin:0" v-if="publisher.contactInformation.address !== null" title="Address"><i class="fas fa-home"></i> {{ publisher.contactInformation.address }}</p>
+							<p style="margin:0" v-if="publisher.emergencyContactInformation && publisher.emergencyContactInformation.name !== null" title="Emergency Contact"><i class="fas fa-user"></i> {{ publisher.emergencyContactInformation.name }}</p>
+							<p style="margin:0" v-if="publisher.emergencyContactInformation && publisher.emergencyContactInformation.phoneNumber !== null" v-for="(number) in getEachNumber(publisher.emergencyContactInformation.phoneNumber)" @click="call(number)" title="Call Emergency Number"><i class="fas fa-address-book"></i> {{ number }}</p>
 						</div>
 						<div class="detail" style="display:none; padding:0 15px 15px 15px">
 							<p><label>Phone Number: <input :class="inputMode('contactInformation w3-input')" type="tel" :value="publisher.contactInformation.phoneNumber" @change="handleInputChange($event.target, publisher, 'phoneNumber')"></label></p>
 							<p><label>Address:<input :class="inputMode('contactInformation w3-input')" type="text" :value="publisher.contactInformation.address" @change="handleInputChange($event.target, publisher, 'address')"></label></p>
-							<p><label>Emergency Contact: <input :class="inputMode('emergencyContactInformation w3-input')" type="text" :value="publisher.emergencyContactInformation.name" @change="handleInputChange($event.target, publisher, 'name')"></label></p>
-							<p><label>Contact Number: <input :class="inputMode('emergencyContactInformation w3-input')" type="tel" :value="publisher.emergencyContactInformation.phoneNumber" @change="handleInputChange($event.target, publisher, 'phoneNumber')"></label></p>
+							<p v-if="publisher.emergencyContactInformation"><label>Emergency Contact: <input :class="inputMode('emergencyContactInformation w3-input')" type="text" :value="publisher.emergencyContactInformation.name" @change="handleInputChange($event.target, publisher, 'name')"></label></p>
+							<p v-if="publisher.emergencyContactInformation"><label>Contact Number: <input :class="inputMode('emergencyContactInformation w3-input')" type="tel" :value="publisher.emergencyContactInformation.phoneNumber" @change="handleInputChange($event.target, publisher, 'phoneNumber')"></label></p>
 						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<h2 v-if="displayEnrolments == true" class="w3-center">Enrolments</h2>
+		<div v-if="displayEnrolments == true" class="w3-row-padding w3-grayscale" style="margin-top:4px">
+			<div v-for="(publisher, count) in enrolments()" :key="publisher + '|' + count" style="cursor:pointer" v-if="publisher.name.toLowerCase().includes(searchTerms.toLowerCase())" class="w3-col l2 m4 w3-margin-bottom">
+				<div :class="mode()">
+					<h5 @click="publisherDetail($event.target, publisher)" style="padding:10px 15px;margin:0">{{ publisher.name }}</h5>
+					<div class="w3-container main" style="padding:0 15px 10px 15px">
+						<p style="margin:0" v-if="publisher.phoneNumber !== null" v-for="(number) in getEachNumber(publisher.phoneNumber)" @click="call(number)" title="Call Number"><i class="fas fa-phone"></i> {{ number }}</p>
+						<p style="margin:0" v-if="publisher.address !== null" title="Address"><i class="fas fa-home"></i> {{ publisher.address }}</p>
+					</div>
+					<div class="detail" style="display:none; padding:0 15px 15px 15px">
+						<p><label>Phone Number: <input :class="inputMode('contactInformation w3-input')" type="tel" :value="publisher.phoneNumber" @change="handleInputChange($event.target, publisher, 'phoneNumber')"></label></p>
+						<p><label>Address:<input :class="inputMode('contactInformation w3-input')" type="text" :value="publisher.address" @change="handleInputChange($event.target, publisher, 'address')"></label></p>
 					</div>
 				</div>
 			</div>
@@ -2039,17 +2393,23 @@ function contactInformation() {
             publishers() {
                 return allPublishersVue.publishers
             },
+			displayEnrolments() {
+				return configurationVue.reportEntry == 'lmo' || configurationVue.reportEntry == 'lma'
+			},
 			searchTerms() {
                 return navigationVue.searchTerms
             },
 			allGroups() {
-                return allPublishersVue.allGroups
+                return navigationVue.allGroups
             },
 			selectedGroup() {
                 return navigationVue.fieldServiceGroup
             },
         },
         methods: {
+			enrolments() {
+                return allParticipantsVue.enrolments
+            },
 			inputMode(currentClass) {
 				return currentClass + ' ' + mode.replace('w3-card ','')
 			},
@@ -2067,7 +2427,11 @@ function contactInformation() {
 				}
 			},
 			groupPublishers(group) {
-                return allPublishersVue.publishers.filter(elem=>elem.fieldServiceGroup == group)
+				if (currentUser.currentProfile == 'Life and Ministry Overseer' || currentUser.currentProfile == 'Life and Ministry Assistant') {
+					return allPublishersVue.publishers.filter(elem=>elem.fieldServiceGroup == group && elem.active)
+				} else {
+					return allPublishersVue.publishers.filter(elem=>elem.fieldServiceGroup == group)
+				}
             },
 			publisherDetail(item, publisher) {
 				//console.log(item, publisher)
@@ -2084,6 +2448,16 @@ function contactInformation() {
 				updatePublisherRecord(publisher)
 			},
             handleInputChange(event, publisher, property) {
+				if (configurationVue.reportEntry == 'lmo' || configurationVue.reportEntry == 'lma') {
+					if (event.value == '') {
+						publisher[`${property}`] = null
+					} else {
+						publisher[`${property}`] = event.value
+					}
+					DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [{"name": "Life and Ministry", "enrolments": allParticipantsVue.enrolments}]});
+					return
+				}
+
 				const type = event.classList[0]
 				if (event.value == '') {
 					publisher[`${type}`][`${property}`] = null
@@ -2552,6 +2926,479 @@ Thanks,
     })
 }
 
+var newAssignments = []
+
+function convertClipboardToHTML() {
+	allAssignmentsVue.currentWeek = ''
+	newAssignments = []
+	// Get the content from the clipboard as plain text
+	navigator.clipboard.readText()
+		.then(async (clipboardText) => {
+			// Convert plain text to HTML (in this case, preserving line breaks)
+			const htmlContent = clipboardText.replace(/\n/g, '<br>');
+
+			// Display the HTML content in the result div
+			document.getElementById('result').innerHTML = htmlContent;
+			await shortWait()
+			await shortWait()
+			allAssignmentsVue.assignDetails = document.getElementById('result').innerText.split('\n')
+			allAssignmentsVue.currentSection = allAssignmentsVue.assignDetails[3].trim()
+			allAssignmentsVue.currentWeek = allAssignmentsVue.assignDetails.shift().trim()
+			//allParticipantsVue.lifeAndMinistry.assignments.push({ "week": allAssignmentsVue.currentWeek, "meetingPart": allAssignmentsVue.assignDetails.shift().trim(), "section": allAssignmentsVue.currentSection })
+			newAssignments.push({ "week": allAssignmentsVue.currentWeek, "meetingPart": allAssignmentsVue.assignDetails.shift().trim(), "section": allAssignmentsVue.currentSection, "assignTo": "chairman" })
+			const firstAssignment = allAssignmentsVue.assignDetails.shift().trim()
+			await shortWait()
+			await shortWait()
+			//console.log(allAssignmentsVue.assignDetails)
+			//return
+
+			//allParticipantsVue.lifeAndMinistry.assignments.push({ "week": allAssignmentsVue.currentWeek, "meetingPart": firstAssignment, "section": allAssignmentsVue.currentSection })
+			newAssignments.push({ "week": allAssignmentsVue.currentWeek, "meetingPart": firstAssignment, "section": allAssignmentsVue.currentSection, "assignTo": "exemplary" })
+			const song = allAssignmentsVue.assignDetails.findIndex(elem=>elem.trim().split(' ')[0] == firstAssignment.split(' ')[0])
+			//console.log(allAssignmentsVue.assignDetails[found])
+			await shortWait()
+			await shortWait()
+			//allParticipantsVue.lifeAndMinistry.assignments.push({ "week": allAssignmentsVue.currentWeek, "meetingPart": allAssignmentsVue.assignDetails.splice(song, 1)[0].trim(), "section": allAssignmentsVue.assignDetails[song - 1].trim() })
+			newAssignments.push({ "week": allAssignmentsVue.currentWeek, "meetingPart": allAssignmentsVue.assignDetails.splice(song, 1)[0].trim(), "section": allAssignmentsVue.assignDetails[song - 1].trim() })
+			await shortWait()
+			await shortWait()
+			//allParticipantsVue.lifeAndMinistry.assignments.push({ "week": allAssignmentsVue.currentWeek, "meetingPart": allAssignmentsVue.assignDetails.pop().trim(), "section": allAssignmentsVue.currentSection })
+			newAssignments.push({ "week": allAssignmentsVue.currentWeek, "meetingPart": allAssignmentsVue.assignDetails.pop().trim(), "section": allAssignmentsVue.currentSection, "assignTo": "exemplary" })
+
+			var i = 1, j = 0, assignTo
+			while (j < allAssignmentsVue.assignDetails.length) {
+				//console.log(i, j)
+				const found = allAssignmentsVue.assignDetails.findIndex(elem=>elem.startsWith(i + '. '))
+				
+				if (found !== -1) {
+					const newPart = `${allAssignmentsVue.assignDetails[found]} ${allAssignmentsVue.assignDetails[found + 1]}`
+					if (i < 3) {
+						assignTo = "appointed"
+					} else if (i == 3) {
+						assignTo = "male"
+					} else if (i == 4) {
+						assignTo = "all"
+						allAssignmentsVue.currentSection = allAssignmentsVue.assignDetails[found - 1].trim()
+					} else if (found == song) {
+						assignTo = "appointed"
+						allAssignmentsVue.currentSection = allAssignmentsVue.assignDetails[song - 1].trim()
+					} else if (`${newPart.split('min.)')[0]}min.)`.trim().includes('(30 min.)')) {
+						assignTo = "cbs"
+					} else if (assignTo == "cbs") {
+						assignTo = "exemplary"
+					}
+					
+
+					//allParticipantsVue.lifeAndMinistry.assignments.push({ "week": allAssignmentsVue.currentWeek, "meetingPart": `${newPart.split('min.)')[0]}min.)`.trim(), "section": allAssignmentsVue.currentSection })
+					newAssignments.push({ "week": allAssignmentsVue.currentWeek, "meetingPart": `${newPart.split('min.)')[0]}min.)`.trim(), "section": allAssignmentsVue.currentSection, "assignTo": assignTo })
+					i++
+				}
+				
+				if (found > j) {
+					j = found
+				}
+				j++
+				newAssignments.forEach(elem=>{
+					const found = allAssignmentsVue.assignments.findIndex(ele=>ele.week == elem.week && ele.meetingPart == elem.meetingPart && ele.section == elem.section)
+					if (found !== -1) {
+						allAssignmentsVue.assignments[found] = elem
+					} else {
+						allAssignmentsVue.assignments.push(elem)
+					}
+				})
+			}
+			
+			await shortWait()
+			await shortWait()
+
+			DBWorker.postMessage({ storeName: 'lifeAndMinistry', action: "save", value: [allAssignmentsVue.assignments]});
+		})
+		.catch(error => {
+			console.error('Error reading clipboard text:', error);
+		});
+}
+
+
+document.querySelector('#allAssignments').innerHTML = `<template>
+	<div v-if="display == true" style="display:block">
+		<h2 class="w3-center">ASSIGNMENTS</h2>
+		<div id="result" style="display:none; margin-top: 20px; border: 1px solid #ccc; padding: 10px;" contenteditable="true">
+			Result will appear here...
+		</div>
+		<div style="display:flex; flex-wrap:wrap">
+			<button class="w3-button w3-black" style="margin:5px 5px 10px 20px" onclick="convertClipboardToHTML()"><i class="fas fa-file-import"></i> Import</button>
+			<select v-model="selectedWeek" style="margin:5px; width:200px" :class="inputMode('week w3-input')">
+				<option value="All Assignments">All Assignments</option>
+				<option v-for="week in allWeeks()" :value="week.week">{{ week.week }}</option>
+			</select>
+			<select v-model="selectedAssignTo" style="margin:5px; width:150px" :class="inputMode('assignTo w3-input')">
+				<option value="All Assign To">All Assign To</option>
+				<option v-for="week in allAssignTo()" :value="week.assignTo">{{ toTitleCase(week.assignTo.replace('cbs','Bible Study')) }}</option>
+			</select>
+			<button class="w3-button w3-black filterBtn" style="margin:5px 5px 10px 5px" @click="filterAssignment($event.target)">All</button>
+			<button class="w3-button w3-black filterBtn" style="margin:5px 5px 10px 5px" @click="filterAssignment($event.target)">Assigned</button>
+			<button class="w3-button w3-black filterBtn" style="margin:5px 5px 10px 5px; display:none" @click="filterAssignment($event.target)">Unassigned</button>
+		</div>
+
+		<div class="w3-row-padding w3-grayscale" style="margin-top:5px">
+			<div v-for="(week, count) in assignments" :key="week.week + '|' + count" v-if="(selectedWeek == week.week || selectedWeek == 'All Assignments') && (selectedAssignTo.startsWith(week.assignTo) || selectedAssignTo == week.assignTo || selectedAssignTo == 'All Assign To')" class="w3-col l3 m6 w3-margin-bottom">
+				<div style="padding-bottom:10px" :class="mode()">
+					<div class="w3-container">
+						<div style="display:flex; justify-content:space-between">
+							<h3 style="margin-right:4px">{{ week.week }}</h3>
+							<h4 style="text-align: right;" @click="deleteAssignment(count)" title="Delete Assignment"><i class="fas fa-trash"></i></h4>
+						</div>
+						<div class="main" style="cursor:pointer">
+							<hr style="margin:0; padding:0">
+							<h5 @click="publisherDetail($event.target, week)" style="margin:2px 0"><i class="fa fa-caret-right w3-margin-right"></i>{{ week.meetingPart }}</h5>
+							<p style="margin:0">{{ week.assignedTo }}{{ week.assistant ? ' / ' + week.assistant : '' }}</p>
+							<div class="w3-container detail" style="display:none">
+								<h5 style="margin:0"><select v-model="week.assignedTo" :class="inputMode('assignedTo w3-input')">
+									<option value="">Select Person</option>
+									<option v-for="publisher in selection(week)[0]" :value="publisher.name">{{ publisher.name }}</option>
+								</select></h5>
+								<h5 v-if="week.assignTo == 'all' || week.assignTo == 'cbs'" style="margin:0"><select v-model="week.assistant" :class="inputMode('assistant w3-input')">
+									<option value="">Select Person</option>
+									<option v-for="publisher in selection(week)[1]" :value="publisher.name">{{ publisher.name }}</option>
+								</select></h5>
+								<hr style="margin:0; padding:0">
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+    </div>
+</template>`
+//.filter(elem=>elem.name !== week.assignedTo)
+function processAllAssignments() {
+
+    allAssignmentsVue = new Vue({
+        el: document.querySelector('#allAssignments'),
+        data: {
+            assignDetails: '',
+            selectedWeek: 'All Assignments',
+            selectedAssignTo: 'All Assign To',
+			currentWeek: '',
+			currentAssignment: '',
+			currentSection: '',
+			currentView: 'Unassigned',
+            display: false,
+            pdfFile: "",
+			selectedPublisher: {},
+			allAssignments: [],
+			//assignments: [],
+        },
+        computed: {
+            publishers() {
+                return allPublishersVue.publishers.filter(elem=>elem.active == true).concat(allParticipantsVue.enrolments)
+            },
+			assignments() {
+				if (this.currentView == 'Assigned') {
+					return this.allAssignments.filter(elem=>elem.assignedTo)
+				} else if (this.currentView == 'Unassigned') {
+					return this.allAssignments.filter(elem=>!elem.assignedTo)
+				} else {
+					return this.allAssignments
+				}
+                
+            },
+			searchTerms() {
+                return navigationVue.searchTerms
+            },
+			selectedGroup() {
+                return navigationVue.fieldServiceGroup
+            },
+        },
+        methods: {
+			filterAssignment(event) {
+				this.currentView = event.innerHTML
+				document.querySelectorAll('.filterBtn').forEach(elem=>{
+					elem.style.display = ''
+				})
+				event.style.display = 'none'
+			},
+			selection(assignment) {
+				//console.log(assignment)
+				//var ministry = this.assignments.filter(elem=>elem.week == assignment.week && elem.meetingPart.startsWith('4.'))[0].section
+				//console.log(ministry)
+				//return []
+				if (assignment.assignTo == 'chairman' || assignment.assignTo == 'cbs') {
+					const assignees = this.publishers.filter(elem=>elem.privilege && elem.privilege.includes('Elder'))
+					const assistant = this.publishers.filter(elem=>elem.privilege && (elem.privilege.includes('Elder') || elem.privilege.includes('Ministerial Servant') || elem.exemplary))
+					//console.log(assignees)
+					return [assignees, assistant]
+				} else if (assignment.assignTo == 'appointed') {
+					const assignees = this.publishers.filter(elem=>elem.privilege && (elem.privilege.includes('Elder') || elem.privilege.includes('Ministerial Servant')))
+					//console.log(assignees)
+					return [assignees]
+				} else if (assignment.assignTo == 'exemplary') {
+					const assignees = this.publishers.filter(elem=>elem.privilege && (elem.privilege.includes('Elder') || elem.privilege.includes('Ministerial Servant') || elem.exemplary))
+					//console.log(assignees)
+					return [assignees]
+				} else if (assignment.assignTo == 'male') {
+					const assignees = this.publishers.filter(elem=>elem.gender && elem.gender == 'Male')
+					//console.log(assignees)
+					return [assignees]
+				} else {
+					return [this.publishers, this.publishers]
+				}
+				
+			},
+			toTitleCase(value) {
+				return toTitleCase(value)
+			},
+			allWeeks() {
+				return getUniqueElementsByProperty(this.assignments,['week'])
+            },
+			allAssignTo() {
+				return getUniqueElementsByProperty(this.assignments.filter(elem=>elem.assignTo),['assignTo'])
+            },
+			deleteAssignment(count) {
+				if (confirm('Are you sure you want to Delete Assignment?\nPress "Yes" to Delete')) {
+					allAssignmentsVue.assignments.splice(count, 1)
+					DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [allParticipantsVue.lifeAndMinistry]});
+				}
+			},
+			addAssignment() {
+				//console.log("New Assignment")
+				if (this.currentWeek == '') {
+					this.currentWeek = this.currentAssignment
+					this.currentAssignment = ''
+					return
+				}
+				allAssignmentsVue.assignments.push({ "week": this.currentWeek, "meetingPart": this.currentAssignment, "section": this.currentSection })
+				this.currentAssignment = ''
+				DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [allParticipantsVue.lifeAndMinistry]});
+			},
+			inputMode(currentClass) {
+				return currentClass + ' ' + mode.replace('w3-card ','')
+			},
+			mode() {
+				return mode
+			},
+			groupPublishers(group) {
+                return allPublishersVue.publishers.filter(elem=>elem.fieldServiceGroup == group && (elem.active == true || (elem.active == false && elem.reactivated)))
+            },
+			publisherDetail(event, week) {
+				//console.log(event, event.parentNode.querySelector('p'))
+				if (!event.parentNode.querySelector('.detail')) {
+					event = event.parentNode
+				}
+
+				if (event.parentNode.querySelector('.detail').style.display !== '') {
+					event.parentNode.querySelector('p').style.display = 'none'
+					event.parentNode.querySelector('.fa-caret-right').classList.value = 'fa fa-caret-down w3-margin-right'
+					event.parentNode.querySelectorAll('.detail').forEach(elem=>{
+						elem.style.display = ''
+					})
+				} else {
+					event.parentNode.querySelector('p').style.display = ''
+					event.parentNode.querySelector('.fa-caret-down').classList.value = 'fa fa-caret-right w3-margin-right'
+					event.parentNode.querySelectorAll('.detail').forEach(elem=>{
+						elem.style.display = 'none'
+					})
+					//console.log(event.parentNode.querySelector('.assignedTo').value)
+					if (event.parentNode.querySelector('.assignedTo').value !== '') {
+						week.assignedTo = event.parentNode.querySelector('.assignedTo').value
+					} else {
+						week.assignedTo = null
+					}
+
+					if (event.parentNode.querySelector('.assistant') && event.parentNode.querySelector('.assistant').value !== '') {
+						week.assistant = event.parentNode.querySelector('.assistant').value
+					} else {
+						week.assistant = null
+					}
+					//console.log(event)
+					DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [allParticipantsVue.lifeAndMinistry]});
+				}
+				//this.selectedPublisher = publisher
+                //fillPublisherRecord(publisher)
+			},
+            updateRecord(publisher) {
+				updatePublisherRecord(publisher)
+			},
+            missingRecord(publisher) {
+				var publisherRecords = ''
+				monthlyReportVue.months.slice(0, monthlyReportVue.months.findIndex(elem=>elem.abbr == monthlyReportVue.month.abbr) + 1).forEach(elem=>{
+					if (publisher.report.currentServiceYear[`${elem.abbr}`].sharedInMinistry !== true) {
+						publisherRecords += '; ' + elem.fullName
+					}
+				})
+				
+				return publisherRecords.replace('; ','')
+			},
+        }
+    })
+}
+
+document.querySelector('#schedule').innerHTML = `<template>
+	<div v-if="display == true" style="display:block">
+		<h2 class="w3-center">SCHEDULE</h2>
+		<div style="display:flex; flex-wrap:wrap">
+			<select v-model="selectedWeek" style="margin:5px; width:200px" :class="inputMode('week w3-input')">
+				<option value="All Assignments">All Assignments</option>
+				<option v-for="week in allWeeks" :value="week.week">{{ week.week }}</option>
+			</select>
+		</div>
+
+    </div>
+</template>`
+//.filter(elem=>elem.name !== week.assignedTo)
+function processSchedule() {
+
+    scheduleVue = new Vue({
+        el: document.querySelector('#schedule'),
+        data: {
+            assignDetails: '',
+            selectedWeek: 'All Assignments',
+            selectedAssignTo: 'All Assign To',
+			currentWeek: '',
+			currentAssignment: '',
+			currentSection: '',
+			currentView: 'Unassigned',
+            display: false,
+            pdfFile: "",
+			selectedPublisher: {},
+        },
+        computed: {
+            publishers() {
+                return allPublishersVue.publishers.filter(elem=>elem.active == true).concat(allParticipantsVue.enrolments)
+            },
+			assignments() {
+				allAssignmentsVue.assignments
+            },
+			allWeeks() {
+				return allAssignmentsVue.assignments.allWeeks
+            },
+			searchTerms() {
+                return navigationVue.searchTerms
+            },
+			selectedGroup() {
+                return navigationVue.fieldServiceGroup
+            },
+        },
+        methods: {
+			filterAssignment(event) {
+				this.currentView = event.innerHTML
+				document.querySelectorAll('.filterBtn').forEach(elem=>{
+					elem.style.display = ''
+				})
+				event.style.display = 'none'
+			},
+			selection(assignment) {
+				//console.log(assignment)
+				//var ministry = this.assignments.filter(elem=>elem.week == assignment.week && elem.meetingPart.startsWith('4.'))[0].section
+				//console.log(ministry)
+				//return []
+				if (assignment.assignTo == 'chairman' || assignment.assignTo == 'cbs') {
+					const assignees = this.publishers.filter(elem=>elem.privilege && elem.privilege.includes('Elder'))
+					const assistant = this.publishers.filter(elem=>elem.privilege && (elem.privilege.includes('Elder') || elem.privilege.includes('Ministerial Servant') || elem.exemplary))
+					//console.log(assignees)
+					return [assignees, assistant]
+				} else if (assignment.assignTo == 'appointed') {
+					const assignees = this.publishers.filter(elem=>elem.privilege && (elem.privilege.includes('Elder') || elem.privilege.includes('Ministerial Servant')))
+					//console.log(assignees)
+					return [assignees]
+				} else if (assignment.assignTo == 'exemplary') {
+					const assignees = this.publishers.filter(elem=>elem.privilege && (elem.privilege.includes('Elder') || elem.privilege.includes('Ministerial Servant') || elem.exemplary))
+					//console.log(assignees)
+					return [assignees]
+				} else if (assignment.assignTo == 'male') {
+					const assignees = this.publishers.filter(elem=>elem.gender && elem.gender == 'Male')
+					//console.log(assignees)
+					return [assignees]
+				} else {
+					return [this.publishers, this.publishers]
+				}
+				
+			},
+			toTitleCase(value) {
+				return toTitleCase(value)
+			},
+			allAssignTo() {
+				return getUniqueElementsByProperty(this.assignments.filter(elem=>elem.assignTo),['assignTo'])
+            },
+			deleteAssignment(count) {
+				if (confirm('Are you sure you want to Delete Assignment?\nPress "Yes" to Delete')) {
+					allParticipantsVue.lifeAndMinistry.assignments.splice(count, 1)
+					DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [allParticipantsVue.lifeAndMinistry]});
+				}
+			},
+			addAssignment() {
+				//console.log("New Assignment")
+				if (this.currentWeek == '') {
+					this.currentWeek = this.currentAssignment
+					this.currentAssignment = ''
+					return
+				}
+				allParticipantsVue.lifeAndMinistry.assignments.push({ "week": this.currentWeek, "meetingPart": this.currentAssignment, "section": this.currentSection })
+				this.currentAssignment = ''
+				DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [allParticipantsVue.lifeAndMinistry]});
+			},
+			inputMode(currentClass) {
+				return currentClass + ' ' + mode.replace('w3-card ','')
+			},
+			mode() {
+				return mode
+			},
+			groupPublishers(group) {
+                return allPublishersVue.publishers.filter(elem=>elem.fieldServiceGroup == group && (elem.active == true || (elem.active == false && elem.reactivated)))
+            },
+			publisherDetail(event, week) {
+				//console.log(event, event.parentNode.querySelector('p'))
+				if (!event.parentNode.querySelector('.detail')) {
+					event = event.parentNode
+				}
+
+				if (event.parentNode.querySelector('.detail').style.display !== '') {
+					event.parentNode.querySelector('p').style.display = 'none'
+					event.parentNode.querySelector('.fa-caret-right').classList.value = 'fa fa-caret-down w3-margin-right'
+					event.parentNode.querySelectorAll('.detail').forEach(elem=>{
+						elem.style.display = ''
+					})
+				} else {
+					event.parentNode.querySelector('p').style.display = ''
+					event.parentNode.querySelector('.fa-caret-down').classList.value = 'fa fa-caret-right w3-margin-right'
+					event.parentNode.querySelectorAll('.detail').forEach(elem=>{
+						elem.style.display = 'none'
+					})
+					//console.log(event.parentNode.querySelector('.assignedTo').value)
+					if (event.parentNode.querySelector('.assignedTo').value !== '') {
+						week.assignedTo = event.parentNode.querySelector('.assignedTo').value
+					} else {
+						week.assignedTo = null
+					}
+
+					if (event.parentNode.querySelector('.assistant') && event.parentNode.querySelector('.assistant').value !== '') {
+						week.assistant = event.parentNode.querySelector('.assistant').value
+					} else {
+						week.assistant = null
+					}
+					//console.log(event)
+					DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [allParticipantsVue.lifeAndMinistry]});
+				}
+				//this.selectedPublisher = publisher
+                //fillPublisherRecord(publisher)
+			},
+            updateRecord(publisher) {
+				updatePublisherRecord(publisher)
+			},
+            missingRecord(publisher) {
+				var publisherRecords = ''
+				monthlyReportVue.months.slice(0, monthlyReportVue.months.findIndex(elem=>elem.abbr == monthlyReportVue.month.abbr) + 1).forEach(elem=>{
+					if (publisher.report.currentServiceYear[`${elem.abbr}`].sharedInMinistry !== true) {
+						publisherRecords += '; ' + elem.fullName
+					}
+				})
+				
+				return publisherRecords.replace('; ','')
+			},
+        }
+    })
+}
+
 document.querySelector('#attendance').innerHTML = `<template>
 	<div v-if="display == true">
 		<h2 class="w3-center">MONTHLY ATTENDANCE</h2>
@@ -2569,8 +3416,8 @@ document.querySelector('#attendance').innerHTML = `<template>
 				</div>
 			</div>
 		</div>
-		<h2 v-if="reportEntry == true" class="w3-center">ATTENDANCE RECORD</h2>
-		<div v-if="reportEntry == true" v-for="(meeting, count) in meetingAttendanceRecord.meetings" :key="meeting.name + '|' + count" class="w3-row-padding w3-grayscale">
+		<h2 v-if="reportEntry() == true" class="w3-center">ATTENDANCE RECORD</h2>
+		<div v-if="reportEntry() == true" v-for="(meeting, count) in meetingAttendanceRecord.meetings" :key="meeting.name + '|' + count" class="w3-row-padding w3-grayscale">
 			<h3>{{ meeting.name }}</h3>
 			<div v-for="(serviceYear, count) in serviceYears" :key="serviceYear + '|' + count">
 				<div :class="mode()" style="display:flex; flex-wrap:wrap; padding:10px;margin-bottom:15px">
@@ -2620,9 +3467,6 @@ function processAttendance() {
             congregationName() {
                 return congregationVue.congregation.congregationName
             },
-            reportEntry() {
-                return reportEntry
-            },
             searchTerms() {
                 return navigationVue.searchTerms
             },
@@ -2662,6 +3506,9 @@ function processAttendance() {
             },
         },
         methods: {
+			reportEntry() {
+                return currentUser.currentProfile == 'Secretary'
+            },
 			inputMode(currentClass) {
 				return currentClass + ' ' + mode.replace('w3-card ','')
 			},
@@ -2924,7 +3771,7 @@ function saveConfiguration() {
 	configurationVue.saveConfiguration()
 }
 
-document.querySelector('#configuration').innerHTML = `<template>
+document.querySelector("#configuration").innerHTML = `<template>
     <div v-if="display == true">
 		<h2 class="w3-center">SETTINGS</h2>
 		<div class="w3-row-padding w3-grayscale">
@@ -2932,15 +3779,15 @@ document.querySelector('#configuration').innerHTML = `<template>
 				<div :class="mode()">
 					<div class="w3-container">
 						
-						<p v-if="reportEntry() && reset !== true" style="margin-top:15px"><label>Congregation Name: </label></p>
-						<p v-if="reportEntry() && reset !== true"><input :class="inputMode('name w3-input')" type="text" :value="configuration.congregationName" @change="saveConfiguration()"></p>
-						<p v-if="reportEntry() && reset !== true"><label v-if="reportEntry() && reset !== true">Congregation Address: </label></p>
-						<p v-if="reportEntry() && reset !== true"><input :class="inputMode('address w3-input')" type="text" :value="configuration.address" @change="saveConfiguration()"></p>
-						<p v-if="reportEntry() && reset !== true"><label v-if="reportEntry() && reset !== true">Congregation Email: </label></p>
-						<p v-if="reportEntry() && reset !== true"><input :class="inputMode('email w3-input')" type="text" :value="configuration.email" @change="saveConfiguration()"></p>
+						<p v-if="reportEntry == 'secretary' && reset !== true" style="margin-top:15px"><label>Congregation Name: </label></p>
+						<p v-if="reportEntry == 'secretary' && reset !== true"><input :class="inputMode('name w3-input')" type="text" :value="configuration.congregationName" @change="saveConfiguration()"></p>
+						<p v-if="reportEntry == 'secretary' && reset !== true"><label>Congregation Address: </label></p>
+						<p v-if="reportEntry == 'secretary' && reset !== true"><input :class="inputMode('address w3-input')" type="text" :value="configuration.address" @change="saveConfiguration()"></p>
+						<p v-if="reportEntry == 'secretary' && reset !== true"><label>Congregation Email: </label></p>
+						<p v-if="reportEntry == 'secretary' && reset !== true"><input :class="inputMode('email w3-input')" type="text" :value="configuration.email" @change="saveConfiguration()"></p>
 						
-						<p v-if="reportEntry() && reset !== true"><label>Field Service Groups:</label></p>
-						<p v-if="reportEntry() && reset !== true" v-for="(group, count) in configuration.fieldServiceGroups" :key="group">
+						<p v-if="reportEntry == 'secretary' && reset !== true"><label>Field Service Groups:</label></p>
+						<p v-if="reportEntry == 'secretary' && reset !== true" v-for="(group, count) in configuration.fieldServiceGroups" :key="group">
 							<input :class="inputMode('fieldServiceGroups w3-input')" type="text" :value="group" onchange="saveConfiguration()">
 							<span style="height:40px;padding:0" title="Add Group" class="w3-button w3-black">
 								<i style="color:#2b6549;padding:13px" onclick="addRecord(this)" class="fa fa-plus"></i>
@@ -2949,24 +3796,24 @@ document.querySelector('#configuration').innerHTML = `<template>
 								<i style="color:#b02c07;padding:13px" onclick="removeRecord(this)" class="fa fa-minus"></i>
 							</span>
 						</p>
-						<p v-if="reportEntry() && reset !== true"><label>Coordinator:</label></p>
-						<p v-if="reportEntry() && reset !== true && elders().length !== 0">
+						<p v-if="reportEntry == 'secretary' && reset !== true"><label>Coordinator:</label></p>
+						<p v-if="reportEntry == 'secretary' && reset !== true && elders().length !== 0">
 							<select @change="saveConfiguration()" :class="inputMode('cboe w3-input')" value="MACFOY Ernest">
 								<option v-if="!elders().includes(configuration.cboe)" value="">Select Coordinator</option>
 								<option v-if="elders().includes(configuration.cboe)" :value="configuration.cboe">{{ configuration.cboe }}</option>
 								<option v-for="elder in elders().filter(elem=>elem !== configuration.cboe)" :value="elder">{{ elder }}</option>
 							</select>
 						</p>
-						<p v-if="reportEntry() && reset !== true"><label>Secretary:</label></p>
-						<p v-if="reportEntry() && reset !== true && elders().length !== 0">
+						<p v-if="reportEntry == 'secretary' && reset !== true"><label>Secretary:</label></p>
+						<p v-if="reportEntry == 'secretary' && reset !== true && elders().length !== 0">
 							<select @change="saveConfiguration()" :class="inputMode('sec w3-input')">
 								<option v-if="!elders().includes(configuration.sec)" value="">Select Secretary</option>
 								<option v-if="elders().includes(configuration.sec)" :value="configuration.sec">{{ configuration.sec }}</option>
 								<option v-for="elder in elders().filter(elem=>elem !== configuration.sec)" :value="elder">{{ elder }}</option>
 							</select>
 						</p>
-						<p v-if="reportEntry() && reset !== true"><label>Service Overseer:</label></p>
-						<p v-if="reportEntry() && reset !== true && elders().length !== 0">
+						<p v-if="reportEntry == 'secretary' && reset !== true"><label>Service Overseer:</label></p>
+						<p v-if="reportEntry == 'secretary' && reset !== true && elders().length !== 0">
 							<select @change="saveConfiguration()" :class="inputMode('so w3-input')">
 								<option v-if="!elders().includes(configuration.so)" value="">Select Service Overseer</option>
 								<option v-if="elders().includes(configuration.so)" :value="configuration.so">{{ configuration.so }}</option>
@@ -2977,22 +3824,27 @@ document.querySelector('#configuration').innerHTML = `<template>
 						<h4 id="status1"></h4>
 						<h4 id="status2"></h4>
 						<h4 id="status3"></h4>
+						<div v-if="profiles().length > 1" @change="setProfile($event.target)" id="profile">
+							<label>Profile: </label>
+							<p style="margin:0" v-for="profile in profiles()"><label><input type="radio" v-model="selectedProfile" name="profileGroup" :value="profile" style="margin-right: 5px;">{{ profile }}</label></p>
+						</div>
 						<label>Appearance: 
 						<select @change="displayMode($event.target)" :class="inputMode('appearance w3-input')">
 							<option :value="currentMode()">{{ currentMode() }}</option>
 							<option v-for="mode in ['System', 'Light', 'Dark'].filter(elem=>elem !== currentMode())" :value="mode">{{ mode }}</option>
 						</select></label>
-						<p v-if="reportEntry()">
+						<p v-if="reportEntry == 'secretary' || reportEntry == 'lmo'">
 							<button :class="buttonMode('w3-button w3-dark-grey')" @click="saveFile()"><i class="fas fa-save"> </i> Save File</button>
 							<input type="file" id="pdfFile" accept=".pdf">
 						</p>
 						<div>
 							<div class="main">
-								<button v-if="reportEntry()" :class="buttonMode('w3-button w3-dark-grey')" @click="publisherDetail($event.target)">New Publisher</button>
+								<button v-if="reportEntry == 'secretary'" :class="buttonMode('w3-button w3-dark-grey')" @click="publisherDetail($event.target)">New Publisher</button>
+								<button v-if="reportEntry == 'lmo'" :class="buttonMode('w3-button w3-dark-grey')" @click="publisherDetail($event.target)">New Enrolment</button>
 								<button :class="buttonMode('w3-button w3-dark-grey')" @click="backupData($event.target)">Backup</button>
 								<button :class="buttonMode('w3-button w3-dark-grey')" @click="resetConfiguration($event.target)">Reset</button>
 							</div>
-							<div v-if="reportEntry()" class="detail" style="display:none; border: 1px solid gray; padding:5px">
+							<div v-if="reportEntry == 'secretary'" class="detail" style="display:none; border: 1px solid gray; padding:5px">
 								<button :class="buttonMode('w3-button w3-dark-grey')" @click="publisherDetail($event.target)">Save</button>
 								<button :class="buttonMode('w3-button w3-dark-grey')" @click="cancel($event.target)">Cancel</button>
 								<h3 contenteditable="true" class="name">Publisher Name</h3>
@@ -3056,9 +3908,29 @@ document.querySelector('#configuration').innerHTML = `<template>
 									</table>
 								</div>
 							</div>
+							<div v-if="reportEntry == 'lmo'" class="detail" style="display:none; border: 1px solid gray; padding:5px">
+								<button :class="buttonMode('w3-button w3-dark-grey')" @click="publisherDetail($event.target)">Save</button>
+								<button :class="buttonMode('w3-button w3-dark-grey')" @click="cancel($event.target)">Cancel</button>
+								<h3 contenteditable="true" class="name">Name</h3>
+								<p>
+									<select :class="inputMode('gender w3-input')">
+										<option v-for="gender in ['Select Gender', 'Male', 'Female']" :value="gender">{{ gender }}</option>
+									</select>
+								</p>
+								<div class="detail" style="padding:0 15px 15px 15px">
+									<p><label>Phone Number: <input :class="inputMode('contactPhoneNumber w3-input')" type="tel" :value="publisher.contactInformation.phoneNumber"></label></p>
+									<p><label>Address:<input :class="inputMode('contactAddress w3-input')" type="text" :value="publisher.contactInformation.address"></label></p>
+								</div>
+							</div>
 						</div>
 						<p>
-							<label v-if="reportEntry()"><input class="export" type="checkbox" checked="true"> All</label>
+							<div v-if="reportEntry == 'secretary' || reportEntry == 'lmo'" id="export">
+								<label><input type="radio" name="exportGroup" value="all" style="margin-right: 5px;" checked>All</label>
+								<br>
+								<label><input type="radio" name="exportGroup" value="reportEntry" style="margin-right: 5px;">Report Entry</label>
+								<br>
+								<label><input type="radio" name="exportGroup" value="lifeAndMinistry" style="margin-right: 5px;">Life and Ministry</label>
+							</div>
 							<button :class="buttonMode('w3-button w3-dark-grey')" @click="exportData()">Export</button>
 							<button :class="buttonMode('w3-button w3-dark-grey')" @click="importData()">Import</button>
 							<button :class="buttonMode('w3-button w3-dark-grey')" @click="reloadPage()"><i class="fas fa-sync"></i> Reload</button>
@@ -3070,7 +3942,7 @@ document.querySelector('#configuration').innerHTML = `<template>
 			</div>
 		</div>
 	</div>
-</template>`
+</template>`;
 
 function processConfiguration() {
 
@@ -3080,7 +3952,9 @@ function processConfiguration() {
             configuration: {},
             display: false,
             reset: false,
+			reportEntry: false,
 			publisher: {},
+			selectedProfile: '',
 			hopes: ['Unbaptized Publisher', 'Other Sheep', 'Anointed'],
 			privileges: ['Elder', 'Ministerial Servant', 'Regular Pioneer', 'Special Pioneer', 'Field Missionary'],
             months: [{"abbr": "sept", "fullName": "September"}, {"abbr": "oct", "fullName": "October"}, {"abbr": "nov", "fullName": "November"}, {"abbr": "dec", "fullName": "December"}, {"abbr": "jan", "fullName": "January"}, {"abbr": "feb", "fullName": "February"}, {"abbr": "mar", "fullName": "March"}, {"abbr": "apr", "fullName": "April"}, {"abbr": "may", "fullName": "May"}, {"abbr": "jun", "fullName": "June"}, {"abbr": "jul", "fullName": "July"}, {"abbr": "aug", "fullName": "August"} ],
@@ -3097,6 +3971,30 @@ function processConfiguration() {
             }
         },
         methods: {
+			currentProfile() {
+				return currentUser.currentProfile
+			},
+			setProfile(event) {
+				currentUser.currentProfile = event.value
+				this.selectedProfile = event.value
+				DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [{"name": "Current Profile", "value": event.value}]});
+				if (currentUser.currentProfile == 'Secretary') {
+					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+					this.reportEntry = 'secretary'
+				} else if (currentUser.currentProfile == 'Secretary - Assistant') {
+					navigationVue.buttons = [{"title": "REPORTS", "function": "missingReportVue"}, {"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH", "function": "branchReportVue"}]
+					this.reportEntry = 'reportEntry'
+				} else if (currentUser.currentProfile == 'Life and Ministry Overseer') {
+					navigationVue.buttons = [{"title": "ASSIGNMENTS", "function": "allAssignmentsVue"}, {"title": "SCHEDULE", "function": "scheduleVue"}, {"title": "PARTICIPANTS", "function": "allParticipantsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}]
+					this.reportEntry = 'lmo'
+				} else if (currentUser.currentProfile == 'Life and Ministry Assistant') {
+					navigationVue.buttons = [{"title": "ASSIGNMENTS", "function": "allAssignmentsVue"}, {"title": "SCHEDULE", "function": "scheduleVue"}, {"title": "PARTICIPANTS", "function": "allParticipantsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}]
+					this.reportEntry = 'lma'
+				}
+			},
+			profiles() {
+				return currentUser.accesses.map(elem=>elem.replace('secretary','Secretary').replace('sendReport','Secretary - Assistant').replace('lmo','Life and Ministry Overseer').replace('lma','Life and Ministry Assistant')).sort()
+			},
 			elders() {
 				return allPublishersVue.publishers.filter(elem=>elem.privilege.includes('Elder')).map(elem=>elem.name)
 			},
@@ -3176,9 +4074,6 @@ function processConfiguration() {
 			mode() {
 				return mode
 			},
-			reportEntry() {
-				return reportEntry
-			},
 			currentMode() {
 				return currentMode
 			},
@@ -3210,22 +4105,26 @@ Thanks a lot
             async exportData() {
                 var a = document.createElement("a");
 				var file;
-				if (document.querySelector('.export').checked)  {
-					file = new Blob([JSON.stringify({"configuration":configurationVue.configuration, "data":allPublishersVue.publishers, "attendance": [attendanceVue.currentMonth, attendanceVue.meetingAttendanceRecord]})], {type: 'text/plain'});
+				if (getSelectedOption(document.getElementsByName("exportGroup")) == 'all') {
+					file = new Blob([JSON.stringify({"exportType":"all", "configuration":configurationVue.configuration, "data":allPublishersVue.publishers, "lifeAndMinistryEnrolments":allParticipantsVue.enrolments, "lifeAndMinistryAssignments":allAssignmentsVue.assignments, "attendance": [attendanceVue.currentMonth, attendanceVue.meetingAttendanceRecord]})], {type: 'text/plain'});
 					await shortWait()
 					await shortWait()
-				} else {
+				} else if (getSelectedOption(document.getElementsByName("exportGroup")) == 'reportEntry') {
 					var currentConfiguration = JSON.parse(JSON.stringify(configurationVue.configuration))
 					await shortWait()
 					await shortWait()
 
 					delete currentConfiguration.address
 					delete currentConfiguration.email
-					var currentData = JSON.parse(JSON.stringify(allPublishersVue.publishers))
+					delete currentConfiguration.cboe
+					delete currentConfiguration.sec
+					delete currentConfiguration.so
+					var currentData = JSON.parse(JSON.stringify(allPublishersVue.publishers.filter(elem=>elem.active == true || elem.reactivated == true)))
 					await shortWait()
 					await shortWait()
 
 					currentData.forEach(elem=>{
+						delete elem.hope
 						delete elem.contactInformation
 						delete elem.dateOfBaptism
 						delete elem.dateOfBirth
@@ -3236,7 +4135,44 @@ Thanks a lot
 					await shortWait()
 					await shortWait()
 
-					file = new Blob([JSON.stringify({"configuration":currentConfiguration, "data":currentData, "attendance": [attendanceVue.currentMonth, attendanceVue.meetingAttendanceRecord]})], {type: 'text/plain'});
+					file = new Blob([JSON.stringify({"exportType":"reportEntry", "configuration":currentConfiguration, "data":currentData, "attendance": [attendanceVue.currentMonth, attendanceVue.meetingAttendanceRecord]})], {type: 'text/plain'});
+				} else if (getSelectedOption(document.getElementsByName("exportGroup")) == 'lifeAndMinistry') {
+					var currentConfiguration = JSON.parse(JSON.stringify(configurationVue.configuration))
+					await shortWait()
+					await shortWait()
+
+					delete currentConfiguration.address
+					delete currentConfiguration.email
+					delete currentConfiguration.cboe
+					delete currentConfiguration.sec
+					delete currentConfiguration.so
+					var currentData = JSON.parse(JSON.stringify(allPublishersVue.publishers.filter(elem=>elem.active == true)))
+					await shortWait()
+					await shortWait()
+
+					var currentEnrolments = JSON.parse(JSON.stringify(allParticipantsVue.enrolments))
+
+					var currentAssignments = JSON.parse(JSON.stringify(allAssignmentsVue.assignments.filter(elem=>elem.assignTo == 'male' || elem.assignTo == 'all')))
+
+					currentLifeAndMinistry.assignments = currentLifeAndMinistry.assignments
+
+					currentData.forEach(elem=>{
+						delete elem.hope
+						delete elem.report
+						delete elem.dateOfBaptism
+						delete elem.dateOfBirth
+						delete elem.emergencyContactInformation
+					})
+					await shortWait()
+					await shortWait()
+					await shortWait()
+					await shortWait()
+
+					file = new Blob([JSON.stringify({"exportType":"lifeAndMinistry", "configuration":currentConfiguration, "data":currentData, "lifeAndMinistryEnrolments":currentEnrolments, "lifeAndMinistryAssignments":currentAssignments})], {type: 'text/plain'});
+				} else {
+					file = new Blob([JSON.stringify({"exportType":"update", "configuration":configurationVue.configuration, "data":allPublishersVue.publishers, "lifeAndMinistryEnrolments":allParticipantsVue.enrolments, "lifeAndMinistryAssignments":allAssignmentsVue.assignments, "attendance": [attendanceVue.currentMonth, attendanceVue.meetingAttendanceRecord]})], {type: 'text/plain'});
+					await shortWait()
+					await shortWait()
 				}
 
 				await shortWait()
@@ -3278,6 +4214,7 @@ Thanks a lot
 						configurationVue.configuration = result.configuration
 						navigationVue.allGroups = result.configuration.fieldServiceGroups
 						allPublishersVue.publishers = result.data
+						allParticipantsVue.lifeAndMinistry = result.lifeAndMinistry
 					}
 
 					await shortWait()
@@ -3290,6 +4227,7 @@ Thanks a lot
 					DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [result.configuration]});
 					DBWorker.postMessage({ storeName: 'data', action: "save", value: result.data});
 					DBWorker.postMessage({ storeName: 'attendance', action: "save", value: result.attendance});
+					DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [result.lifeAndMinistry]});
 
 					await shortWait()
 					await shortWait()
@@ -3303,9 +4241,9 @@ Thanks a lot
 					})
 
 					configured = true
-					if (currentUser.accesses.includes('secretary')) {
+					if (currentUser.currentProfile == 'Secretary') {
 						gotoView('congregationVue')
-					} else if (currentUser.accesses.includes('sendReport')) {
+					} else if (currentUser.currentProfile == 'Secretary - Assistant') {
 						gotoView('missingReportVue')
 					}
 				}
@@ -3313,7 +4251,7 @@ Thanks a lot
 				// Read the file content as a single string
 				reader.readAsText(document.querySelector('#dataFile').files[0]);
             },
-			saveConfiguration(element) {
+			saveConfiguration() {
                 /*if (configured = true) {
                     DBWorker.postMessage({ storeName: 'configuration', action: "deleteItem", value: this.configuration.name});
                 }*/
@@ -3325,7 +4263,7 @@ Thanks a lot
 
                 allGroups.sort()
 
-				var currentConfiguration = { "name": "Congregation", "congregationName": document.querySelector('.name').value, "address": document.querySelector('.address').value, "email": document.querySelector('.email').value, "fieldServiceGroups": allGroups, "cboe": document.querySelector('.cboe').value, "sec": document.querySelector('.sec').value, "so":  document.querySelector('.so').value }
+				var currentConfiguration = { "name": "Congregation", "congregationName": document.querySelector('.name').value, "address": document.querySelector('.address').value, "email": document.querySelector('.email').value, "fieldServiceGroups": allGroups, "cboe": document.querySelector('.cboe').value, "sec": document.querySelector('.sec').value, "so":  document.querySelector('.so').value, "currentProfile": currentUser.currentProfile }
                 DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [currentConfiguration]});
                 configured = true
             },
@@ -3382,17 +4320,23 @@ Thanks a lot
                 this.configuration.fieldServiceGroups.pop()
             },
 			cancel(item) {
+				item.parentNode.querySelector('.gender').value = 'Select Gender'
+				item.parentNode.querySelector('.contactAddress').value = ''
+				item.parentNode.querySelector('.contactPhoneNumber').value = ''
+				if (currentUser.currentProfile == 'Life and Ministry Overseer' || currentUser.currentProfile == 'Life and Ministry Assistant') {
+					item.parentNode.querySelector('.name').innerHTML = 'Name'
+					item.parentNode.parentNode.querySelector('.detail').style.display = 'none'
+					item.parentNode.parentNode.querySelector('.main').style.display = ''
+					return
+				}
 				item.parentNode.querySelector('.name').innerHTML = 'Publisher Name'
 				item.parentNode.querySelector('.dateOfBirth').value = ''
 				item.parentNode.querySelector('.dateOfBaptism').value = ''
-				item.parentNode.querySelector('.gender').value = 'Select Gender'
                 item.parentNode.querySelector('.hope').value = 'Unbaptized Publisher'
                 item.parentNode.querySelector('.fieldServiceGroup').value = ''
 				item.parentNode.parentNode.querySelectorAll('.privileges').forEach(elem=>{
 					elem.checked = false
 				})
-                item.parentNode.querySelector('.contactAddress').value = ''
-                item.parentNode.querySelector('.contactPhoneNumber').value = ''
                 item.parentNode.querySelector('.emergencyContactName').value = ''
                 item.parentNode.querySelector('.emergencyContactPhoneNumber').value = ''
 				this.months.forEach(elem=>{
@@ -3415,16 +4359,31 @@ Thanks a lot
                     if (item.parentNode.querySelector('.name').innerHTML) {
                         publisher.name = item.parentNode.querySelector('.name').innerHTML
                     } else {
-						alert('Please enter Publisher Name')
+						if (currentUser.currentProfile == 'Life and Ministry Overseer' || currentUser.currentProfile == 'Life and Ministry Assistant') {
+							alert('Please enter Name')
+						} else {
+							alert('Please enter Publisher Name')
+						}
 						return
 					}
+					publisher.gender = item.parentNode.querySelector('.gender').value
+					publisher.contactInformation.address = item.parentNode.querySelector('.contactAddress').value
+                    publisher.contactInformation.phoneNumber = item.parentNode.querySelector('.contactPhoneNumber').value
+
+                    if (currentUser.currentProfile == 'Life and Ministry Overseer' || currentUser.currentProfile == 'Life and Ministry Assistant') {
+						allParticipantsVue.enrolments.push({name: publisher.name, gender: publisher.gender, phoneNumber: publisher.contactInformation.phoneNumber == '' ? null : publisher.contactInformation.phoneNumber, address: publisher.contactInformation.address == '' ? null : publisher.contactInformation.address })
+						DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [{"name": "Life and Ministry", "enrolments": allParticipantsVue.enrolments}]});
+						this.cancel(item)
+						return
+					}
+
 					if (item.parentNode.querySelector('.dateOfBirth').value) {
                         publisher.dateOfBirth = item.parentNode.querySelector('.dateOfBirth').value
                     }
                     if (item.parentNode.querySelector('.dateOfBaptism')) {
                         publisher.dateOfBaptism = item.parentNode.querySelector('.dateOfBaptism').value
                     }
-                    publisher.gender = item.parentNode.querySelector('.gender').value
+                    
                     publisher.hope = item.parentNode.querySelector('.hope').value
                     publisher.fieldServiceGroup = item.parentNode.querySelector('.fieldServiceGroup').value
                     
@@ -3440,8 +4399,6 @@ Thanks a lot
 
                     publisher.privilege = allPrivileges
 
-                    publisher.contactInformation.address = item.parentNode.querySelector('.contactAddress').value
-                    publisher.contactInformation.phoneNumber = item.parentNode.querySelector('.contactPhoneNumber').value
                     publisher.emergencyContactInformation.name = item.parentNode.querySelector('.emergencyContactName').value
                     publisher.emergencyContactInformation.phoneNumber = item.parentNode.querySelector('.emergencyContactPhoneNumber').value
                     this.months.forEach(elem=>{
@@ -3491,15 +4448,19 @@ Thanks a lot
 }
 
 processAllPublishers()
+processAllParticipants()
 processConfiguration()
 processCongregation()
 
 processFieldServiceGroups()
 processMonthlyReport()
 processMissingReport()
+processAllAssignments()
+processSchedule()
 processAttendance()
 contactInformation()
 branchReportDetails()
+
 configurationVue.displayMode({"value": "System"})
 
 var defaultConfiguration = { "congregationName": "", "name": "Congregation", "address": "", "email": "", "fieldServiceGroups": ["Group 1"], "cboe": "", "sec": "", "so": "" }
