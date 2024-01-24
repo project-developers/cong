@@ -3032,7 +3032,7 @@ function processAllAssignments() {
         data: {
             assignDetails: '',
             selectedWeek: 'All Assignments',
-            selectedAssignTo: 'All',
+            selectedAssignTo: 'All Assign To',
 			currentWeek: '',
 			currentAssignment: '',
 			currentSection: '',
