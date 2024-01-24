@@ -2885,8 +2885,11 @@ Thanks,
     })
 }
 
+var newAssignments = []
+
 function convertClipboardToHTML() {
 	allAssignmentsVue.currentWeek = ''
+	newAssignments = []
 	// Get the content from the clipboard as plain text
 	navigator.clipboard.readText()
 		.then(async (clipboardText) => {
@@ -2900,37 +2903,53 @@ function convertClipboardToHTML() {
 			allAssignmentsVue.assignDetails = document.getElementById('result').innerText.split('\n')
 			allAssignmentsVue.currentSection = allAssignmentsVue.assignDetails[3].trim()
 			allAssignmentsVue.currentWeek = allAssignmentsVue.assignDetails.shift().trim()
-			allParticipantsVue.lifeAndMinistry.assignments.push({ "week": allAssignmentsVue.currentWeek, "meetingPart": allAssignmentsVue.assignDetails.shift().trim(), "section": allAssignmentsVue.currentSection })
+			//allParticipantsVue.lifeAndMinistry.assignments.push({ "week": allAssignmentsVue.currentWeek, "meetingPart": allAssignmentsVue.assignDetails.shift().trim(), "section": allAssignmentsVue.currentSection })
+			newAssignments.push({ "week": allAssignmentsVue.currentWeek, "meetingPart": allAssignmentsVue.assignDetails.shift().trim(), "section": allAssignmentsVue.currentSection, "assignTo": "elder" })
 			const firstAssignment = allAssignmentsVue.assignDetails.shift().trim()
 			await shortWait()
 			await shortWait()
-			console.log(allAssignmentsVue.assignDetails)
+			//console.log(allAssignmentsVue.assignDetails)
 			//return
 
-			allParticipantsVue.lifeAndMinistry.assignments.push({ "week": allAssignmentsVue.currentWeek, "meetingPart": firstAssignment, "section": allAssignmentsVue.currentSection })
+			//allParticipantsVue.lifeAndMinistry.assignments.push({ "week": allAssignmentsVue.currentWeek, "meetingPart": firstAssignment, "section": allAssignmentsVue.currentSection })
+			newAssignments.push({ "week": allAssignmentsVue.currentWeek, "meetingPart": firstAssignment, "section": allAssignmentsVue.currentSection, "assignTo": "exemplary" })
 			const song = allAssignmentsVue.assignDetails.findIndex(elem=>elem.trim().split(' ')[0] == firstAssignment.split(' ')[0])
 			//console.log(allAssignmentsVue.assignDetails[found])
 			await shortWait()
 			await shortWait()
-			allParticipantsVue.lifeAndMinistry.assignments.push({ "week": allAssignmentsVue.currentWeek, "meetingPart": allAssignmentsVue.assignDetails.splice(song, 1)[0].trim(), "section": allAssignmentsVue.assignDetails[song - 1].trim() })
+			//allParticipantsVue.lifeAndMinistry.assignments.push({ "week": allAssignmentsVue.currentWeek, "meetingPart": allAssignmentsVue.assignDetails.splice(song, 1)[0].trim(), "section": allAssignmentsVue.assignDetails[song - 1].trim() })
+			newAssignments.push({ "week": allAssignmentsVue.currentWeek, "meetingPart": allAssignmentsVue.assignDetails.splice(song, 1)[0].trim(), "section": allAssignmentsVue.assignDetails[song - 1].trim() })
 			await shortWait()
 			await shortWait()
-			allParticipantsVue.lifeAndMinistry.assignments.push({ "week": allAssignmentsVue.currentWeek, "meetingPart": allAssignmentsVue.assignDetails.pop().trim(), "section": allAssignmentsVue.currentSection })
+			//allParticipantsVue.lifeAndMinistry.assignments.push({ "week": allAssignmentsVue.currentWeek, "meetingPart": allAssignmentsVue.assignDetails.pop().trim(), "section": allAssignmentsVue.currentSection })
+			newAssignments.push({ "week": allAssignmentsVue.currentWeek, "meetingPart": allAssignmentsVue.assignDetails.pop().trim(), "section": allAssignmentsVue.currentSection, "assignTo": "exemplary" })
 
-			var i = 1, j = 0
+			var i = 1, j = 0, assignTo
 			while (j < allAssignmentsVue.assignDetails.length) {
 				//console.log(i, j)
 				const found = allAssignmentsVue.assignDetails.findIndex(elem=>elem.startsWith(i + '. '))
 				
 				if (found !== -1) {
-					if (i == 4) {
+					const newPart = `${allAssignmentsVue.assignDetails[found]} ${allAssignmentsVue.assignDetails[found + 1]}`
+					if (i < 3) {
+						assignTo = "appointed"
+					} else if (i == 3) {
+						assignTo = "male"
+					} else if (i == 4) {
+						assignTo = "all"
 						allAssignmentsVue.currentSection = allAssignmentsVue.assignDetails[found - 1].trim()
 					} else if (found == song) {
+						assignTo = "appointed"
 						allAssignmentsVue.currentSection = allAssignmentsVue.assignDetails[song - 1].trim()
+					} else if (`${newPart.split('min.)')[0]}min.)`.trim().includes('(30 min.)')) {
+						assignTo = "elder"
+					} else if (assignTo == "elder") {
+						assignTo = "exemplary"
 					}
-					const newPart = `${allAssignmentsVue.assignDetails[found]} ${allAssignmentsVue.assignDetails[found + 1]}`
+					
 
-					allParticipantsVue.lifeAndMinistry.assignments.push({ "week": allAssignmentsVue.currentWeek, "meetingPart": `${newPart.split('min.)')[0]}min.)`.trim(), "section": allAssignmentsVue.currentSection })
+					//allParticipantsVue.lifeAndMinistry.assignments.push({ "week": allAssignmentsVue.currentWeek, "meetingPart": `${newPart.split('min.)')[0]}min.)`.trim(), "section": allAssignmentsVue.currentSection })
+					newAssignments.push({ "week": allAssignmentsVue.currentWeek, "meetingPart": `${newPart.split('min.)')[0]}min.)`.trim(), "section": allAssignmentsVue.currentSection, "assignTo": assignTo })
 					i++
 				}
 				
@@ -2938,7 +2957,14 @@ function convertClipboardToHTML() {
 					j = found
 				}
 				j++
-				//alert("here")
+				newAssignments.forEach(elem=>{
+					const found = allParticipantsVue.lifeAndMinistry.assignments.findIndex(ele=>ele.week == elem.week && ele.meetingPart == elem.meetingPart && ele.section == elem.section)
+					if (found !== -1) {
+						allParticipantsVue.lifeAndMinistry.assignments[found] = elem
+					} else {
+						allParticipantsVue.lifeAndMinistry.assignments.push(elem)
+					}
+				})
 			}
 			
 			await shortWait()
@@ -2958,13 +2984,20 @@ document.querySelector('#allAssignments').innerHTML = `<template>
 		<div id="result" style="display:none; margin-top: 20px; border: 1px solid #ccc; padding: 10px;" contenteditable="true">
 			Result will appear here...
 		</div>
-		<p><button class="w3-button w3-black" style="margin:0 0 10px 20px" onclick="convertClipboardToHTML()">Import Assignments</button>
-		<span><select v-model="selectedWeek" style="margin:5px 20px; width:300px" :class="inputMode('week w3-input')">
-			<option value="All Assignments">All Assignments</option>
-			<option v-for="week in allWeeks()" :value="week.week">{{ week.week }}</option>
-		</select></span><p/>
+		<div style="display:flex; flex-wrap:wrap">
+			<button class="w3-button w3-black" style="margin:5px 0 10px 20px" onclick="convertClipboardToHTML()"><i class="fas fa-file-import"></i> Import</button>
+			<select v-model="selectedWeek" style="margin:5px 20px; width:250px" :class="inputMode('week w3-input')">
+				<option value="All Assignments">All Assignments</option>
+				<option v-for="week in allWeeks()" :value="week.week">{{ week.week }}</option>
+			</select>
+			<select v-model="selectedAssignTo" style="margin:5px 20px; width:250px" :class="inputMode('assignTo w3-input')">
+				<option value="All Assign To">All Assign To</option>
+				<option v-for="week in allAssignTo()" :value="week.assignTo">{{ toTitleCase(week.assignTo) }}</option>
+			</select>
+		</div>
+
 		<div class="w3-row-padding w3-grayscale" style="margin-top:5px">
-			<div v-for="(week, count) in assignments" :key="week.week + '|' + count" v-if="selectedWeek == week.week || selectedWeek == 'All Assignments'" class="w3-col l3 m6 w3-margin-bottom">
+			<div v-for="(week, count) in assignments" :key="week.week + '|' + count" v-if="(selectedWeek == week.week || selectedWeek == 'All Assignments') && (selectedAssignTo == week.assignTo || selectedAssignTo == 'All Assign To')" class="w3-col l3 m6 w3-margin-bottom">
 				<div style="padding-bottom:10px" :class="mode()">
 					<div class="w3-container">
 						<div style="display:flex; justify-content:space-between">
@@ -2999,6 +3032,7 @@ function processAllAssignments() {
         data: {
             assignDetails: '',
             selectedWeek: 'All Assignments',
+            selectedAssignTo: 'All',
 			currentWeek: '',
 			currentAssignment: '',
 			currentSection: '',
@@ -3035,8 +3069,14 @@ function processAllAssignments() {
 				}
 				
 			},
+			toTitleCase(value) {
+				return toTitleCase(value)
+			},
 			allWeeks() {
 				return getUniqueElementsByProperty(this.assignments,['week'])
+            },
+			allAssignTo() {
+				return getUniqueElementsByProperty(this.assignments.filter(elem=>elem.assignTo),['assignTo'])
             },
 			deleteAssignment(count) {
 				if (confirm('Are you sure you want to Delete Assignment?\nPress "Yes" to Delete')) {
