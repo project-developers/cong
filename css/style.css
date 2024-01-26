@@ -154,3 +154,24 @@ th, td {
 .edit-content {
   cursor: auto;
 }
+
+.schedulePreview table {
+  font-size: 14.5px;
+  margin-bottom:2px;
+  font-family: 'Calibri','Arial',sans-serif;
+}
+
+.schedulePreview td {
+  margin:0 5px;
+  padding:0 5px;
+  border: none;
+}
+
+.guideText {
+  color: #575a7a;
+  font-size: 80%;
+}
+
+.boldText {
+  font-weight: 600;
+}
