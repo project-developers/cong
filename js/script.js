@@ -105,6 +105,7 @@ loginButton.addEventListener("click", (e) => {
 			currentUser.password = loginForm.password.value
 			currentUser.selectedQuestion = getSelectedOption(document.getElementsByName("securityGroup"))
 			currentUser.answer = document.querySelector('#answer').value.toLowerCase().trim()
+			configurationVue.selectedProfile = currentUser.currentProfile
 			if (currentUser.currentProfile == 'Secretary') {
 				console.log("You have successfully logged in.");
 				document.getElementById("securityQuestions").style.display = 'none';
@@ -176,6 +177,7 @@ loginButton.addEventListener("click", (e) => {
 		loginForm.username.value = ''
 		loginForm.password.value = ''
 		currentUser = allUsers.filter(elem=>elem.username.toLowerCase() == username.toLowerCase() && elem.password == password)[0]
+		configurationVue.selectedProfile = currentUser.currentProfile
 		hiddenElements.forEach(elem=>{
 			document.getElementById(`${elem}`).style.display = ''
 		})
@@ -360,7 +362,7 @@ DBWorker.onmessage = async function (msg) {
 		switch (msgData.name) {
 			case "configuration":
 				{
-					//console.log(msgData.value)
+					console.log(msgData.value)
 					if (msgData.value.filter(elem=>elem.name == "Current Profile").length !== 0) {
 						currentUser.currentProfile = msgData.value.filter(elem=>elem.name == "Current Profile")[0].value
 						configurationVue.selectedProfile = msgData.value.filter(elem=>elem.name == "Current Profile")[0].value
@@ -377,20 +379,20 @@ DBWorker.onmessage = async function (msg) {
 						if (currentUser.currentProfile == 'Secretary') {
 							navigationVue.buttons = [{"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
 							configurationVue.reportEntry = 'secretary'
-							congregationVue.display = true
+							//congregationVue.display = true
 						} else if (currentUser.currentProfile == 'Secretary - Assistant') {
 							configurationVue.reportEntry = 'sendReport'
 							navigationVue.buttons = [{"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH", "function": "branchReportVue"}]
 							navigationVue.displayDropdown = true
-							missingReportVue.display = true
+							//missingReportVue.display = true
 						} else if (currentUser.currentProfile == 'Life and Ministry Overseer') {
 							configurationVue.reportEntry = 'lmo'
 							navigationVue.buttons = [{"title": "SCHEDULE", "function": "scheduleVue"}, {"title": "PARTICIPANTS", "function": "allParticipantsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}]
-							allAssignmentsVue.display = true
+							//allAssignmentsVue.display = true
 						} else if (currentUser.currentProfile == 'Life and Ministry Assistant') {
 							configurationVue.reportEntry = 'lma'
 							navigationVue.buttons = [{"title": "SCHEDULE", "function": "scheduleVue"}, {"title": "PARTICIPANTS", "function": "allParticipantsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}]
-							allAssignmentsVue.display = true
+							//allAssignmentsVue.display = true
 						}
 					}
 					if (msgData.value.filter(elem=>elem.name == "Congregation").length !== 0) {
@@ -419,6 +421,7 @@ DBWorker.onmessage = async function (msg) {
 						//navigationVue.buttons = [{"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "REPORTS", "function": "missingReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "SETTINGS", "function": "configurationVue"}]
 						configurationVue.configuration = msgData.value.filter(elem=>elem.name == "Congregation")[0]
 						navigationVue.allGroups = msgData.value.filter(elem=>elem.name == "Congregation")[0].fieldServiceGroups
+						configurationVue.midweekMeetingDay = configurationVue.configuration.midweekMeetingDay
 						DBWorker.postMessage({ storeName: 'data', action: "readAll"});
 						DBWorker.postMessage({ storeName: 'attendance', action: "readAll"});
 						DBWorker.postMessage({ storeName: 'files', action: "readAll"});
@@ -442,12 +445,19 @@ DBWorker.onmessage = async function (msg) {
 					//myFile = msgData.value
 					console.log(msgData.value)
 					//console.log(msgData.value[0])
-					if (msgData.value.filter(elem=>elem.name == 'S-21_E.pdf').length !== 0) {
+					myFiles = msgData.value
+					/*if (msgData.value.filter(elem=>elem.name == 'S-21').length !== 0) {
 						//console.log(msgData.value.filter(elem=>elem.name == 'S-21_E.pdf')[0])
-						if (!s21current) {
-							await getFieldByName(msgData.value.filter(elem=>elem.name == 'S-21_E.pdf')[0])
+						if (!s21) {
+							await getFieldByName(msgData.value.filter(elem=>elem.name == 'S-21')[0].value, 's21')
 						}
 					}
+					if (msgData.value.filter(elem=>elem.name == 'S-89').length !== 0) {
+						//console.log(msgData.value.filter(elem=>elem.name == 'S-21_E.pdf')[0])
+						if (!s89) {
+							await getFieldByName(msgData.value.filter(elem=>elem.name == 'S-89')[0].value, 's89')
+						}
+					}*/
 
 				}
 				break;
@@ -514,7 +524,7 @@ DBWorker.onmessage = async function (msg) {
 	}
 }
 
-//var myFile;
+var myFiles = [];
 
 // style="padding:16px 0 0 2px; margin-top:1px"  style="margin-top:2px"
 
@@ -579,7 +589,7 @@ function processNavigation() {
         },
         methods: {
 			showDownloadButton() {
-				return allPublishersVue.display == true ||	fieldServiceGroupsVue.display == true || contactInformationVue.display == true
+				return allPublishersVue.display == true ||	fieldServiceGroupsVue.display == true || contactInformationVue.display == true// || scheduleVue.display == true
 			},
 			async downloadContent() {
 				console.log(currentView)
@@ -690,7 +700,7 @@ function processNavigation() {
 
 				currentView = button.innerHTML                
 				
-				if (allPublishersVue.transfer == true) {
+				if (allPublishersVue.transfer == true || scheduleVue.display == true) {
 					selectedTransferPublishers.length = 0
 					var i = 0
 					document.querySelectorAll('#publisherRequest select').forEach(elem=>{
@@ -705,6 +715,12 @@ function processNavigation() {
 					document.querySelectorAll('iframe').forEach(elem=>{
 						elem.parentNode.remove()
 					})
+					if (document.querySelector('#content')) {
+						document.querySelector('#content').style.display = ''
+					}
+					if (document.querySelector('.weekSelector')) {
+						document.querySelector('.weekSelector').style.display = ''
+					}
 				}
 
 				configurationVue.display = false
@@ -779,12 +795,12 @@ function processNavigation() {
 					allPublishersVue.transfer = false
 					this.buttons = [{"title": "ASSIGNMENTS", "function": "allAssignmentsVue"}, {"title": "SCHEDULE", "function": "scheduleVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}]
 				} else if (button.innerHTML == "ASSIGNMENTS") {
-					this.displayDropdown = true
+					this.displayDropdown = false
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
 					this.buttons = [{"title": "SCHEDULE", "function": "scheduleVue"}, {"title": "PARTICIPANTS", "function": "allParticipantsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}]
 				} else if (button.innerHTML == "SCHEDULE") {
-					this.displayDropdown = true
+					this.displayDropdown = false
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
 					this.buttons = [{"title": "ASSIGNMENTS", "function": "allAssignmentsVue"}, {"title": "PARTICIPANTS", "function": "allParticipantsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}]
@@ -829,7 +845,7 @@ function processNavigation() {
 					navigationVue.buttons[groupCount].title = 'GROUPS'
 				}
 
-				if (allPublishersVue.transfer == true) {
+				if (allPublishersVue.transfer == true || scheduleVue.display == true) {
 					selectedTransferPublishers.length = 0
 					var i = 0
 					document.querySelectorAll('#publisherRequest select').forEach(elem=>{
@@ -844,6 +860,12 @@ function processNavigation() {
 					document.querySelectorAll('iframe').forEach(elem=>{
 						elem.parentNode.remove()
 					})
+					if (document.querySelector('#content')) {
+						document.querySelector('#content').style.display = ''
+					}
+					if (document.querySelector('.weekSelector')) {
+						document.querySelector('.weekSelector').style.display = ''
+					}
 				}
 
 				allPublishersVue.request = false
@@ -927,7 +949,7 @@ function processNavigation2() {
         },
         methods: {
 			showDownloadButton() {
-				return allPublishersVue.display == true ||	fieldServiceGroupsVue.display == true || contactInformationVue.display == true
+				return allPublishersVue.display == true ||	fieldServiceGroupsVue.display == true || contactInformationVue.display == true// || scheduleVue.display == true
 			},
 			async downloadContent() {
 				console.log(currentView)
@@ -1011,7 +1033,7 @@ function processNavigation2() {
                 //console.log(button)
 				currentView = button.innerHTML
 				w3_close()
-				if (allPublishersVue.transfer == true) {
+				if (allPublishersVue.transfer == true || scheduleVue.display == true) {
 					selectedTransferPublishers.length = 0
 					var i = 0
 					document.querySelectorAll('#publisherRequest select').forEach(elem=>{
@@ -1026,6 +1048,12 @@ function processNavigation2() {
 					document.querySelectorAll('iframe').forEach(elem=>{
 						elem.parentNode.remove()
 					})
+					if (document.querySelector('#content')) {
+						document.querySelector('#content').style.display = ''
+					}
+					if (document.querySelector('.weekSelector')) {
+						document.querySelector('.weekSelector').style.display = ''
+					}
 				}
 
 				configurationVue.display = false
@@ -1099,8 +1127,13 @@ function processNavigation2() {
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
 					navigationVue.buttons = [{"title": "ASSIGNMENTS", "function": "allAssignmentsVue"}, {"title": "SCHEDULE", "function": "scheduleVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}]
+				} else if (button.innerHTML == "ASSIGNMENTS") {
+					navigationVue.displayDropdown = false
+					allPublishersVue.request = false
+					allPublishersVue.transfer = false
+					navigationVue.buttons = [{"title": "SCHEDULE", "function": "scheduleVue"}, {"title": "PARTICIPANTS", "function": "allParticipantsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}]
 				} else if (button.innerHTML == "SCHEDULE") {
-					navigationVue.displayDropdown = true
+					navigationVue.displayDropdown = false
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
 					navigationVue.buttons = [{"title": "ASSIGNMENTS", "function": "allAssignmentsVue"}, {"title": "PARTICIPANTS", "function": "allParticipantsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}]
@@ -1148,7 +1181,7 @@ function processNavigation2() {
 					navigationVue.buttons[groupCount].title = 'GROUPS'
 				}
 
-				if (allPublishersVue.transfer == true) {
+				if (allPublishersVue.transfer == true || scheduleVue.display == true) {
 					selectedTransferPublishers.length = 0
 					var i = 0
 					document.querySelectorAll('#publisherRequest select').forEach(elem=>{
@@ -1163,6 +1196,12 @@ function processNavigation2() {
 					document.querySelectorAll('iframe').forEach(elem=>{
 						elem.parentNode.remove()
 					})
+					if (document.querySelector('#content')) {
+						document.querySelector('#content').style.display = ''
+					}
+					if (document.querySelector('.weekSelector')) {
+						document.querySelector('.weekSelector').style.display = ''
+					}
 				}
 
 				allPublishersVue.request = false
@@ -2239,7 +2278,7 @@ function processAllParticipants() {
 					
                     item.parentNode.parentNode.parentNode.querySelector('.detail').style.display = 'none'
                     item.parentNode.parentNode.parentNode.querySelector('.main').style.display = ''
-                    DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [{"name": "Life and Ministry", "enrolments": allParticipantsVue.enrolments}]});
+                    DBWorker.postMessage({ storeName: 'lifeAndMInistry', action: "save", value: allParticipantsVue.enrolments});
                 }
 			},          
 			cleanDate(date) {
@@ -2259,7 +2298,7 @@ function processAllParticipants() {
 					item.parentNode.parentNode.parentNode.querySelector('.detail').style.display = 'none'
 					item.parentNode.parentNode.parentNode.querySelector('.main').style.display = ''
 					this.enrolments.splice(count, 1)
-					DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [{"name": "Life and Ministry", "enrolments": allParticipantsVue.enrolments}]});
+					DBWorker.postMessage({ storeName: 'lifeAndMInistry', action: "save", value: allParticipantsVue.enrolments});
 				}
             }
         }
@@ -2268,7 +2307,7 @@ function processAllParticipants() {
 
 
 document.querySelector('#fieldServiceGroups').innerHTML = `<template>
-	<div v-if="display == true">
+	<div v-if="display == true" :class="mode()">
 		<h2 class="w3-center">FIELD SERVICE GROUPS {{ active !== true ? '' : '(ALL)'}}</h2>		
 		<div style="display:flex;flex-wrap:wrap">
 			<div v-for="(group) in allGroups" :key="group" class="element" align="center" style="padding: 10px;margin: 5px;border: 1px solid gray">
@@ -2316,7 +2355,7 @@ function processFieldServiceGroups() {
         },
         methods: {
 			mode() {
-				return mode
+				return mode.replace('w3-card ','')
 			},
 			groupPublishers(group) {
                 return allPublishersVue.publishers.filter(elem=>elem.fieldServiceGroup == group && (elem.active == true || this.active == true))
@@ -2454,7 +2493,7 @@ function contactInformation() {
 					} else {
 						publisher[`${property}`] = event.value
 					}
-					DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [{"name": "Life and Ministry", "enrolments": allParticipantsVue.enrolments}]});
+					DBWorker.postMessage({ storeName: 'lifeAndMInistry', action: "save", value: allParticipantsVue.enrolments});
 					return
 				}
 
@@ -2945,7 +2984,7 @@ function convertClipboardToHTML() {
 			allAssignmentsVue.currentSection = allAssignmentsVue.assignDetails[3].trim()
 			allAssignmentsVue.currentWeek = allAssignmentsVue.assignDetails.shift().trim()
 			//allParticipantsVue.lifeAndMinistry.assignments.push({ "week": allAssignmentsVue.currentWeek, "meetingPart": allAssignmentsVue.assignDetails.shift().trim(), "section": allAssignmentsVue.currentSection })
-			newAssignments.push({ "week": allAssignmentsVue.currentWeek, "meetingPart": allAssignmentsVue.assignDetails.shift().trim(), "section": allAssignmentsVue.currentSection, "assignTo": "chairman" })
+			newAssignments.push({ "meetingPart": allAssignmentsVue.assignDetails.shift().trim(), "section": allAssignmentsVue.currentSection, "assignTo": "chairman" })
 			const firstAssignment = allAssignmentsVue.assignDetails.shift().trim()
 			await shortWait()
 			await shortWait()
@@ -2953,17 +2992,17 @@ function convertClipboardToHTML() {
 			//return
 
 			//allParticipantsVue.lifeAndMinistry.assignments.push({ "week": allAssignmentsVue.currentWeek, "meetingPart": firstAssignment, "section": allAssignmentsVue.currentSection })
-			newAssignments.push({ "week": allAssignmentsVue.currentWeek, "meetingPart": firstAssignment, "section": allAssignmentsVue.currentSection, "assignTo": "exemplary" })
+			newAssignments.push({ "meetingPart": firstAssignment, "section": allAssignmentsVue.currentSection, "assignTo": "exemplary" })
 			const song = allAssignmentsVue.assignDetails.findIndex(elem=>elem.trim().split(' ')[0] == firstAssignment.split(' ')[0])
 			//console.log(allAssignmentsVue.assignDetails[found])
 			await shortWait()
 			await shortWait()
 			//allParticipantsVue.lifeAndMinistry.assignments.push({ "week": allAssignmentsVue.currentWeek, "meetingPart": allAssignmentsVue.assignDetails.splice(song, 1)[0].trim(), "section": allAssignmentsVue.assignDetails[song - 1].trim() })
-			newAssignments.push({ "week": allAssignmentsVue.currentWeek, "meetingPart": allAssignmentsVue.assignDetails.splice(song, 1)[0].trim(), "section": allAssignmentsVue.assignDetails[song - 1].trim() })
+			const secondSong = allAssignmentsVue.assignDetails.splice(song, 1)[0].trim()
 			await shortWait()
 			await shortWait()
 			//allParticipantsVue.lifeAndMinistry.assignments.push({ "week": allAssignmentsVue.currentWeek, "meetingPart": allAssignmentsVue.assignDetails.pop().trim(), "section": allAssignmentsVue.currentSection })
-			newAssignments.push({ "week": allAssignmentsVue.currentWeek, "meetingPart": allAssignmentsVue.assignDetails.pop().trim(), "section": allAssignmentsVue.currentSection, "assignTo": "exemplary" })
+			const closing = allAssignmentsVue.assignDetails.pop().trim()
 
 			var i = 1, j = 0, assignTo
 			while (j < allAssignmentsVue.assignDetails.length) {
@@ -2980,6 +3019,7 @@ function convertClipboardToHTML() {
 						assignTo = "all"
 						allAssignmentsVue.currentSection = allAssignmentsVue.assignDetails[found - 1].trim()
 					} else if (found == song) {
+						newAssignments.push({ "meetingPart": secondSong, "section": allAssignmentsVue.assignDetails[song - 1].trim() })
 						assignTo = "appointed"
 						allAssignmentsVue.currentSection = allAssignmentsVue.assignDetails[song - 1].trim()
 					} else if (`${newPart.split('min.)')[0]}min.)`.trim().includes('(30 min.)')) {
@@ -2987,36 +3027,39 @@ function convertClipboardToHTML() {
 					} else if (assignTo == "cbs") {
 						assignTo = "exemplary"
 					}
-					
 
 					//allParticipantsVue.lifeAndMinistry.assignments.push({ "week": allAssignmentsVue.currentWeek, "meetingPart": `${newPart.split('min.)')[0]}min.)`.trim(), "section": allAssignmentsVue.currentSection })
-					newAssignments.push({ "week": allAssignmentsVue.currentWeek, "meetingPart": `${newPart.split('min.)')[0]}min.)`.trim(), "section": allAssignmentsVue.currentSection, "assignTo": assignTo })
+					newAssignments.push({ "meetingPart": `${newPart.split('min.)')[0]}min.)`.trim(), "section": allAssignmentsVue.currentSection, "assignTo": assignTo })
 					i++
 				}
 				
 				if (found > j) {
 					j = found
 				}
-				j++
-				newAssignments.forEach(elem=>{
-					const found = allAssignmentsVue.assignments.findIndex(ele=>ele.week == elem.week && ele.meetingPart == elem.meetingPart && ele.section == elem.section)
-					if (found !== -1) {
-						allAssignmentsVue.assignments[found] = elem
-					} else {
-						allAssignmentsVue.assignments.push(elem)
-					}
-				})
+				j++			
+				
+			}
+
+			newAssignments.push({ "meetingPart": closing, "section": allAssignmentsVue.currentSection, "assignTo": "exemplary" })
+
+			const index = allAssignmentsVue.allAssignments.findIndex(elem=>elem.week == allAssignmentsVue.currentWeek)
+			if (index !== -1) {
+				allAssignmentsVue.allAssignments.parts = newAssignments
+			} else {
+				allAssignmentsVue.allAssignments.push({"week": allAssignmentsVue.currentWeek, "parts": newAssignments, "count": allAssignmentsVue.currentCount})
 			}
 			
 			await shortWait()
 			await shortWait()
 
-			DBWorker.postMessage({ storeName: 'lifeAndMinistry', action: "save", value: [allAssignmentsVue.assignments]});
+			DBWorker.postMessage({ storeName: 'lifeAndMinistryAssignments', action: "save", value: [{"week": allAssignmentsVue.currentWeek, "parts": newAssignments, "count": allAssignmentsVue.currentCount}]});
 		})
 		.catch(error => {
 			console.error('Error reading clipboard text:', error);
 		});
 }
+
+var collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
 
 
 document.querySelector('#allAssignments').innerHTML = `<template>
@@ -3029,7 +3072,7 @@ document.querySelector('#allAssignments').innerHTML = `<template>
 			<button class="w3-button w3-black" style="margin:5px 5px 10px 20px" onclick="convertClipboardToHTML()"><i class="fas fa-file-import"></i> Import</button>
 			<select v-model="selectedWeek" style="margin:5px; width:200px" :class="inputMode('week w3-input')">
 				<option value="All Assignments">All Assignments</option>
-				<option v-for="week in allWeeks()" :value="week.week">{{ week.week }}</option>
+				<option v-for="week in allAssignments" :value="week.week">{{ week.week }}</option>
 			</select>
 			<select v-model="selectedAssignTo" style="margin:5px; width:150px" :class="inputMode('assignTo w3-input')">
 				<option value="All Assign To">All Assign To</option>
@@ -3041,25 +3084,25 @@ document.querySelector('#allAssignments').innerHTML = `<template>
 		</div>
 
 		<div class="w3-row-padding w3-grayscale" style="margin-top:5px">
-			<div v-for="(week, count) in assignments" :key="week.week + '|' + count" v-if="(selectedWeek == week.week || selectedWeek == 'All Assignments') && (selectedAssignTo.startsWith(week.assignTo) || selectedAssignTo == week.assignTo || selectedAssignTo == 'All Assign To')" class="w3-col l3 m6 w3-margin-bottom">
+			<div v-for="(week, count) in assignments" :key="week.week + '|' + count" v-if="selectedWeek == week.week || selectedWeek == 'All Assignments'" class="w3-col l3 m6 w3-margin-bottom">
 				<div style="padding-bottom:10px" :class="mode()">
 					<div class="w3-container">
 						<div style="display:flex; justify-content:space-between">
-							<h3 style="margin-right:4px">{{ week.week }}</h3>
-							<h4 style="text-align: right;" @click="deleteAssignment(count)" title="Delete Assignment"><i class="fas fa-trash"></i></h4>
+							<h3 style="margin-right:4px">{{ displayMeetingDay(week.week) }}</h3>
+							<p style="text-align: right;"><i style="padding:5px;margin:2px" v-if="count > 0" @click="moveLeft(week, count)" title="Move Up" class="fas fa-chevron-left"></i><i style="padding:5px;margin:2px" v-if="count < assignments.length - 1" @click="moveRight(week, count)" title="Move Down" class="fas fa-chevron-right"></i><i style="padding:5px;margin:2px" @click="deleteAssignment(week)" title="Delete Assignment" class="fas fa-trash"></i></p>
 						</div>
-						<div class="main" style="cursor:pointer">
+						<div class="main" v-for="(part, count) in week.parts.filter(elem=>elem.assignTo)" v-for="(week, count) in assignments" :key="week.week + '|' + count" v-if="(selectedAssignTo.startsWith(part.assignTo) || selectedAssignTo == part.assignTo || selectedAssignTo == 'All Assign To') && (currentView == 'All' || (currentView == 'Assigned' && part.assignedTo) || (currentView == 'Unassigned' && !part.assignedTo)) && (selectedProfile == 'Life and Ministry Overseer' || (selectedProfile == 'Life and Ministry Assistant' && (part.assignTo == 'male' || part.assignTo == 'all')))" style="cursor:pointer">
 							<hr style="margin:0; padding:0">
-							<h5 @click="publisherDetail($event.target, week)" style="margin:2px 0"><i class="fa fa-caret-right w3-margin-right"></i>{{ week.meetingPart }}</h5>
-							<p style="margin:0">{{ week.assignedTo }}{{ week.assistant ? ' / ' + week.assistant : '' }}</p>
+							<h5 @click="publisherDetail($event.target, part, week)" style="margin:2px 0"><i class="fa fa-caret-right w3-margin-right"></i>{{ part.meetingPart }}</h5>
+							<p style="margin:0">{{ part.assignedTo }}{{ part.assistant ? ' / ' + part.assistant : '' }}</p>
 							<div class="w3-container detail" style="display:none">
-								<h5 style="margin:0"><select v-model="week.assignedTo" :class="inputMode('assignedTo w3-input')">
+								<h5 style="margin:0"><select v-model="part.assignedTo" :class="inputMode('assignedTo w3-input')">
 									<option value="">Select Person</option>
-									<option v-for="publisher in selection(week)[0]" :value="publisher.name">{{ publisher.name }}</option>
+									<option v-for="publisher in selection(part)[0]" :value="publisher.name">{{ publisher.name }}</option>
 								</select></h5>
-								<h5 v-if="week.assignTo == 'all' || week.assignTo == 'cbs'" style="margin:0"><select v-model="week.assistant" :class="inputMode('assistant w3-input')">
+								<h5 v-if="part.assignTo == 'all' || part.assignTo == 'cbs'" style="margin:0"><select v-model="part.assistant" :class="inputMode('assistant w3-input')">
 									<option value="">Select Person</option>
-									<option v-for="publisher in selection(week)[1]" :value="publisher.name">{{ publisher.name }}</option>
+									<option v-for="publisher in selection(part)[1]" :value="publisher.name">{{ publisher.name }}</option>
 								</select></h5>
 								<hr style="margin:0; padding:0">
 							</div>
@@ -3094,23 +3137,58 @@ function processAllAssignments() {
                 return allPublishersVue.publishers.filter(elem=>elem.active == true).concat(allParticipantsVue.enrolments)
             },
 			assignments() {
-				if (this.currentView == 'Assigned') {
-					return this.allAssignments.filter(elem=>elem.assignedTo)
-				} else if (this.currentView == 'Unassigned') {
-					return this.allAssignments.filter(elem=>!elem.assignedTo)
-				} else {
-					return this.allAssignments
-				}
-                
+				return this.allAssignments.sort((a, b) => collator.compare(a.count, b.count))
+            },
+			selectedProfile() {
+                return configurationVue.selectedProfile
             },
 			searchTerms() {
                 return navigationVue.searchTerms
             },
+			currentCount() {
+				return this.allAssignments.length
+			},
 			selectedGroup() {
                 return navigationVue.fieldServiceGroup
             },
         },
         methods: {
+			moveRight(week) {
+				//if (week.count > this.allAssignments.length - 1) {return}
+				/*var currentAssignment = week.count
+				var nextAssignment = this.allAssignments.findIndex(elem=>elem.count == (week.count + 1))
+				if (nextAssignment !== -1) {
+					this.allAssignments[nextAssignment].count = week.count
+					DBWorker.postMessage({ storeName: 'lifeAndMinistryAssignments', action: "save", value: [this.allAssignments[nextAssignment]]});
+				}*/
+				week.count = week.count + 1
+				DBWorker.postMessage({ storeName: 'lifeAndMinistryAssignments', action: "save", value: [week]});
+			},
+			moveLeft(week) {
+				if (week.count == 0) {return}
+				/*var currentAssignment = week.count
+				var previousAssignment = this.allAssignments.findIndex(elem=>elem.count == (week.count - 1))
+				if (previousAssignment !== -1) {
+					this.allAssignments[previousAssignment].count = week.count
+					DBWorker.postMessage({ storeName: 'lifeAndMinistryAssignments', action: "save", value: [this.allAssignments[previousAssignment]]});
+				}
+				this.allAssignments[currentAssignment].count = week.count - 1*/
+				week.count = week.count - 1
+				DBWorker.postMessage({ storeName: 'lifeAndMinistryAssignments', action: "save", value: [week]});
+			},
+			displayMeetingDay(value) {
+				var date;
+				if (value.split('–').length == 1) {
+					return `${value.split(' ')[0]} ${Number(value.split('-')[0].split(' ')[1]) + configurationVue.weekdays.indexOf(configurationVue.midweekMeetingDay)}`
+				} else {
+					date = Number(value.split('–')[1].split(' ')[1]) - (6 - configurationVue.weekdays.indexOf(configurationVue.midweekMeetingDay))
+					if (date < 1) {
+						return `${value.split(' ')[0]} ${Number(value.split('–')[0].split(' ')[1]) + configurationVue.weekdays.indexOf(configurationVue.midweekMeetingDay)}`
+					} else {
+						return `${value.split('–')[1].split(' ')[0]} ${date}`
+					}
+				}
+			},
 			filterAssignment(event) {
 				this.currentView = event.innerHTML
 				document.querySelectorAll('.filterBtn').forEach(elem=>{
@@ -3149,15 +3227,17 @@ function processAllAssignments() {
 				return toTitleCase(value)
 			},
 			allWeeks() {
+				//var filteredWeeks = 
+				//scheduleVue.allWeeks
 				return getUniqueElementsByProperty(this.assignments,['week'])
             },
 			allAssignTo() {
-				return getUniqueElementsByProperty(this.assignments.filter(elem=>elem.assignTo),['assignTo'])
+				return getUniqueElementsByProperty(this.assignments.map(elem=>elem.parts).reduce((result, currentArray) => result.concat(currentArray), []).filter(elem=>elem.assignTo),['assignTo'])
             },
-			deleteAssignment(count) {
+			deleteAssignment(week) {
 				if (confirm('Are you sure you want to Delete Assignment?\nPress "Yes" to Delete')) {
-					allAssignmentsVue.assignments.splice(count, 1)
-					DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [allParticipantsVue.lifeAndMinistry]});
+					this.allAssignments.splice(this.allAssignments.findIndex(elem=>elem.count == week.count), 1)
+					DBWorker.postMessage({ storeName: 'lifeAndMinistryAssignments', action: "deleteItem", value: week.week});
 				}
 			},
 			addAssignment() {
@@ -3167,9 +3247,9 @@ function processAllAssignments() {
 					this.currentAssignment = ''
 					return
 				}
-				allAssignmentsVue.assignments.push({ "week": this.currentWeek, "meetingPart": this.currentAssignment, "section": this.currentSection })
-				this.currentAssignment = ''
-				DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [allParticipantsVue.lifeAndMinistry]});
+				//allAssignmentsVue.assignments.push({ "week": this.currentWeek, "meetingPart": this.currentAssignment, "section": this.currentSection })
+				//this.currentAssignment = ''
+				//DBWorker.postMessage({ storeName: 'lifeAndMInistry', action: "save", value: allParticipantsVue.allAssignments});
 			},
 			inputMode(currentClass) {
 				return currentClass + ' ' + mode.replace('w3-card ','')
@@ -3180,8 +3260,8 @@ function processAllAssignments() {
 			groupPublishers(group) {
                 return allPublishersVue.publishers.filter(elem=>elem.fieldServiceGroup == group && (elem.active == true || (elem.active == false && elem.reactivated)))
             },
-			publisherDetail(event, week) {
-				//console.log(event, event.parentNode.querySelector('p'))
+			publisherDetail(event, part, week) {
+				//console.log(event, part, week, event.parentNode.querySelector('p'))
 				if (!event.parentNode.querySelector('.detail')) {
 					event = event.parentNode
 				}
@@ -3200,18 +3280,18 @@ function processAllAssignments() {
 					})
 					//console.log(event.parentNode.querySelector('.assignedTo').value)
 					if (event.parentNode.querySelector('.assignedTo').value !== '') {
-						week.assignedTo = event.parentNode.querySelector('.assignedTo').value
+						part.assignedTo = event.parentNode.querySelector('.assignedTo').value
 					} else {
-						week.assignedTo = null
+						part.assignedTo = null
 					}
 
 					if (event.parentNode.querySelector('.assistant') && event.parentNode.querySelector('.assistant').value !== '') {
-						week.assistant = event.parentNode.querySelector('.assistant').value
+						part.assistant = event.parentNode.querySelector('.assistant').value
 					} else {
-						week.assistant = null
+						part.assistant = null
 					}
 					//console.log(event)
-					DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [allParticipantsVue.lifeAndMinistry]});
+					DBWorker.postMessage({ storeName: 'lifeAndMinistryAssignments', action: "save", value: [week]});
 				}
 				//this.selectedPublisher = publisher
                 //fillPublisherRecord(publisher)
@@ -3233,19 +3313,128 @@ function processAllAssignments() {
     })
 }
 
+// Function to change the index of an element
+function changeIndex(array, oldIndex, newIndex) {
+	// Ensure the old index is within bounds
+	if (oldIndex < 0 || oldIndex >= array.length || newIndex < 0 || newIndex >= array.length) {
+		console.error('Invalid index');
+		return;
+	}
+  
+	// Remove the element from the old index
+	var element = array.splice(oldIndex, 1)[0];
+  
+	// Insert the element at the new index
+	array.splice(newIndex, 0, element);
+}
+
 document.querySelector('#schedule').innerHTML = `<template>
 	<div v-if="display == true" style="display:block">
 		<h2 class="w3-center">SCHEDULE</h2>
-		<div style="display:flex; flex-wrap:wrap">
+		<div style="display:flex;" class="weekSelector">
 			<select v-model="selectedWeek" style="margin:5px; width:200px" :class="inputMode('week w3-input')">
 				<option value="All Assignments">All Assignments</option>
-				<option v-for="week in allWeeks" :value="week.week">{{ week.week }}</option>
+				<option v-for="week in assignments" :value="week.week">{{ week.week }}</option>
 			</select>
+			<button class="w3-button w3-black" style="margin:5px 5px 10px 5px" @click="previewRecord()">Preview</button>
 		</div>
 
+		<div class="zoom-container1" id="zoomContainer1">
+			<div class="zoom-content1" id="zoomContent1">
+				<div id="content" class="schedulePreview">
+					<table style="margin-top:-40px">
+						<tr class="boldText">
+							<td style="padding:0 4px;font-size:120%;border-bottom: 1px solid #000;" colspan="2">NYU INGLAND</td>
+							<td style="padding:0 4px;font-size:180%;border-bottom: 1px solid #000; font-family: 'Cambria','Helvetica Roman','Arial', sans-serif;text-align:right" colspan="3">Pat dɛn fɔ Mitin dɛn Insay di Wik</td>
+						</tr>
+					</table>
+					<div v-for="(week, count) in assignments" :key="week.week + '|' + count" v-if="selectedWeek == week.week || selectedWeek == 'All Assignments'">
+					<table style="margin-bottom:0;margin-top:0">
+							<tr>
+								<td colspan="3" class="boldText">{{ displayMeetingDay(week.week.toUpperCase()) }} | {{ week.parts[0].meetingPart }}</td>
+								<td style="text-align:right" class="guideText">Chiaman:</td>				
+								<td>{{ week.parts[0].assignedTo }}</td>						
+							</tr>
+						</table>
+						<table style="margin-bottom:0;margin-top:0">
+							<tr>
+								<td class="guideText">0:00</td>
+								<td colspan="2">{{ week.parts[1].meetingPart.split('|')[0].trim() }}</td>
+								<td style="text-align:right" class="guideText">Prea:</td>						
+								<td>{{ week.parts[1].assignedTo }}</td>						
+							</tr>
+							<tr>
+								<td class="guideText">0:00</td>
+								<td colspan="2">{{ week.parts[1].meetingPart.split('|')[1].trim() }}</td>				
+							</tr>
+						</table>
+						<table style="margin-bottom:0;margin-top:0">
+							<tr>
+								<td colspan="3" class="boldText" style="background: #587d84;color: white;">{{ week.parts[1].section }}</td>
+								<td class="guideText">Sɛkɔn Ɔl</td>						
+								<td class="guideText">Men Ɔl</td>						
+							</tr>
+							<tr v-for="(part, count) in week.parts.filter(elem=>elem.section == week.parts[1].section).slice(2)">
+								<td class="guideText">0:00</td>
+								<td v-if="part.assignTo !== 'male'" colspan="3">{{ part.meetingPart }}</td>
+								<td v-if="part.assignTo == 'male'">{{ part.meetingPart }}</td>
+								<td v-if="part.assignTo == 'male'" class="guideText">Studɛnt:</td>
+								<td v-if="part.assignTo == 'male'"></td>
+								<td>{{ part.assignedTo }}</td>						
+							</tr>
+						</table>
+						<table style="margin-bottom:0;margin-top:0">
+							<tr>
+								<td colspan="3" class="boldText" style="background: #ac7300;color: white;">{{ week.parts[5].section }}</td>
+								<td class="guideText">Sɛkɔn Ɔl</td>						
+								<td class="guideText">Men Ɔl</td>						
+							</tr>
+							<tr v-for="(part, count) in week.parts.filter(elem=>elem.section == week.parts[5].section)">
+								<td class="guideText">0:00</td>
+								<td>{{ part.meetingPart }}</td>
+								<td v-if="part.assistant" style="text-align:right" class="guideText">Studɛnt/Pɔsin we de ɛp:</td>
+								<td v-if="!part.assistant" style="text-align:right" class="guideText">Studɛnt:</td>
+								<td></td>
+								<td>{{ part.assignedTo }}{{ part.assistant ? ' / ' + part.assistant : '' }}</td>						
+							</tr>
+						</table>
+						<table style="margin-bottom:10px">
+							<tr>
+								<td colspan="2" class="boldText" style="background: #7e0024;color: white;">{{ week.parts.filter(elem=>!elem.assignTo)[0].section }}</td>	
+								<td colspan="2"></td>
+							</tr>
+							<tr>
+								<td class="guideText">0:00</td>
+								<td>{{ week.parts.filter(elem=>!elem.assignTo)[0].meetingPart }}</td>				
+							</tr>
+							<tr v-for="(part, count) in week.parts.slice(week.parts.findIndex(elem=>!elem.assignTo) + 1).slice(0, -1)">
+								<td class="guideText">0:00</td>
+								<td v-if="part.assignTo == 'cbs'">{{ part.meetingPart }}</td>
+								<td v-if="part.assignTo !== 'cbs'" colspan="2">{{ part.meetingPart }}</td>
+								<td v-if="part.assignTo == 'cbs'" style="text-align:right" class="guideText">Kɔndɔktɔ/Rida:</td>
+								<td>{{ part.assignedTo }}{{ part.assistant ? ' / ' + part.assistant : '' }}</td>				
+							</tr>
+							<tr>
+								<td class="guideText">0:00</td>
+								<td colspan="2">{{ week.parts.slice(week.parts.findIndex(elem=>!elem.assignTo) + 1).slice(-1)[0].meetingPart.split('|')[0].trim() }}</td>
+								<td></td>						
+							</tr>
+							<tr>
+								<td class="guideText">0:00</td>
+								<td>{{ week.parts.slice(week.parts.findIndex(elem=>!elem.assignTo) + 1).slice(-1)[0].meetingPart.split('|')[1].trim() }}</td>
+								<td style="text-align:right" class="guideText">Prea:</td>
+								<td>{{ week.parts.slice(week.parts.findIndex(elem=>!elem.assignTo) + 1).slice(-1)[0].assignedTo }}</td>				
+							</tr>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
     </div>
 </template>`
-//.filter(elem=>elem.name !== week.assignedTo)
+
+var assignmentsToSend = []
+
 function processSchedule() {
 
     scheduleVue = new Vue({
@@ -3261,16 +3450,14 @@ function processSchedule() {
             display: false,
             pdfFile: "",
 			selectedPublisher: {},
+			allWeeks: [],
         },
         computed: {
             publishers() {
                 return allPublishersVue.publishers.filter(elem=>elem.active == true).concat(allParticipantsVue.enrolments)
             },
 			assignments() {
-				allAssignmentsVue.assignments
-            },
-			allWeeks() {
-				return allAssignmentsVue.assignments.allWeeks
+				return allAssignmentsVue.allAssignments.sort((a, b) => collator.compare(a.count, b.count))
             },
 			searchTerms() {
                 return navigationVue.searchTerms
@@ -3280,6 +3467,43 @@ function processSchedule() {
             },
         },
         methods: {
+			async previewRecord() {
+				downloadsArray = []
+				assignmentsToSend = [].concat(allAssignmentsVue.assignments.map(elem=>elem.parts.filter(ele=>ele.assignTo == 'male' || ele.assignTo == 'all')).reduce((result, currentArray) => result.concat(currentArray), []))
+				var tempAssignments = [].concat(allAssignmentsVue.allAssignments)
+				var restoreAssignments = [].concat(allAssignmentsVue.allAssignments)
+				await shortWait()
+				
+				while (tempAssignments.length !== 0) {
+					allAssignmentsVue.allAssignments = tempAssignments.splice(0, 2)
+					await shortWait()
+					await shortWait()
+					await shortWait()
+					await convertToImage(document.querySelector('#content'))
+				}
+				await shortWait()
+				await shortWait()
+				allAssignmentsVue.allAssignments = restoreAssignments
+				await shortWait()
+				await shortWait()
+				document.querySelector('#content').style.display = 'none'
+				document.querySelector('.weekSelector').style.display = 'none'
+
+				await assignmentSlip(assignmentsToSend.splice(0, 4))
+			},
+			displayMeetingDay(value) {
+				var date;
+				if (value.split('–').length == 1) {
+					return `${value.split(' ')[0]} ${Number(value.split('-')[0].split(' ')[1]) + configurationVue.weekdays.indexOf(configurationVue.midweekMeetingDay)}`
+				} else {
+					date = Number(value.split('–')[1].split(' ')[1]) - (6 - configurationVue.weekdays.indexOf(configurationVue.midweekMeetingDay))
+					if (date < 1) {
+						return `${value.split(' ')[0]} ${Number(value.split('–')[0].split(' ')[1]) + configurationVue.weekdays.indexOf(configurationVue.midweekMeetingDay)}`
+					} else {
+						return `${value.split('–')[1].split(' ')[0]} ${date}`
+					}
+				}
+			},
 			filterAssignment(event) {
 				this.currentView = event.innerHTML
 				document.querySelectorAll('.filterBtn').forEach(elem=>{
@@ -3322,8 +3546,8 @@ function processSchedule() {
             },
 			deleteAssignment(count) {
 				if (confirm('Are you sure you want to Delete Assignment?\nPress "Yes" to Delete')) {
-					allParticipantsVue.lifeAndMinistry.assignments.splice(count, 1)
-					DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [allParticipantsVue.lifeAndMinistry]});
+					//allParticipantsVue.lifeAndMinistry.assignments.splice(count, 1)
+					//DBWorker.postMessage({ storeName: 'lifeAndMInistry', action: "save", value: allParticipantsVue.lifeAndMinistry});
 				}
 			},
 			addAssignment() {
@@ -3333,9 +3557,9 @@ function processSchedule() {
 					this.currentAssignment = ''
 					return
 				}
-				allParticipantsVue.lifeAndMinistry.assignments.push({ "week": this.currentWeek, "meetingPart": this.currentAssignment, "section": this.currentSection })
-				this.currentAssignment = ''
-				DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [allParticipantsVue.lifeAndMinistry]});
+				//allParticipantsVue.lifeAndMinistry.assignments.push({ "week": this.currentWeek, "meetingPart": this.currentAssignment, "section": this.currentSection })
+				//this.currentAssignment = ''
+				//DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [allParticipantsVue.lifeAndMinistry]});
 			},
 			inputMode(currentClass) {
 				return currentClass + ' ' + mode.replace('w3-card ','')
@@ -3377,7 +3601,7 @@ function processSchedule() {
 						week.assistant = null
 					}
 					//console.log(event)
-					DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [allParticipantsVue.lifeAndMinistry]});
+					//DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [allParticipantsVue.lifeAndMinistry]});
 				}
 				//this.selectedPublisher = publisher
                 //fillPublisherRecord(publisher)
@@ -3824,9 +4048,18 @@ document.querySelector("#configuration").innerHTML = `<template>
 						<h4 id="status1"></h4>
 						<h4 id="status2"></h4>
 						<h4 id="status3"></h4>
-						<div v-if="profiles().length > 1" @change="setProfile($event.target)" id="profile">
-							<label>Profile: </label>
-							<p style="margin:0" v-for="profile in profiles()"><label><input type="radio" v-model="selectedProfile" name="profileGroup" :value="profile" style="margin-right: 5px;">{{ profile }}</label></p>
+						
+						<div v-if="reportEntry == 'secretary' || reportEntry == 'lmo'" id="midweekMeetingDay">
+							<label>Midweek Meeting Day: 
+							<select v-model="midweekMeetingDay" @change="setMeetingDay()" :class="inputMode('appearance w3-input')">
+								<option v-for="day in weekdays" :value="day">{{ day }}</option>
+							</select></label>
+						</div>
+						<div v-if="profiles().length > 1" id="profile">
+							<label>Profile: 
+							<select v-model="selectedProfile" @change="setProfile($event.target)" :class="inputMode('appearance w3-input')">
+								<option v-for="profile in profiles()" :value="profile">{{ profile }}</option>
+							</select></label>
 						</div>
 						<label>Appearance: 
 						<select @change="displayMode($event.target)" :class="inputMode('appearance w3-input')">
@@ -3834,8 +4067,9 @@ document.querySelector("#configuration").innerHTML = `<template>
 							<option v-for="mode in ['System', 'Light', 'Dark'].filter(elem=>elem !== currentMode())" :value="mode">{{ mode }}</option>
 						</select></label>
 						<p v-if="reportEntry == 'secretary' || reportEntry == 'lmo'">
-							<button :class="buttonMode('w3-button w3-dark-grey')" @click="saveFile()"><i class="fas fa-save"> </i> Save File</button>
 							<input type="file" id="pdfFile" accept=".pdf">
+							<p v-if="reportEntry == 'secretary' || reportEntry == 'lmo'"><input :class="inputMode('fileName w3-input')" type="text" placeholder="File Name" @click="fileName($event.target)"></p>
+							<button :class="buttonMode('w3-button w3-dark-grey')" @click="saveFile()" v-if="reportEntry == 'secretary' || reportEntry == 'lmo'"><i class="fas fa-save"> </i> Save File</button>
 						</p>
 						<div>
 							<div class="main">
@@ -3926,8 +4160,8 @@ document.querySelector("#configuration").innerHTML = `<template>
 						<p>
 							<div v-if="reportEntry == 'secretary' || reportEntry == 'lmo'" id="export">
 								<label><input type="radio" name="exportGroup" value="all" style="margin-right: 5px;" checked>All</label>
-								<br>
-								<label><input type="radio" name="exportGroup" value="reportEntry" style="margin-right: 5px;">Report Entry</label>
+								<br v-if="reportEntry !== 'lmo'">
+								<label v-if="reportEntry !== 'lmo'"><input type="radio" name="exportGroup" value="reportEntry" style="margin-right: 5px;">Report Entry</label>
 								<br>
 								<label><input type="radio" name="exportGroup" value="lifeAndMinistry" style="margin-right: 5px;">Life and Ministry</label>
 							</div>
@@ -3955,6 +4189,8 @@ function processConfiguration() {
 			reportEntry: false,
 			publisher: {},
 			selectedProfile: '',
+			midweekMeetingDay: '',
+			weekdays: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
 			hopes: ['Unbaptized Publisher', 'Other Sheep', 'Anointed'],
 			privileges: ['Elder', 'Ministerial Servant', 'Regular Pioneer', 'Special Pioneer', 'Field Missionary'],
             months: [{"abbr": "sept", "fullName": "September"}, {"abbr": "oct", "fullName": "October"}, {"abbr": "nov", "fullName": "November"}, {"abbr": "dec", "fullName": "December"}, {"abbr": "jan", "fullName": "January"}, {"abbr": "feb", "fullName": "February"}, {"abbr": "mar", "fullName": "March"}, {"abbr": "apr", "fullName": "April"}, {"abbr": "may", "fullName": "May"}, {"abbr": "jun", "fullName": "June"}, {"abbr": "jul", "fullName": "July"}, {"abbr": "aug", "fullName": "August"} ],
@@ -3971,12 +4207,23 @@ function processConfiguration() {
             }
         },
         methods: {
+			setMeetingDay() {
+				this.configuration.midweekMeetingDay = this.midweekMeetingDay
+				DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [this.configuration]});
+			},
 			currentProfile() {
 				return currentUser.currentProfile
 			},
+			fileName(event) {
+				if (document.querySelector('#pdfFile') && document.querySelector('#pdfFile').files[0]) {
+					event.value = document.querySelector('#pdfFile').files[0].name
+				} else {
+					event.value = ''
+				}
+			},
 			setProfile(event) {
 				currentUser.currentProfile = event.value
-				this.selectedProfile = event.value
+				//this.selectedProfile = event.value
 				DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [{"name": "Current Profile", "value": event.value}]});
 				if (currentUser.currentProfile == 'Secretary') {
 					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
@@ -4106,7 +4353,7 @@ Thanks a lot
                 var a = document.createElement("a");
 				var file;
 				if (getSelectedOption(document.getElementsByName("exportGroup")) == 'all') {
-					file = new Blob([JSON.stringify({"exportType":"all", "configuration":configurationVue.configuration, "data":allPublishersVue.publishers, "lifeAndMinistryEnrolments":allParticipantsVue.enrolments, "lifeAndMinistryAssignments":allAssignmentsVue.assignments, "attendance": [attendanceVue.currentMonth, attendanceVue.meetingAttendanceRecord]})], {type: 'text/plain'});
+					file = new Blob([JSON.stringify({"exportType":"all", "configuration":configurationVue.configuration, "data":allPublishersVue.publishers, "lifeAndMinistryEnrolments":allParticipantsVue.enrolments, "lifeAndMinistryAssignments":allAssignmentsVue.allAssignments, "attendance": [attendanceVue.currentMonth, attendanceVue.meetingAttendanceRecord]})], {type: 'text/plain'});
 					await shortWait()
 					await shortWait()
 				} else if (getSelectedOption(document.getElementsByName("exportGroup")) == 'reportEntry') {
@@ -4152,9 +4399,9 @@ Thanks a lot
 
 					var currentEnrolments = JSON.parse(JSON.stringify(allParticipantsVue.enrolments))
 
-					var currentAssignments = JSON.parse(JSON.stringify(allAssignmentsVue.assignments.filter(elem=>elem.assignTo == 'male' || elem.assignTo == 'all')))
+					var currentAssignments = JSON.parse(JSON.stringify(allAssignmentsVue.allAssignments))
 
-					currentLifeAndMinistry.assignments = currentLifeAndMinistry.assignments
+					//currentLifeAndMinistry.assignments = currentLifeAndMinistry.assignments
 
 					currentData.forEach(elem=>{
 						delete elem.hope
@@ -4170,7 +4417,7 @@ Thanks a lot
 
 					file = new Blob([JSON.stringify({"exportType":"lifeAndMinistry", "configuration":currentConfiguration, "data":currentData, "lifeAndMinistryEnrolments":currentEnrolments, "lifeAndMinistryAssignments":currentAssignments})], {type: 'text/plain'});
 				} else {
-					file = new Blob([JSON.stringify({"exportType":"update", "configuration":configurationVue.configuration, "data":allPublishersVue.publishers, "lifeAndMinistryEnrolments":allParticipantsVue.enrolments, "lifeAndMinistryAssignments":allAssignmentsVue.assignments, "attendance": [attendanceVue.currentMonth, attendanceVue.meetingAttendanceRecord]})], {type: 'text/plain'});
+					file = new Blob([JSON.stringify({"exportType":"update", "configuration":configurationVue.configuration, "data":allPublishersVue.publishers, "lifeAndMinistryEnrolments":allParticipantsVue.enrolments, "lifeAndMinistryAssignments":allAssignmentsVue.allAssignments, "attendance": [attendanceVue.currentMonth, attendanceVue.meetingAttendanceRecord]})], {type: 'text/plain'});
 					await shortWait()
 					await shortWait()
 				}
@@ -4194,58 +4441,184 @@ Thanks a lot
 				// When the FileReader has loaded the file...
 				reader.onload = async function() {
 					var result = JSON.parse(this.result)
-					
-					var cleanupDataBase = allPublishersVue.publishers.filter((elem) => {
-						return result.data.findIndex(ele=>ele.name === elem.name) == -1
-					});
 
-					await shortWait()
-					await shortWait()
+					var exportType = result.exportType
+					console.log(exportType, result)
 
+					if (exportType == 'all') {
+						var cleanupPublishersDataBase = allPublishersVue.publishers.filter((elem) => {
+							return result.data.findIndex(ele=>ele.name === elem.name) == -1
+						});
 
-					if (!result.data[0].contactInformation) {
-						allPublishersVue.publishers.forEach(elem=>{
-							elem.report = result.data.filter(ele=>ele.name === elem.name)[0].report
-						})
+						var cleanupEnrolmentsDataBase = allParticipantsVue.enrolments.filter((elem) => {
+							return result.lifeAndMinistryEnrolments.findIndex(ele=>ele.name === elem.name) == -1
+						});
+
+						var cleanupAssignmentsDataBase = allAssignmentsVue.allAssignments.filter((elem) => {
+							return result.lifeAndMinistryAssignments.findIndex(ele=>ele.week === elem.week) == -1
+						});
+	
 						await shortWait()
 						await shortWait()
-
-					} else {
+	
 						configurationVue.configuration = result.configuration
 						navigationVue.allGroups = result.configuration.fieldServiceGroups
 						allPublishersVue.publishers = result.data
-						allParticipantsVue.lifeAndMinistry = result.lifeAndMinistry
-					}
+						allParticipantsVue.enrolments = result.lifeAndMinistryEnrolments
+						allAssignmentsVue.allAssignments = result.lifeAndMinistryAssignments
+	
+						await shortWait()
+						await shortWait()
+	
+						attendanceVue.currentMonth = result.attendance[0]
+						attendanceVue.meetingAttendanceRecord = result.attendance[1]
+	
+						DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [result.configuration]});
+						DBWorker.postMessage({ storeName: 'data', action: "save", value: result.data});
+						DBWorker.postMessage({ storeName: 'attendance', action: "save", value: result.attendance});
+						DBWorker.postMessage({ storeName: 'lifeAndMinistryEnrolments', action: "save", value: result.lifeAndMinistryEnrolments});
+						DBWorker.postMessage({ storeName: 'lifeAndMinistryAssignments', action: "save", value: result.lifeAndMinistryAssignments});
+	
+						await shortWait()
+						await shortWait()
+						await shortWait()
+						await shortWait()
+	
+	
+						cleanupPublishersDataBase.forEach(item=>{
+							DBWorker.postMessage({ storeName: 'data', action: "deleteItem", value: item.name});
+						})
 
-					await shortWait()
-					await shortWait()
+						cleanupEnrolmentsDataBase.forEach(item=>{
+							DBWorker.postMessage({ storeName: 'lifeAndMinistryEnrolments', action: "deleteItem", value: item.name});
+						})
 
-
-					attendanceVue.currentMonth = result.attendance[0]
-					attendanceVue.meetingAttendanceRecord = result.attendance[1]
-
-					DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [result.configuration]});
-					DBWorker.postMessage({ storeName: 'data', action: "save", value: result.data});
-					DBWorker.postMessage({ storeName: 'attendance', action: "save", value: result.attendance});
-					DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [result.lifeAndMinistry]});
-
-					await shortWait()
-					await shortWait()
-					await shortWait()
-					await shortWait()
-
-
-					console.log(cleanupDataBase)
-					cleanupDataBase.forEach(item=>{
-						DBWorker.postMessage({ storeName: 'data', action: "deleteItem", value: item.name});
-					})
-
-					configured = true
-					if (currentUser.currentProfile == 'Secretary') {
+						cleanupAssignmentsDataBase.forEach(item=>{
+							DBWorker.postMessage({ storeName: 'lifeAndMinistryAssignments', action: "deleteItem", value: item.name});
+						})
+	
+						configured = true
 						gotoView('congregationVue')
-					} else if (currentUser.currentProfile == 'Secretary - Assistant') {
+
+					} else if (exportType == 'reportEntry') {
+
+						var cleanupPublishersDataBase = allPublishersVue.publishers.filter((elem) => {
+							return result.data.findIndex(ele=>ele.name === elem.name) == -1
+						});
+	
+						await shortWait()
+						await shortWait()
+	
+						configurationVue.configuration = result.configuration
+						navigationVue.allGroups = result.configuration.fieldServiceGroups
+						allPublishersVue.publishers = result.data
+						
+						await shortWait()
+						await shortWait()
+	
+						await shortWait()
+						await shortWait()
+	
+						attendanceVue.currentMonth = result.attendance[0]
+						attendanceVue.meetingAttendanceRecord = result.attendance[1]
+	
+						DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [result.configuration]});
+						DBWorker.postMessage({ storeName: 'data', action: "save", value: result.data});
+						DBWorker.postMessage({ storeName: 'attendance', action: "save", value: result.attendance});
+	
+						await shortWait()
+						await shortWait()
+						await shortWait()
+						await shortWait()
+	
+	
+						cleanupPublishersDataBase.forEach(item=>{
+							DBWorker.postMessage({ storeName: 'data', action: "deleteItem", value: item.name});
+						})
+	
+						configured = true
+						
 						gotoView('missingReportVue')
+
+					} else if (exportType == 'lifeAndMinistry') {
+						var cleanupPublishersDataBase = allPublishersVue.publishers.filter((elem) => {
+							return result.data.findIndex(ele=>ele.name === elem.name) == -1
+						});
+
+						var cleanupEnrolmentsDataBase = allParticipantsVue.enrolments.filter((elem) => {
+							return result.lifeAndMinistryEnrolments.findIndex(ele=>ele.name === elem.name) == -1
+						});
+
+						var cleanupAssignmentsDataBase = allAssignmentsVue.allAssignments.filter((elem) => {
+							return result.lifeAndMinistryAssignments.findIndex(ele=>ele.week === elem.week) == -1
+						});
+	
+						await shortWait()
+						await shortWait()
+	
+						configurationVue.configuration = result.configuration
+						navigationVue.allGroups = result.configuration.fieldServiceGroups
+						allPublishersVue.publishers = result.data
+						allParticipantsVue.enrolments = result.lifeAndMinistryEnrolments
+						allAssignmentsVue.allAssignments = result.lifeAndMinistryAssignments
+	
+						await shortWait()
+						await shortWait()
+	
+						DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [result.configuration]});
+						DBWorker.postMessage({ storeName: 'data', action: "save", value: result.data});
+						DBWorker.postMessage({ storeName: 'lifeAndMinistryEnrolments', action: "save", value: result.lifeAndMinistryEnrolments});
+						DBWorker.postMessage({ storeName: 'lifeAndMinistryAssignments', action: "save", value: result.lifeAndMinistryAssignments});
+	
+						await shortWait()
+						await shortWait()
+						await shortWait()
+						await shortWait()
+	
+	
+						cleanupPublishersDataBase.forEach(item=>{
+							DBWorker.postMessage({ storeName: 'data', action: "deleteItem", value: item.name});
+						})
+
+						cleanupEnrolmentsDataBase.forEach(item=>{
+							DBWorker.postMessage({ storeName: 'lifeAndMinistryEnrolments', action: "deleteItem", value: item.name});
+						})
+
+						cleanupAssignmentsDataBase.forEach(item=>{
+							DBWorker.postMessage({ storeName: 'lifeAndMinistryAssignments', action: "deleteItem", value: item.name});
+						})
+	
+						configured = true
+						gotoView('allAssignmentsVue')
+					} else if (exportType == 'update') {
+
+						attendanceVue.currentMonth = result.attendance[0]
+
+						allPublishersVue.publishers.forEach(elem=>{
+							elem.report = result.data.filter(ele=>ele.name === elem.name)[0].report
+						})
+
+						allParticipantsVue.enrolments = result.lifeAndMinistryEnrolments
+						allAssignmentsVue.allAssignments = result.lifeAndMinistryAssignments
+
+						await shortWait()
+						await shortWait()
+	
+						DBWorker.postMessage({ storeName: 'data', action: "save", value: allPublishersVue.publishers});
+						DBWorker.postMessage({ storeName: 'attendance', action: "save", value: result.attendance});
+						DBWorker.postMessage({ storeName: 'lifeAndMinistryEnrolments', action: "save", value: result.lifeAndMinistryEnrolments});
+						DBWorker.postMessage({ storeName: 'lifeAndMinistryAssignments', action: "save", value: result.lifeAndMinistryAssignments});
+	
+						await shortWait()
+						await shortWait()
+						await shortWait()
+						await shortWait()
+		
+						configured = true
+						gotoView('contactInformationVue')
+						
 					}
+					
 				}
 				
 				// Read the file content as a single string
@@ -4271,11 +4644,13 @@ Thanks a lot
 				var confirmReset = prompt('Are you sure you want to Reset records?\nType "Reset" to Reset')
                 if (confirmReset !== null && confirmReset.toLowerCase() == 'reset') {
 					this.reset = true
-					resetCount = 4
+					resetCount = 6
 					DBWorker.postMessage({ storeName: 'data', action: "readAll"});
                     DBWorker.postMessage({ storeName: 'configuration', action: "readAll"});
                     DBWorker.postMessage({ storeName: 'attendance', action: "readAll"});
                     DBWorker.postMessage({ storeName: 'files', action: "readAll"});
+                    DBWorker.postMessage({ storeName: 'lifeAndMinistryAssignments', action: "readAll"});
+                    DBWorker.postMessage({ storeName: 'lifeAndMinistryAssignments', action: "readAll"});
 
 					// Open a connection to the database
 					/*var request = indexedDB.open('congRec');
@@ -4372,7 +4747,7 @@ Thanks a lot
 
                     if (currentUser.currentProfile == 'Life and Ministry Overseer' || currentUser.currentProfile == 'Life and Ministry Assistant') {
 						allParticipantsVue.enrolments.push({name: publisher.name, gender: publisher.gender, phoneNumber: publisher.contactInformation.phoneNumber == '' ? null : publisher.contactInformation.phoneNumber, address: publisher.contactInformation.address == '' ? null : publisher.contactInformation.address })
-						DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [{"name": "Life and Ministry", "enrolments": allParticipantsVue.enrolments}]});
+						DBWorker.postMessage({ storeName: 'lifeAndMinistryEnrolments', action: "save", value: allParticipantsVue.enrolments});
 						this.cancel(item)
 						return
 					}
@@ -4434,14 +4809,15 @@ Thanks a lot
 
 					allPublishersVue.publishers.push(publisher)
 
-                    console.log(publisher)
+                    //console.log(publisher)
                     
                     DBWorker.postMessage({ storeName: 'data', action: "save", value: [publisher]});
 					this.cancel(item)
                 }
 			},
 			saveFile() {
-				DBWorker.postMessage({ storeName: 'files', action: "save", value: [document.getElementById('pdfFile').files[0]]});
+				DBWorker.postMessage({ storeName: 'files', action: "save", value: [{name: document.querySelector('.fileName').value, value: document.getElementById('pdfFile').files[0]}]});
+				getFieldByName(document.getElementById('pdfFile').files[0], document.querySelector('.fileName').value)
 			}
         }
     })
@@ -5033,85 +5409,84 @@ function download(content, fileName, contentType) {
 
 
 
-
 async function fillPublisherRecord(data) {
 	const publisher = data[0]
 	const period = data[1]
     // Get the form field by name
     //const fieldName = fieldNameInput.value;
-    const name = s21current.getForm().getTextField('900_1_Text_SanSerif');
-    const dateOfBirth = s21current.getForm().getTextField('900_2_Text_SanSerif');
-    const dateOfBaptism = s21current.getForm().getTextField('900_5_Text_SanSerif');
-    const male = s21current.getForm().getCheckBox('900_3_CheckBox');
-    const female = s21current.getForm().getCheckBox('900_4_CheckBox');
-    const otherSheep = s21current.getForm().getCheckBox('900_6_CheckBox');
-    const anointed = s21current.getForm().getCheckBox('900_7_CheckBox');
-    const elder = s21current.getForm().getCheckBox('900_8_CheckBox');
-    const ministerialServant = s21current.getForm().getCheckBox('900_9_CheckBox');
-    const regularPioneer = s21current.getForm().getCheckBox('900_10_CheckBox');
-    const specialPioneer = s21current.getForm().getCheckBox('900_11_CheckBox');
-    const fieldMissionary = s21current.getForm().getCheckBox('900_12_CheckBox');
-    const serviceYear = s21current.getForm().getTextField('900_13_Text_C_SanSerif');
-    const septPreached = s21current.getForm().getCheckBox('901_20_CheckBox');
-    const octPreached = s21current.getForm().getCheckBox('901_21_CheckBox');
-    const novPreached = s21current.getForm().getCheckBox('901_22_CheckBox');
-    const decPreached = s21current.getForm().getCheckBox('901_23_CheckBox');
-    const janPreached = s21current.getForm().getCheckBox('901_24_CheckBox');
-    const febPreached = s21current.getForm().getCheckBox('901_25_CheckBox');
-    const marPreached = s21current.getForm().getCheckBox('901_26_CheckBox');
-    const aprPreached = s21current.getForm().getCheckBox('901_27_CheckBox');
-    const mayPreached = s21current.getForm().getCheckBox('901_28_CheckBox');
-    const junPreached = s21current.getForm().getCheckBox('901_29_CheckBox');
-    const julPreached = s21current.getForm().getCheckBox('901_30_CheckBox');
-    const augPreached = s21current.getForm().getCheckBox('901_31_CheckBox');
-    const septAux = s21current.getForm().getCheckBox('903_20_CheckBox');
-    const octAux = s21current.getForm().getCheckBox('903_21_CheckBox');
-    const novAux = s21current.getForm().getCheckBox('903_22_CheckBox');
-    const decAux = s21current.getForm().getCheckBox('903_23_CheckBox');
-    const janAux = s21current.getForm().getCheckBox('903_24_CheckBox');
-    const febAux = s21current.getForm().getCheckBox('903_25_CheckBox');
-    const marAux = s21current.getForm().getCheckBox('903_26_CheckBox');
-    const aprAux = s21current.getForm().getCheckBox('903_27_CheckBox');
-    const mayAux = s21current.getForm().getCheckBox('903_28_CheckBox');
-    const junAux = s21current.getForm().getCheckBox('903_29_CheckBox');
-    const julAux = s21current.getForm().getCheckBox('903_30_CheckBox');
-    const augAux = s21current.getForm().getCheckBox('903_31_CheckBox');
-    const septBs = s21current.getForm().getTextField('902_20_Text_C_SanSerif');
-    const octBs = s21current.getForm().getTextField('902_21_Text_C_SanSerif');
-    const novBs = s21current.getForm().getTextField('902_22_Text_C_SanSerif');
-    const decBs = s21current.getForm().getTextField('902_23_Text_C_SanSerif');
-    const janBs = s21current.getForm().getTextField('902_24_Text_C_SanSerif');
-    const febBs = s21current.getForm().getTextField('902_25_Text_C_SanSerif');
-    const marBs = s21current.getForm().getTextField('902_26_Text_C_SanSerif');
-    const aprBs = s21current.getForm().getTextField('902_27_Text_C_SanSerif');
-    const mayBs = s21current.getForm().getTextField('902_28_Text_C_SanSerif');
-    const junBs = s21current.getForm().getTextField('902_29_Text_C_SanSerif');
-    const julBs = s21current.getForm().getTextField('902_30_Text_C_SanSerif');
-    const augBs = s21current.getForm().getTextField('902_31_Text_C_SanSerif');
-	const septHr = s21current.getForm().getField('904_20_S21_Value');
-    const octHr = s21current.getForm().getField('904_21_S21_Value');
-    const novHr = s21current.getForm().getField('904_22_S21_Value');
-    const decHr = s21current.getForm().getField('904_23_S21_Value');
-    const janHr = s21current.getForm().getField('904_24_S21_Value');
-    const febHr = s21current.getForm().getField('904_25_S21_Value');
-    const marHr = s21current.getForm().getField('904_26_S21_Value');
-    const aprHr = s21current.getForm().getField('904_27_S21_Value');
-    const mayHr = s21current.getForm().getField('904_28_S21_Value');
-    const junHr = s21current.getForm().getField('904_29_S21_Value');
-    const julHr = s21current.getForm().getField('904_30_S21_Value');
-    const augHr = s21current.getForm().getField('904_31_S21_Value');
-	const septRem = s21current.getForm().getTextField('905_20_Text_SanSerif');
-    const octRem = s21current.getForm().getTextField('905_21_Text_SanSerif');
-    const novRem = s21current.getForm().getTextField('905_22_Text_SanSerif');
-    const decRem = s21current.getForm().getTextField('905_23_Text_SanSerif');
-    const janRem = s21current.getForm().getTextField('905_24_Text_SanSerif');
-    const febRem = s21current.getForm().getTextField('905_25_Text_SanSerif');
-    const marRem = s21current.getForm().getTextField('905_26_Text_SanSerif');
-    const aprRem = s21current.getForm().getTextField('905_27_Text_SanSerif');
-    const mayRem = s21current.getForm().getTextField('905_28_Text_SanSerif');
-    const junRem = s21current.getForm().getTextField('905_29_Text_SanSerif');
-    const julRem = s21current.getForm().getTextField('905_30_Text_SanSerif');
-    const augRem = s21current.getForm().getTextField('905_31_Text_SanSerif');
+    const name = s21.getForm().getTextField('900_1_Text_SanSerif');
+    const dateOfBirth = s21.getForm().getTextField('900_2_Text_SanSerif');
+    const dateOfBaptism = s21.getForm().getTextField('900_5_Text_SanSerif');
+    const male = s21.getForm().getCheckBox('900_3_CheckBox');
+    const female = s21.getForm().getCheckBox('900_4_CheckBox');
+    const otherSheep = s21.getForm().getCheckBox('900_6_CheckBox');
+    const anointed = s21.getForm().getCheckBox('900_7_CheckBox');
+    const elder = s21.getForm().getCheckBox('900_8_CheckBox');
+    const ministerialServant = s21.getForm().getCheckBox('900_9_CheckBox');
+    const regularPioneer = s21.getForm().getCheckBox('900_10_CheckBox');
+    const specialPioneer = s21.getForm().getCheckBox('900_11_CheckBox');
+    const fieldMissionary = s21.getForm().getCheckBox('900_12_CheckBox');
+    const serviceYear = s21.getForm().getTextField('900_13_Text_C_SanSerif');
+    const septPreached = s21.getForm().getCheckBox('901_20_CheckBox');
+    const octPreached = s21.getForm().getCheckBox('901_21_CheckBox');
+    const novPreached = s21.getForm().getCheckBox('901_22_CheckBox');
+    const decPreached = s21.getForm().getCheckBox('901_23_CheckBox');
+    const janPreached = s21.getForm().getCheckBox('901_24_CheckBox');
+    const febPreached = s21.getForm().getCheckBox('901_25_CheckBox');
+    const marPreached = s21.getForm().getCheckBox('901_26_CheckBox');
+    const aprPreached = s21.getForm().getCheckBox('901_27_CheckBox');
+    const mayPreached = s21.getForm().getCheckBox('901_28_CheckBox');
+    const junPreached = s21.getForm().getCheckBox('901_29_CheckBox');
+    const julPreached = s21.getForm().getCheckBox('901_30_CheckBox');
+    const augPreached = s21.getForm().getCheckBox('901_31_CheckBox');
+    const septAux = s21.getForm().getCheckBox('903_20_CheckBox');
+    const octAux = s21.getForm().getCheckBox('903_21_CheckBox');
+    const novAux = s21.getForm().getCheckBox('903_22_CheckBox');
+    const decAux = s21.getForm().getCheckBox('903_23_CheckBox');
+    const janAux = s21.getForm().getCheckBox('903_24_CheckBox');
+    const febAux = s21.getForm().getCheckBox('903_25_CheckBox');
+    const marAux = s21.getForm().getCheckBox('903_26_CheckBox');
+    const aprAux = s21.getForm().getCheckBox('903_27_CheckBox');
+    const mayAux = s21.getForm().getCheckBox('903_28_CheckBox');
+    const junAux = s21.getForm().getCheckBox('903_29_CheckBox');
+    const julAux = s21.getForm().getCheckBox('903_30_CheckBox');
+    const augAux = s21.getForm().getCheckBox('903_31_CheckBox');
+    const septBs = s21.getForm().getTextField('902_20_Text_C_SanSerif');
+    const octBs = s21.getForm().getTextField('902_21_Text_C_SanSerif');
+    const novBs = s21.getForm().getTextField('902_22_Text_C_SanSerif');
+    const decBs = s21.getForm().getTextField('902_23_Text_C_SanSerif');
+    const janBs = s21.getForm().getTextField('902_24_Text_C_SanSerif');
+    const febBs = s21.getForm().getTextField('902_25_Text_C_SanSerif');
+    const marBs = s21.getForm().getTextField('902_26_Text_C_SanSerif');
+    const aprBs = s21.getForm().getTextField('902_27_Text_C_SanSerif');
+    const mayBs = s21.getForm().getTextField('902_28_Text_C_SanSerif');
+    const junBs = s21.getForm().getTextField('902_29_Text_C_SanSerif');
+    const julBs = s21.getForm().getTextField('902_30_Text_C_SanSerif');
+    const augBs = s21.getForm().getTextField('902_31_Text_C_SanSerif');
+	const septHr = s21.getForm().getField('904_20_S21_Value');
+    const octHr = s21.getForm().getField('904_21_S21_Value');
+    const novHr = s21.getForm().getField('904_22_S21_Value');
+    const decHr = s21.getForm().getField('904_23_S21_Value');
+    const janHr = s21.getForm().getField('904_24_S21_Value');
+    const febHr = s21.getForm().getField('904_25_S21_Value');
+    const marHr = s21.getForm().getField('904_26_S21_Value');
+    const aprHr = s21.getForm().getField('904_27_S21_Value');
+    const mayHr = s21.getForm().getField('904_28_S21_Value');
+    const junHr = s21.getForm().getField('904_29_S21_Value');
+    const julHr = s21.getForm().getField('904_30_S21_Value');
+    const augHr = s21.getForm().getField('904_31_S21_Value');
+	const septRem = s21.getForm().getTextField('905_20_Text_SanSerif');
+    const octRem = s21.getForm().getTextField('905_21_Text_SanSerif');
+    const novRem = s21.getForm().getTextField('905_22_Text_SanSerif');
+    const decRem = s21.getForm().getTextField('905_23_Text_SanSerif');
+    const janRem = s21.getForm().getTextField('905_24_Text_SanSerif');
+    const febRem = s21.getForm().getTextField('905_25_Text_SanSerif');
+    const marRem = s21.getForm().getTextField('905_26_Text_SanSerif');
+    const aprRem = s21.getForm().getTextField('905_27_Text_SanSerif');
+    const mayRem = s21.getForm().getTextField('905_28_Text_SanSerif');
+    const junRem = s21.getForm().getTextField('905_29_Text_SanSerif');
+    const julRem = s21.getForm().getTextField('905_30_Text_SanSerif');
+    const augRem = s21.getForm().getTextField('905_31_Text_SanSerif');
 
 	name.setText(`${publisher.name == null ? '' : publisher.name}`)
 	dateOfBirth.setText(`${publisher.dateOfBirth == null ? '' : publisher.dateOfBirth}`)
@@ -5364,7 +5739,7 @@ async function fillPublisherRecord(data) {
 	var newPdfViewer = document.createElement('iframe')
 	newPdfViewer.height = '600px'
 	newPdfViewer.width = '100%'
-	newPdfViewer.src = URL.createObjectURL(new Blob([await s21current.save()], { type: 'application/pdf' }));
+	newPdfViewer.src = URL.createObjectURL(new Blob([await s21.save()], { type: 'application/pdf' }));
 	newPdfbutton.innerHTML = `<a href="${newPdfViewer.src}" style="text-decoration:none" download="${toTitleCase(period.replace('ServiceYear', ''))} Record Card - ${publisher.name}"><i class="fas fa-download"></i></a>`
 	newPdfbutton.classList.value = "w3-button w3-black download-button"
 	newPdfholder.style.margin = "15px"
@@ -5377,6 +5752,118 @@ async function fillPublisherRecord(data) {
 
 	if (recordsToCreate.length !== 0) {
 		fillPublisherRecord(recordsToCreate.shift())
+	}
+
+    //download(modifiedPdfBytes, publisher.name + ".pdf", "application/pdf");
+}
+
+async function assignmentSlip(data, count) {
+	if (!count) {
+		count = 1
+	}
+	if (!data[0]) {
+		data[0] = {}
+	}
+	if (!data[1]) {
+		data[1] = {}
+	}
+	if (!data[2]) {
+		data[2] = {}
+	}
+	if (!data[3]) {
+		data[3] = {}
+	}
+	const student1 = data[0].assignedTo
+	const assist1 = data[0].assistant
+	const week1 = data[0].week
+	const no1 = data[0].meetingPart.split(' ')[0].replace('.', '')
+	const student2 = data[1].assignedTo
+	const assist2 = data[1].assistant
+	const week2 = data[1].week
+	const no2 = data[1].meetingPart.split(' ')[0].replace('.', '')
+	const student3 = data[2].assignedTo
+	const assist3 = data[2].assistant
+	const week3 = data[2].week
+	const no3 = data[2].meetingPart.split(' ')[0].replace('.', '')
+	const student4 = data[3].assignedTo
+	const assist4 = data[3].assistant
+	const week4 = data[3].week
+	const no4 = data[3].meetingPart.split(' ')[0].replace('.', '')
+    // Get the form field by name
+    //const fieldName = fieldNameInput.value;
+    const name1 = s89.getForm().getTextField('900_1_Text_SanSerif');
+    const assistant1 = s89.getForm().getTextField('900_2_Text_SanSerif');
+    const date1 = s89.getForm().getTextField('900_3_Text_SanSerif');
+    const partNo1 = s89.getForm().getTextField('900_4_Text_SanSerif');
+    const mainHall1 = s89.getForm().getCheckBox('900_5_CheckBox');
+    const auxClass11 = s89.getForm().getCheckBox('900_6_CheckBox');
+    const auxClass89 = s89.getForm().getCheckBox('900_7_CheckBox');
+    const name2 = s89.getForm().getTextField('900_8_Text_SanSerif');
+    const assistant2 = s89.getForm().getTextField('900_9_Text_SanSerif');
+    const date2 = s89.getForm().getTextField('900_10_Text_SanSerif');
+    const partNo2 = s89.getForm().getTextField('900_11_Text_SanSerif');
+    const mainHall2 = s89.getForm().getCheckBox('900_12_CheckBox');
+    const auxClass12 = s89.getForm().getCheckBox('900_13_CheckBox');
+    const auxClass22 = s89.getForm().getCheckBox('900_14_CheckBox');
+	const name3 = s89.getForm().getTextField('900_15_Text_SanSerif');
+    const assistant3 = s89.getForm().getTextField('900_16_Text_SanSerif');
+    const date3 = s89.getForm().getTextField('900_17_Text_SanSerif');
+    const partNo3 = s89.getForm().getTextField('900_18_Text_SanSerif');
+    const mainHall3 = s89.getForm().getCheckBox('900_19_CheckBox');
+    const auxClass13 = s89.getForm().getCheckBox('900_20_CheckBox');
+    const auxClass23 = s89.getForm().getCheckBox('900_21_CheckBox');
+	const name4 = s89.getForm().getTextField('900_22_Text_SanSerif');
+    const assistant4 = s89.getForm().getTextField('900_23_Text_SanSerif');
+    const date4 = s89.getForm().getTextField('900_24_Text_SanSerif');
+    const partNo4 = s89.getForm().getTextField('900_25_Text_SanSerif');
+    const mainHall4 = s89.getForm().getCheckBox('900_26_CheckBox');
+    const auxClass14 = s89.getForm().getCheckBox('900_27_CheckBox');
+    const auxClass24 = s89.getForm().getCheckBox('900_28_CheckBox');
+
+	name1.setText(`${student1 == null ? '' : student1}`)
+	assistant1.setText(`${assist1 == null ? '' : assist1}`)
+	date1.setText(`${week1 == null ? '' : week1}`)
+	partNo1.setText(`${no1 == null ? '' : no1}`)
+
+	name2.setText(`${student2 == null ? '' : student2}`)
+	assistant2.setText(`${assist2 == null ? '' : assist2}`)
+	date2.setText(`${week2 == null ? '' : week2}`)
+	partNo2.setText(`${no2 == null ? '' : no2}`)
+
+	name3.setText(`${student3 == null ? '' : student3}`)
+	assistant3.setText(`${assist3 == null ? '' : assist3}`)
+	date3.setText(`${week3 == null ? '' : week3}`)
+	partNo3.setText(`${no3 == null ? '' : no3}`)
+
+	name4.setText(`${student4 == null ? '' : student4}`)
+	assistant4.setText(`${assist4 == null ? '' : assist4}`)
+	date4.setText(`${week4 == null ? '' : week4}`)
+	partNo4.setText(`${no4 == null ? '' : no4}`)
+	
+	mainHall1.check()
+	mainHall2.check()
+	mainHall3.check()
+	mainHall4.check()
+
+	var newPdfholder = document.createElement('div')
+	var newPdfbutton = document.createElement('button')
+	var newPdfViewer = document.createElement('iframe')
+	newPdfViewer.height = '600px'
+	newPdfViewer.width = '100%'
+	newPdfViewer.src = URL.createObjectURL(new Blob([await s89.save()], { type: 'application/pdf' }));
+	newPdfbutton.innerHTML = `<a href="${newPdfViewer.src}" style="text-decoration:none" download="Assignment Slips - ${count}"><i class="fas fa-download"></i></a>`
+	newPdfbutton.classList.value = "w3-button w3-black download-button"
+	newPdfholder.style.margin = "15px"
+	newPdfbutton.style.margin = "10px 0"
+	newPdfholder.appendChild(newPdfbutton)
+	newPdfholder.appendChild(newPdfViewer)
+	document.getElementById("pdfViewer").appendChild(newPdfholder)
+
+	downloadsArray.push([newPdfViewer.src, `Assignment Slips - ${count}`])
+
+	if (assignmentsToSend.length !== 0) {
+		count++
+		assignmentSlip(assignmentsToSend.splice(0, 4), count)
 	}
 
     //download(modifiedPdfBytes, publisher.name + ".pdf", "application/pdf");
@@ -5400,11 +5887,11 @@ function updatePublisherRecord(publisher) {
     publisher.gender = "Male"
     
 
-    const name = s21current.getForm().getTextField('900_1_Text_SanSerif');
-    const dateOfBirth = s21current.getForm().getTextField('900_2_Text_SanSerif');
-    const dateOfBaptism = s21current.getForm().getTextField('900_5_Text_SanSerif');
-    const male = s21current.getForm().getCheckBox('900_3_CheckBox');
-    const female = s21current.getForm().getCheckBox('900_4_CheckBox');
+    const name = s21.getForm().getTextField('900_1_Text_SanSerif');
+    const dateOfBirth = s21.getForm().getTextField('900_2_Text_SanSerif');
+    const dateOfBaptism = s21.getForm().getTextField('900_5_Text_SanSerif');
+    const male = s21.getForm().getCheckBox('900_3_CheckBox');
+    const female = s21.getForm().getCheckBox('900_4_CheckBox');
 
     console.log(name.getText(), dateOfBirth.getText(), dateOfBaptism.getText(), male.isChecked(), female.isChecked())
 return
@@ -5423,9 +5910,9 @@ return
 
 // 900_1_Text_SanSerif
 
-var s21current, s21past;
+var s21, s89;
 
-async function getFieldByName(file) {
+async function getFieldByName(file, variable) {
     //const fileInput = document.getElementById('pdfFile');
     //const file = fileInput.files[0];
 
@@ -5436,12 +5923,17 @@ async function getFieldByName(file) {
             const pdfData = new Uint8Array(e.target.result);
 
             // Using pdf-lib to load the PDF document
-            s21current = await PDFLib.PDFDocument.load(pdfData);
+			if (variable == 'S-21') {
+				s21 = await PDFLib.PDFDocument.load(pdfData);
+			} else if (variable == 'S-89') {
+				s89 = await PDFLib.PDFDocument.load(pdfData);
+			}
+            //s21 = await PDFLib.PDFDocument.load(pdfData);
             //s21past = await PDFLib.PDFDocument.load(pdfData);
         };
 
         reader.readAsArrayBuffer(file);
-    } else {
+    }/* else {
 		const fileInput = document.getElementById('pdfFile');
     	const file = fileInput.files[0];
 		
@@ -5451,12 +5943,16 @@ async function getFieldByName(file) {
             const pdfData = new Uint8Array(e.target.result);
 
             // Using pdf-lib to load the PDF document
-            s21current = await PDFLib.PDFDocument.load(pdfData);
+            if (variable == s21) {
+				s21 = await PDFLib.PDFDocument.load(pdfData);
+			} else if (variable == s89) {
+				s89 = await PDFLib.PDFDocument.load(pdfData);
+			}
             //s21past = await PDFLib.PDFDocument.load(pdfData);
         };
 
         reader.readAsArrayBuffer(file);
-	}
+	}*/
 }
 
 function generatePDF(element, fileName, orientation) {
@@ -5478,7 +5974,7 @@ function generatePDF(element, fileName, orientation) {
 
 var myImage;
 
-function convertToImage(content) {
+async function convertToImage(content) {
 	//const content = document.getElementById('content');
 
 	// Use html2canvas with options
@@ -5540,9 +6036,11 @@ async function convertToPdf(element) {
     // Load the PDF with pdf-lib
     //const pdfDoc = await PDFLib.PDFDocument.load(pdfBytes);
 
-	document.querySelector('#content').innerHTML = ''
-	document.querySelector('#content').style.display = 'none'
-
+	if (scheduleVue.display !== true) {
+		document.querySelector('#content').innerHTML = ''
+		document.querySelector('#content').style.display = 'none'
+	}
+	
 	var newPdfholder = document.createElement('div')
 	var newPdfbutton = document.createElement('button')
 	var downloadAllbutton = document.createElement('button')
@@ -5559,7 +6057,11 @@ async function convertToPdf(element) {
 	downloadAllbutton.style.margin = "10px 5px"
 	
 	newPdfholder.appendChild(newPdfbutton)
-	newPdfholder.appendChild(downloadAllbutton)
+	
+	if (scheduleVue.display !== true) {
+		newPdfholder.appendChild(downloadAllbutton)
+	}
+	
 	newPdfholder.appendChild(newPdfViewer)
 	document.getElementById("pdfViewer").appendChild(newPdfholder)
 
