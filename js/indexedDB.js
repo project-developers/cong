@@ -2,7 +2,7 @@
 
 var DB = {}
 
-let db, settings, configuration, data, files, attendance, account, lifeAndMinistryEnrolments, lifeAndMinistryAssignments;
+let db, settings, configuration, data, files, territory, attendance, account, lifeAndMinistryEnrolments, lifeAndMinistryAssignments;
 
 self.onmessage = async function (a) {
     switch (a.data.action) {
@@ -43,6 +43,7 @@ DB.open = function(b, c, d) {
             files = db.createObjectStore('files',{keyPath: 'name'});
             lifeAndMinistryEnrolments = db.createObjectStore('lifeAndMinistryEnrolments',{keyPath: 'name'});
             lifeAndMinistryAssignments = db.createObjectStore('lifeAndMinistryAssignments',{keyPath: 'week'});
+            territory = db.createObjectStore('territory',{keyPath: 'name'});
         } else {
 
         }
