@@ -1348,6 +1348,30 @@ function w3_close() {
 	mySidebar.style.display = "none";
 }
 
+var draw; // Declare draw globally
+var vectorSource
+var vectorLayer
+
+function setDrawType(drawType) {
+	// Remove the existing draw interaction
+	if (draw) {
+		map.removeInteraction(draw);
+	}
+
+	// Create a new draw interaction with the specified type
+	draw = new ol.interaction.Draw({
+		source: vectorSource,
+		type: drawType
+	});
+
+	map.addInteraction(draw);
+}
+
+function clearDrawnFeatures() {
+	// Clear the vector source
+	vectorSource.clear();
+}
+
 async function gotoView(button) {
 	congregationVue.display = false
 	allPublishersVue.display = false
@@ -1368,8 +1392,57 @@ async function gotoView(button) {
 		navigationVue.display = true
 	}
 	window[`${button}`].display = true
-	if (button == 'territoryVue' && !mymap) {
-		myZip = await JSZip.loadAsync(myTerritory[1].value)
+	if (button == 'territoryVue' && !map) {
+		await shortWait()
+		await shortWait()
+		await shortWait()
+		
+		map = new ol.Map({
+			target: 'map',
+			layers: [
+				new ol.layer.Tile({
+					source: new ol.source.OSM()
+				})
+			],
+			view: new ol.View({
+				center: ol.proj.fromLonLat([-13.239936, 8.468872]),
+				zoom: 14
+			})
+		});
+		await shortWait()
+		await shortWait()
+		await shortWait()
+		// Create a vector source and layer for drawing
+		vectorSource = new ol.source.Vector();
+		vectorLayer = new ol.layer.Vector({
+			source: vectorSource,
+			style: new ol.style.Style({
+				fill: new ol.style.Fill({
+					color: 'rgba(255, 255, 255, 0.2)'
+				}),
+				stroke: new ol.style.Stroke({
+					color: '#ffcc33',
+					width: 2
+				}),
+				image: new ol.style.Circle({
+					radius: 7,
+					fill: new ol.style.Fill({
+						color: '#ffcc33'
+					})
+				})
+			})
+		});
+
+		map.addLayer(vectorLayer);
+
+		var draw;
+
+		
+
+		// Set the initial draw type
+		setDrawType('Point');
+		/*
+		//myZip = await JSZip.loadAsync(myTerritory[1].value)
 		await shortWait()
 		await shortWait()
 		await shortWait()
@@ -1434,7 +1507,7 @@ async function gotoView(button) {
 			});
 		});
 */
-		
+		/*
 		// Add the OpenStreetMap tile layer
 		L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 		attribution: '&copy; OpenStreetMap contributors'
@@ -1571,6 +1644,7 @@ async function gotoView(button) {
 		});
 
 		territoryVue.updateDrawnFeaturesLayer()
+		*/
 	}
 }
 
@@ -1611,13 +1685,19 @@ function processCongregation() {
     })
 }
 
-var mymap, drawControl, drawnLayers = [], drawnFeaturesLayer, marker
+var map, mymap, drawControl, drawnLayers = [], drawnFeaturesLayer, marker
 
 document.querySelector('#territory').innerHTML = `<template>
 	<div v-if="display == true" class="w3-row-padding w3-center" style="margin-top:64px">
 		<h2 class="w3-center">TERRITORY</h2>	
-		<div id="map"></div>
+		<div id="map" style="width: 100%; height: 500px;"></div>
 		<button class="w3-button w3-black" @click="saveDrawing()">Save Drawings</button>
+		<div class="draw-buttons">
+			<button onclick="setDrawType('Point')">Draw Point</button>
+			<button onclick="setDrawType('LineString')">Draw Line</button>
+			<button onclick="setDrawType('Polygon')">Draw Polygon</button>
+			<button onclick="clearDrawnFeatures()">Clear Drawings</button>
+		</div>
 	</div>
 </template>`
 
