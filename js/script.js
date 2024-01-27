@@ -7,7 +7,7 @@ loginForm.confirmPassword.style.display = 'none';
 document.getElementById("securityQuestions").style.display = 'none';
 loginErrorMsg.style.opacity = 0;
 var logged = false, reportEntry = false;
-var hiddenElements = ["congregation", "allParticipants", "allPublishers", "allAssignments", "schedule", "contactInformation", "fieldServiceGroups", "monthlyReport", "missingReport", "attendance", "branchReport", "configuration"]
+var hiddenElements = ["congregation", "allParticipants", "allPublishers", "allAssignments", "schedule", "contactInformation", "fieldServiceGroups", "monthlyReport", "missingReport", "attendance", "branchReport", "territory", "configuration"]
 var securityQuestions = [
 	{value: "What was the name of your first CO?".replaceAll(' ',''), label: "What was the name of your first CO?"},
 	{value: "In which city did you start preaching?".replaceAll(' ',''), label: "In which city did you start preaching?"},
@@ -106,6 +106,27 @@ loginButton.addEventListener("click", (e) => {
 			currentUser.selectedQuestion = getSelectedOption(document.getElementsByName("securityGroup"))
 			currentUser.answer = document.querySelector('#answer').value.toLowerCase().trim()
 			configurationVue.selectedProfile = currentUser.currentProfile
+			if (currentUser.currentProfile == 'Service Overseer') {
+				console.log("You have successfully logged in.");
+				document.getElementById("securityQuestions").style.display = 'none';
+				loginForm.username.value = ''
+				loginForm.password.value = ''
+				loginForm.confirmPassword.value = ''
+				loginForm.confirmPassword.style.display = 'none';
+				currentUser.name = currentUser.username
+				hiddenElements.forEach(elem=>{
+					document.getElementById(`${elem}`).style.display = ''
+				})
+				logged = true
+				//reportEntry = true
+
+				allUsers.push(currentUser)
+
+				document.getElementById("home").style.display = 'none'
+				DBWorker.postMessage({ storeName: 'settings', action: "save", value: [currentUser]});
+				DBWorker.postMessage({ dbName: 'cong-' + currentUser.username.toLowerCase(), action: "init"});
+				loginErrorMsg.style.opacity = 0;
+			}
 			if (currentUser.currentProfile == 'Secretary') {
 				console.log("You have successfully logged in.");
 				document.getElementById("securityQuestions").style.display = 'none';
@@ -190,6 +211,27 @@ loginButton.addEventListener("click", (e) => {
 		document.getElementById("home").style.display = 'none'
 		DBWorker.postMessage({ dbName: 'cong-' + currentUser.username.toLowerCase(), action: "init"});
 		loginErrorMsg.style.opacity = 0;
+		
+    } else if (username.toLowerCase() === "ministry".toLowerCase() && password === "service") {
+		navigationVue.buttons = [
+			{
+				"title": "BACK",
+				"function": "missingReportVue"
+			}
+		]
+		loginButton.innerText = 'Create Account'
+		document.getElementById("securityQuestions").style.display = '';
+        loginErrorMsg.innerHTML = 'You will need to create an account to continue:'
+		loginForm.username.value="";
+		loginForm.password.value="";
+		loginForm.confirmPassword.style.display = '';
+		loginForm.username.select()
+		loginButton.value = 'Create Account'
+		currentUser.accesses = ['so']
+		currentUser.currentProfile = 'Service Overseer'
+		configurationVue.reportEntry = 'so'
+		configurationVue.selectedProfile = 'Service Overseer'
+		loginErrorMsg.style.opacity = 1;
 		
     } else if (username.toLowerCase() === "lifeAndMinistry".toLowerCase() && password === "handler") {
 		navigationVue.buttons = [
@@ -301,6 +343,7 @@ var allButtons = [
 	{"title": "BRANCH", "function": "branchReportVue"}, 
 	{"title": "ATTENDANCE", "function": "attendanceVue"},
 	{"title": "PARTICIPANTS", "function": "allParticipantsVue"},
+	{"title": "TERRITORY", "function": "territoryVue"},
 	{"title": "SETTINGS", "function": "configurationVue"}
 ]
 //var CongregationData = JSON.parse(localStorage.getItem('CongregationData'));
@@ -385,6 +428,10 @@ DBWorker.onmessage = async function (msg) {
 							navigationVue.buttons = [{"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH", "function": "branchReportVue"}]
 							navigationVue.displayDropdown = true
 							//missingReportVue.display = true
+						} else if (currentUser.currentProfile == 'Service Overseer') {
+							navigationVue.buttons = [{"title": "TERRITORY", "function": "territoryVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}]
+							configurationVue.reportEntry = 'so'
+							//congregationVue.display = true
 						} else if (currentUser.currentProfile == 'Life and Ministry Overseer') {
 							configurationVue.reportEntry = 'lmo'
 							navigationVue.buttons = [{"title": "SCHEDULE", "function": "scheduleVue"}, {"title": "PARTICIPANTS", "function": "allParticipantsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}]
@@ -405,6 +452,11 @@ DBWorker.onmessage = async function (msg) {
 							navigationVue.buttons = [{"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH", "function": "branchReportVue"}]
 							navigationVue.displayDropdown = true
 							missingReportVue.display = true
+						} else if (currentUser.currentProfile == 'Service Overseer') {
+							navigationVue.buttons = [{"title": "TERRITORY", "function": "territoryVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}]
+							configurationVue.reportEntry = 'so'
+							congregationVue.display = true
+							DBWorker.postMessage({ storeName: 'territory', action: "readAll"});
 						} else if (currentUser.currentProfile == 'Life and Ministry Overseer') {
 							configurationVue.reportEntry = 'lmo'
 							navigationVue.buttons = [{"title": "SCHEDULE", "function": "scheduleVue"}, {"title": "PARTICIPANTS", "function": "allParticipantsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}]
@@ -515,6 +567,14 @@ DBWorker.onmessage = async function (msg) {
 					
 				}
 				break;
+			case "territory":
+				{
+					console.log(msgData.value)
+					myTerritory = msgData.value
+					territoryVue.geoJsonData.features = msgData.value[0].value
+					
+				}
+				break;
 			case "done":
 				{
 					// No code here
@@ -524,7 +584,7 @@ DBWorker.onmessage = async function (msg) {
 	}
 }
 
-var myFiles = [];
+var myFiles = [], myTerritory;
 
 // style="padding:16px 0 0 2px; margin-top:1px"  style="margin-top:2px"
 
@@ -804,6 +864,11 @@ function processNavigation() {
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
 					this.buttons = [{"title": "ASSIGNMENTS", "function": "allAssignmentsVue"}, {"title": "PARTICIPANTS", "function": "allParticipantsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}]
+				} else if (button.innerHTML == "TERRITORY") {
+					this.displayDropdown = false
+					allPublishersVue.request = false
+					allPublishersVue.transfer = false
+					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}]
 				} else {
 					this.displayDropdown = false
 					allPublishersVue.request = false
@@ -1137,6 +1202,11 @@ function processNavigation2() {
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
 					navigationVue.buttons = [{"title": "ASSIGNMENTS", "function": "allAssignmentsVue"}, {"title": "PARTICIPANTS", "function": "allParticipantsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}]
+				} else if (button.innerHTML == "TERRITORY") {
+					navigationVue.displayDropdown = false
+					allPublishersVue.request = false
+					allPublishersVue.transfer = false
+					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}]
 				} else {
 					navigationVue.displayDropdown = false
 					allPublishersVue.request = false
@@ -1278,9 +1348,10 @@ function w3_close() {
 	mySidebar.style.display = "none";
 }
 
-function gotoView(button) {
+async function gotoView(button) {
 	congregationVue.display = false
 	allPublishersVue.display = false
+	territoryVue.display = false
 	allParticipantsVue.display = false
 	fieldServiceGroupsVue.display = false
     configurationVue.display = false
@@ -1297,6 +1368,210 @@ function gotoView(button) {
 		navigationVue.display = true
 	}
 	window[`${button}`].display = true
+	if (button == 'territoryVue' && !mymap) {
+		myZip = await JSZip.loadAsync(myTerritory[1].value)
+		await shortWait()
+		await shortWait()
+		await shortWait()
+		await shortWait()
+		await shortWait()
+		// Initialize the map
+		mymap = L.map('map').setView([
+			8.468872, -13.239936
+		], 19);
+
+		/*
+		// Create a Leaflet layer group to hold the tile layers
+		var tileLayerGroup = L.layerGroup();
+
+		// Iterate through the extracted files and add them as tile layers
+		Object.keys(myZip.files).forEach(fileName => {
+		  var file = myZip.files[fileName];
+		  if (file.dir || !file.name.endsWith('.png')) {
+			// Skip directories and non-PNG files
+			return;
+		  }
+	
+		  // Create a Blob from the extracted PNG file
+		  file.async('arraybuffer').then(arrayBuffer => {
+			var blob = new Blob([arrayBuffer], { type: 'image/png' });
+	
+			// Create a data URL for the Blob
+			var dataUrl = URL.createObjectURL(blob);
+	
+			// Add a tile layer to the layer group
+			var tileLayer = L.tileLayer(dataUrl, {
+			  attribution: '© OpenStreetMap contributors'
+			});
+	
+			tileLayerGroup.addLayer(tileLayer);
+		  });
+		});
+	
+		// Add the layer group to the map
+		tileLayerGroup.addTo(map);
+*/
+/*		
+		// Iterate through the extracted files and add them as tile layers
+		Object.keys(myZip.files).forEach(fileName => {
+			var file = myZip.files[fileName];
+			if (file.dir || !file.name.endsWith('.png')) {
+				// Skip directories and non-PNG files
+				return;
+			}
+	  
+			// Create a Blob from the extracted PNG file
+			file.async('arraybuffer').then(arrayBuffer => {
+				var blob = new Blob([arrayBuffer], { type: 'image/png' });
+		
+				// Create a data URL for the Blob
+				var dataUrl = URL.createObjectURL(blob);
+		console.log(dataUrl)
+				// Add a tile layer to the map
+				L.tileLayer(dataUrl, {
+					attribution: '© OpenStreetMap contributors'
+				}).addTo(map);
+			});
+		});
+*/
+		
+		// Add the OpenStreetMap tile layer
+		L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+		attribution: '&copy; OpenStreetMap contributors'
+		}).addTo(mymap);
+
+		// Initialize the draw control
+		drawControl = new L.Control.Draw({
+		draw: {
+			polygon: true,
+			polyline: true,
+			rectangle: true,
+			circle: true,
+			marker: true
+		},
+		edit: {
+			featureGroup: new L.FeatureGroup()
+		}
+		});
+
+		// Add the draw control to the map
+		mymap.addControl(drawControl);
+
+		// Array to store drawn layers
+		//var drawnLayers = [];
+		//var drawnFeaturesLayer;
+
+		// Event listener for drawing completion
+		mymap.on('draw:created', function (e) {
+			var layer = e.layer;
+			mymap.addLayer(layer);
+			drawnLayers.push(layer);
+			territoryVue.updateDrawnFeaturesLayer();
+		});
+
+		// Add a marker for the current location
+		marker = L.marker([0, 0]).addTo(mymap);
+
+
+		var myData = [
+			{
+				"type": "Feature",
+				"properties": {},
+				"geometry": {
+					"type": "Polygon",
+					"coordinates": [
+						[
+							[
+								-13.239824,
+								8.468292
+							],
+							[
+								-13.239673,
+								8.467926
+							],
+							[
+								-13.239464,
+								8.467602
+							],
+							[
+								-13.23925,
+								8.467629
+							],
+							[
+								-13.239046,
+								8.467613
+							],
+							[
+								-13.23889,
+								8.467576
+							],
+							[
+								-13.238735,
+								8.467523
+							],
+							[
+								-13.238584,
+								8.467432
+							],
+							[
+								-13.238456,
+								8.467273
+							],
+							[
+								-13.238322,
+								8.467135
+							],
+							[
+								-13.238246,
+								8.467098
+							],
+							[
+								-13.238381,
+								8.467639
+							],
+							[
+								-13.238402,
+								8.46774
+							],
+							[
+								-13.238681,
+								8.467894
+							],
+							[
+								-13.238917,
+								8.468053
+							],
+							[
+								-13.239582,
+								8.468255
+							],
+							[
+								-13.239824,
+								8.468292
+							]
+						]
+					]
+				}
+			}
+		]
+
+
+		// Get the user's current location
+		navigator.geolocation.getCurrentPosition(function (position) {
+			var lat = position.coords.latitude;
+			var lon = position.coords.longitude;
+
+			// Update the map and marker with the current location
+			mymap.setView([
+				8.468872, -13.239936
+			], 14);
+			marker.setLatLng([
+				8.468872, -13.239936
+			]).bindPopup('You are here!').openPopup();
+		});
+
+		territoryVue.updateDrawnFeaturesLayer()
+	}
 }
 
 document.querySelector('#congregation').innerHTML = `<template>
@@ -1335,6 +1610,81 @@ function processCongregation() {
         }
     })
 }
+
+var mymap, drawControl, drawnLayers = [], drawnFeaturesLayer, marker
+
+document.querySelector('#territory').innerHTML = `<template>
+	<div v-if="display == true" class="w3-row-padding w3-center" style="margin-top:64px">
+		<h2 class="w3-center">TERRITORY</h2>	
+		<div id="map"></div>
+		<button class="w3-button w3-black" @click="saveDrawing()">Save Drawings</button>
+	</div>
+</template>`
+
+function processTerritory() {
+
+    territoryVue = new Vue({
+        el: document.querySelector('#territory'),
+        data: {
+            //congregation: {"name": "New England Congregation", "address": "14 Hannesson Street, New England Ville.", "email": "cong574356@jwpub.org"},
+            display: false,
+			geoJsonData: {type: 'FeatureCollection', features: []}
+        },
+        computed: {
+            publishersCount() {
+                return allPublishersVue.publishers.length
+            },
+            congregation() {
+				if (configurationVue.configuration) {
+					return configurationVue.configuration
+				} else {
+					return { "congregationName": null, "address": null }
+				}
+            },
+        },
+        methods: {
+			mode() {
+				return mode
+			},
+			saveDrawing() {
+				// Serialize drawn layers to GeoJSON
+				var geoJsonData = [];
+				
+				drawnLayers.forEach(function (layer) {
+					// Convert Leaflet layer to GeoJSON format
+					var geoJsonFeature = layer.toGeoJSON();
+					geoJsonData.push(geoJsonFeature);
+				});
+
+				// Log or send GeoJSON data to a server
+				console.log('GeoJSON data:', geoJsonData);
+			},
+			updateDrawnFeaturesLayer() {
+				if (drawnFeaturesLayer) {
+				  mymap.removeLayer(drawnFeaturesLayer);
+				}
+			  
+				// Convert drawnLayers to GeoJSON format
+				/*var geoJsonData = {
+				  type: 'FeatureCollection',
+				  features: []
+				};*/
+			
+				drawnLayers.forEach(function (layer) {
+				  // Convert Leaflet layer to GeoJSON format
+				  var geoJsonFeature = layer.toGeoJSON();
+				  territoryVue.geoJsonData.features.push(geoJsonFeature);
+				  DBWorker.postMessage({ storeName: 'territory', action: "save", value: [{"name": "FeatureCollection", "value": territoryVue.geoJsonData.features}]});
+				});
+			  
+				// Create a new GeoJSON layer and add it to the map
+				drawnFeaturesLayer = L.geoJSON(territoryVue.geoJsonData).addTo(mymap);
+			}			
+        }
+    })
+}
+
+processTerritory()
 
 document.querySelector('#allPublishers').innerHTML = `<template>
 	<div v-if="display == true">
@@ -4246,7 +4596,7 @@ function processConfiguration() {
 				}
 			},
 			profiles() {
-				return currentUser.accesses.map(elem=>elem.replace('secretary','Secretary').replace('sendReport','Secretary - Assistant').replace('lmo','Life and Ministry Overseer').replace('lma','Life and Ministry Assistant')).sort()
+				return currentUser.accesses.map(elem=>elem.replace('secretary','Secretary').replace('sendReport','Secretary - Assistant').replace('lmo','Life and Ministry Overseer').replace('lma','Life and Ministry Assistant').replace('so','Service Overseer')).sort()
 			},
 			elders() {
 				return allPublishersVue.publishers.filter(elem=>elem.privilege.includes('Elder')).map(elem=>elem.name)
@@ -4845,13 +5195,14 @@ processAttendance()
 contactInformation()
 branchReportDetails()
 
+/*
 // Initialize the map
 var mymap = L.map('map').setView([
-    8.471495, -13.247762
-], 18);
+    8.468872, -13.239936
+], 19);
 
 // Add the OpenStreetMap tile layer
-L.tileLayer('https://github.com/project-developers/cong/blob/main/myMaps/{z}/{x}/{y}.png', {
+L.tileLayer('new/{z}/{x}/{y}.png', {
   attribution: '&copy; OpenStreetMap contributors'
 }).addTo(mymap);
 
@@ -4984,7 +5335,7 @@ function updateDrawnFeaturesLayer(geoJsonData) {
     type: 'FeatureCollection',
     features: []
   };*/
-
+/*
   drawnLayers.forEach(function (layer) {
     // Convert Leaflet layer to GeoJSON format
     var geoJsonFeature = layer.toGeoJSON();
@@ -5002,22 +5353,12 @@ navigator.geolocation.getCurrentPosition(function (position) {
 
   // Update the map and marker with the current location
   mymap.setView([
-    8.471495, -13.247762
+    8.468872, -13.239936
 ], 14);
   marker.setLatLng([
-    8.471495, -13.247762
+    8.468872, -13.239936
 ]).bindPopup('You are here!').openPopup();
 });
-/*
-// Get the user's current location
-navigator.geolocation.getCurrentPosition(function (position) {
-    var lat = position.coords.latitude;
-    var lon = position.coords.longitude;
-  
-    // Update the map and marker with the current location
-    mymap.setView([lat, lon], 13);
-    marker.setLatLng([lat, lon]).bindPopup('You are here!').openPopup();
-});*/
 
 var geoJsonData = [];
 
@@ -5035,8 +5376,20 @@ document.getElementById('saveButton').addEventListener('click', function () {
   // Log or send GeoJSON data to a server
   console.log('GeoJSON data:', geoJsonData);
 });
+*/
+//updateDrawnFeaturesLayer(myData)
 
-updateDrawnFeaturesLayer(myData)
+/*
+// Get the user's current location
+navigator.geolocation.getCurrentPosition(function (position) {
+    var lat = position.coords.latitude;
+    var lon = position.coords.longitude;
+  
+    // Update the map and marker with the current location
+    mymap.setView([lat, lon], 13);
+    marker.setLatLng([lat, lon]).bindPopup('You are here!').openPopup();
+});*/
+
 
 configurationVue.displayMode({"value": "System"})
 
