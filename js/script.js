@@ -4851,7 +4851,7 @@ var mymap = L.map('map').setView([
 ], 18);
 
 // Add the OpenStreetMap tile layer
-L.tileLayer('myMaps/{z}/{x}/{y}.png', {
+L.tileLayer('https://github.com/project-developers/cong/blob/main/myMaps/{z}/{x}/{y}.png', {
   attribution: '&copy; OpenStreetMap contributors'
 }).addTo(mymap);
 
