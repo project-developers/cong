@@ -1687,16 +1687,34 @@ function processCongregation() {
 
 var map, mymap, drawControl, drawnLayers = [], drawnFeaturesLayer, marker
 
+function showMyLocation() {
+	if ('geolocation' in navigator) {
+		navigator.geolocation.getCurrentPosition(
+			(position) => {
+				const coordinates = [position.coords.longitude, position.coords.latitude];
+				map.getView().animate({ center: coordinates, zoom: 15 });
+			},
+			(error) => {
+				console.error('Error getting location:', error.message);
+				alert('Error getting your location. Please check your browser settings.');
+			}
+		);
+	} else {
+		alert('Geolocation is not supported by your browser.');
+	}
+}
+
 document.querySelector('#territory').innerHTML = `<template>
 	<div v-if="display == true" class="w3-row-padding w3-center" style="margin-top:64px">
 		<h2 class="w3-center">TERRITORY</h2>	
-		<div id="map" style="width: 100%; height: 500px;"></div>
+		<div id="map"></div>
 		<button class="w3-button w3-black" @click="saveDrawing()">Save Drawings</button>
 		<div class="draw-buttons">
 			<button onclick="setDrawType('Point')">Draw Point</button>
 			<button onclick="setDrawType('LineString')">Draw Line</button>
 			<button onclick="setDrawType('Polygon')">Draw Polygon</button>
 			<button onclick="clearDrawnFeatures()">Clear Drawings</button>
+			<button onclick="showMyLocation()">Show My Location</button>
 		</div>
 	</div>
 </template>`
