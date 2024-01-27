@@ -446,18 +446,18 @@ DBWorker.onmessage = async function (msg) {
 					console.log(msgData.value)
 					//console.log(msgData.value[0])
 					myFiles = msgData.value
-					/*if (msgData.value.filter(elem=>elem.name == 'S-21').length !== 0) {
+					if (msgData.value.filter(elem=>elem.name == 'S-21').length !== 0) {
 						//console.log(msgData.value.filter(elem=>elem.name == 'S-21_E.pdf')[0])
 						if (!s21) {
-							await getFieldByName(msgData.value.filter(elem=>elem.name == 'S-21')[0].value, 's21')
+							await getFieldByName(msgData.value.filter(elem=>elem.name == 'S-21')[0].value, 'S-21')
 						}
 					}
 					if (msgData.value.filter(elem=>elem.name == 'S-89').length !== 0) {
 						//console.log(msgData.value.filter(elem=>elem.name == 'S-21_E.pdf')[0])
 						if (!s89) {
-							await getFieldByName(msgData.value.filter(elem=>elem.name == 'S-89')[0].value, 's89')
+							await getFieldByName(msgData.value.filter(elem=>elem.name == 'S-89')[0].value, 'S-89')
 						}
-					}*/
+					}
 
 				}
 				break;
@@ -1305,6 +1305,8 @@ document.querySelector('#congregation').innerHTML = `<template>
 	<div v-if="display == true" class="w3-row-padding w3-center" style="margin-top:64px">
 		
 	</div>
+	<div id="map"></div>
+	<button id="saveButton">Save Drawings</button>
 </template>`
 
 function processCongregation() {
@@ -3480,10 +3482,16 @@ function processSchedule() {
 					await shortWait()
 					await shortWait()
 					await convertToImage(document.querySelector('#content'))
+					await shortWait()
+					await shortWait()
 				}
 				await shortWait()
 				await shortWait()
+				await shortWait()
+				await shortWait()
 				allAssignmentsVue.allAssignments = restoreAssignments
+				await shortWait()
+				await shortWait()
 				await shortWait()
 				await shortWait()
 				document.querySelector('#content').style.display = 'none'
@@ -4816,8 +4824,10 @@ Thanks a lot
                 }
 			},
 			saveFile() {
-				DBWorker.postMessage({ storeName: 'files', action: "save", value: [{name: document.querySelector('.fileName').value, value: document.getElementById('pdfFile').files[0]}]});
-				getFieldByName(document.getElementById('pdfFile').files[0], document.querySelector('.fileName').value)
+				if (document.getElementById('pdfFile').files[0]) {
+					DBWorker.postMessage({ storeName: 'files', action: "save", value: [{name: document.querySelector('.fileName').value, value: document.getElementById('pdfFile').files[0]}]});
+					getFieldByName(document.getElementById('pdfFile').files[0], document.querySelector('.fileName').value)
+				}
 			}
         }
     })
@@ -4836,6 +4846,199 @@ processSchedule()
 processAttendance()
 contactInformation()
 branchReportDetails()
+
+// Initialize the map
+var mymap = L.map('map').setView([
+    8.468872, -13.239936
+], 18);
+
+// Add the OpenStreetMap tile layer
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; OpenStreetMap contributors'
+}).addTo(mymap);
+
+// Initialize the draw control
+var drawControl = new L.Control.Draw({
+  draw: {
+    polygon: true,
+    polyline: true,
+    rectangle: true,
+    circle: true,
+    marker: true
+  },
+  edit: {
+    featureGroup: new L.FeatureGroup()
+  }
+});
+
+// Add the draw control to the map
+mymap.addControl(drawControl);
+
+// Array to store drawn layers
+var drawnLayers = [];
+var drawnFeaturesLayer;
+
+// Event listener for drawing completion
+mymap.on('draw:created', function (e) {
+    var layer = e.layer;
+    mymap.addLayer(layer);
+    drawnLayers.push(layer);
+    updateDrawnFeaturesLayer(myData);
+});
+
+// Add a marker for the current location
+var marker = L.marker([0, 0]).addTo(mymap);
+
+
+var myData = [
+    {
+        "type": "Feature",
+        "properties": {},
+        "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+                [
+                    [
+                        -13.239824,
+                        8.468292
+                    ],
+                    [
+                        -13.239673,
+                        8.467926
+                    ],
+                    [
+                        -13.239464,
+                        8.467602
+                    ],
+                    [
+                        -13.23925,
+                        8.467629
+                    ],
+                    [
+                        -13.239046,
+                        8.467613
+                    ],
+                    [
+                        -13.23889,
+                        8.467576
+                    ],
+                    [
+                        -13.238735,
+                        8.467523
+                    ],
+                    [
+                        -13.238584,
+                        8.467432
+                    ],
+                    [
+                        -13.238456,
+                        8.467273
+                    ],
+                    [
+                        -13.238322,
+                        8.467135
+                    ],
+                    [
+                        -13.238246,
+                        8.467098
+                    ],
+                    [
+                        -13.238381,
+                        8.467639
+                    ],
+                    [
+                        -13.238402,
+                        8.46774
+                    ],
+                    [
+                        -13.238681,
+                        8.467894
+                    ],
+                    [
+                        -13.238917,
+                        8.468053
+                    ],
+                    [
+                        -13.239582,
+                        8.468255
+                    ],
+                    [
+                        -13.239824,
+                        8.468292
+                    ]
+                ]
+            ]
+        }
+    }
+]
+
+
+
+
+// Function to update GeoJSON layer on the map
+function updateDrawnFeaturesLayer(geoJsonData) {
+  if (drawnFeaturesLayer) {
+    mymap.removeLayer(drawnFeaturesLayer);
+  }
+
+  // Convert drawnLayers to GeoJSON format
+  /*var geoJsonData = {
+    type: 'FeatureCollection',
+    features: []
+  };*/
+
+  drawnLayers.forEach(function (layer) {
+    // Convert Leaflet layer to GeoJSON format
+    var geoJsonFeature = layer.toGeoJSON();
+    myData.features.push(geoJsonFeature);
+  });
+
+  // Create a new GeoJSON layer and add it to the map
+  drawnFeaturesLayer = L.geoJSON(myData).addTo(mymap);
+}
+
+// Get the user's current location
+navigator.geolocation.getCurrentPosition(function (position) {
+  var lat = position.coords.latitude;
+  var lon = position.coords.longitude;
+
+  // Update the map and marker with the current location
+  mymap.setView([
+    8.468872, -13.239936
+], 14);
+  marker.setLatLng([
+    8.468872, -13.239936
+]).bindPopup('You are here!').openPopup();
+});
+/*
+// Get the user's current location
+navigator.geolocation.getCurrentPosition(function (position) {
+    var lat = position.coords.latitude;
+    var lon = position.coords.longitude;
+  
+    // Update the map and marker with the current location
+    mymap.setView([lat, lon], 13);
+    marker.setLatLng([lat, lon]).bindPopup('You are here!').openPopup();
+});*/
+
+var geoJsonData = [];
+
+// Save button click event
+document.getElementById('saveButton').addEventListener('click', function () {
+  // Serialize drawn layers to GeoJSON
+  //var geoJsonData = [];
+  
+  drawnLayers.forEach(function (layer) {
+    // Convert Leaflet layer to GeoJSON format
+    var geoJsonFeature = layer.toGeoJSON();
+    geoJsonData.push(geoJsonFeature);
+  });
+
+  // Log or send GeoJSON data to a server
+  console.log('GeoJSON data:', geoJsonData);
+});
+
+updateDrawnFeaturesLayer(myData)
 
 configurationVue.displayMode({"value": "System"})
 
@@ -5762,16 +5965,16 @@ async function assignmentSlip(data, count) {
 		count = 1
 	}
 	if (!data[0]) {
-		data[0] = {}
+		data[0] = {"assignedTo": "", "assistant": "", "week": "", "meetingPart": ""}
 	}
 	if (!data[1]) {
-		data[1] = {}
+		data[1] = {"assignedTo": "", "assistant": "", "week": "", "meetingPart": ""}
 	}
 	if (!data[2]) {
-		data[2] = {}
+		data[2] = {"assignedTo": "", "assistant": "", "week": "", "meetingPart": ""}
 	}
 	if (!data[3]) {
-		data[3] = {}
+		data[3] = {"assignedTo": "", "assistant": "", "week": "", "meetingPart": ""}
 	}
 	const student1 = data[0].assignedTo
 	const assist1 = data[0].assistant
@@ -5863,7 +6066,7 @@ async function assignmentSlip(data, count) {
 
 	if (assignmentsToSend.length !== 0) {
 		count++
-		assignmentSlip(assignmentsToSend.splice(0, 4), count)
+		await assignmentSlip(assignmentsToSend.splice(0, 4), count)
 	}
 
     //download(modifiedPdfBytes, publisher.name + ".pdf", "application/pdf");
@@ -6048,9 +6251,15 @@ async function convertToPdf(element) {
 	newPdfViewer.height = '600px'
 	newPdfViewer.width = '100%'
 	newPdfViewer.src = URL.createObjectURL(new Blob([await pdfDoc.save()], { type: 'application/pdf' }));
-	newPdfbutton.innerHTML = `<a href="${newPdfViewer.src}" style="text-decoration:none" download="Letter of Introduction - ${allPublishersVue.selectedPublisher.name}"><i class="fas fa-download"></i></a>`
+
+	if (scheduleVue.display == true) {
+		newPdfbutton.innerHTML = `<a href="${newPdfViewer.src}" style="text-decoration:none" download="Life and Ministry Meeting Schedule - ${document.querySelectorAll('.createdPDF').length + 1}"><i class="fas fa-download"></i></a>`
+	} else if (scheduleVue.display !== true) {
+		newPdfbutton.innerHTML = `<a href="${newPdfViewer.src}" style="text-decoration:none" download="Letter of Introduction - ${allPublishersVue.selectedPublisher.name}"><i class="fas fa-download"></i></a>`
+	}
+
 	downloadAllbutton.innerHTML = `<span onclick="downloadAll()">Download All</span>`
-	newPdfbutton.classList.value = "w3-button w3-black download-button"
+	newPdfbutton.classList.value = "w3-button w3-black download-button createdPDF"
 	newPdfholder.style.margin = "15px"
 	newPdfbutton.style.margin = "10px 0"
 	downloadAllbutton.classList.value = "w3-button w3-black"
@@ -6060,6 +6269,10 @@ async function convertToPdf(element) {
 	
 	if (scheduleVue.display !== true) {
 		newPdfholder.appendChild(downloadAllbutton)
+	} else if (scheduleVue.display == true) {
+		if (document.querySelectorAll('.download-button').length == 0) {
+			newPdfholder.appendChild(downloadAllbutton)
+		}
 	}
 	
 	newPdfholder.appendChild(newPdfViewer)
