@@ -1305,8 +1305,6 @@ document.querySelector('#congregation').innerHTML = `<template>
 	<div v-if="display == true" class="w3-row-padding w3-center" style="margin-top:64px">
 		
 	</div>
-	<div id="map"></div>
-	<button id="saveButton">Save Drawings</button>
 </template>`
 
 function processCongregation() {
