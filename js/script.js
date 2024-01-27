@@ -4847,7 +4847,7 @@ branchReportDetails()
 
 // Initialize the map
 var mymap = L.map('map').setView([
-    8.468872, -13.239936
+    8.471495, -13.247762
 ], 18);
 
 // Add the OpenStreetMap tile layer
@@ -5002,10 +5002,10 @@ navigator.geolocation.getCurrentPosition(function (position) {
 
   // Update the map and marker with the current location
   mymap.setView([
-    8.468872, -13.239936
+    8.471495, -13.247762
 ], 14);
   marker.setLatLng([
-    8.468872, -13.239936
+    8.471495, -13.247762
 ]).bindPopup('You are here!').openPopup();
 });
 /*
