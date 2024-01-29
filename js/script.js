@@ -1860,7 +1860,7 @@ async function gotoView(button) {
 		redrawPolygons(territoryVue.savedPolygons)
 
 		const draw = document.createElement("div");
-		draw.innerHTML = `<div class="custom-control" style="pointer-events: auto;position: relative;margin-top: 100px;margin-left: 8px;font-size: 12px;padding: 0;width: 22px;"><button style="margin:0;padding:0 3px"><i class="fas fa-pen"></i></button></div>`
+		draw.innerHTML = `<div class="custom-control" style="pointer-events: auto;position: relative;margin-top: 150px;margin-left: 8px;font-size: 12px;padding: 0;width: 22px;"><button style="margin:0;padding:0 3px"><i class="fas fa-pen"></i></button></div>`
 		document.querySelectorAll('.ol-control')[0].insertAdjacentElement('afterend',draw)
 		draw.addEventListener("click", () => {
 			
