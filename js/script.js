@@ -326,7 +326,7 @@ loginButton.addEventListener("click", (e) => {
 var currentUser = { "name": "currentUser", "username": null, "password": null, "accesses": [], "selectedQuestion": null, "answer": null }
 var allUsers;
 
-var navigationVue, navigationVue2, allPublishersVue, congregationVue, configurationVue, branchReportVue, contactInformationVue, fieldServiceGroupsVue, monthlyReportVue, missingReportVue, allAssignmentsVue, scheduleVue;
+var navigationVue, navigationVue2, allPublishersVue, congregationVue, configurationVue, branchReportVue, contactInformationVue, fieldServiceGroupsVue, monthlyReportVue, missingReportVue, allAssignmentsVue, scheduleVue, territoryVue;
 var allButtons = [
 	{"title": "CONG", "function": "congregationVue"}, 
 	{"title": "RECORDS", "function": "allPublishersVue"}, 
@@ -370,6 +370,7 @@ var currentMonth = `${new Date().getFullYear()}-${(new Date().getMonth() + 1).to
 var reportButtons = [{"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "REPORTS", "function": "missingReportVue"}, {"title": "BRANCH", "function": "branchReportVue"}]
 var currentMode = 'System';
 var mode = 'w3-card w3-white';
+var xmlDoc;
 
 DBWorker.onmessage = async function (msg) {
     var msgData = msg.data;
@@ -510,7 +511,25 @@ DBWorker.onmessage = async function (msg) {
 							await getFieldByName(msgData.value.filter(elem=>elem.name == 'S-89')[0].value, 'S-89')
 						}
 					}
+					if (msgData.value.filter(elem=>elem.name.endsWith('.kml')).length !== 0) {
 
+						var reader = new FileReader();
+
+						reader.onload = function (event) {
+						const xmlString = event.target.result;
+						parseXml(xmlString);
+						};
+
+						reader.readAsText(msgData.value.filter(elem=>elem.name.endsWith('.kml'))[0].value);
+
+						function parseXml(xmlString) {
+						const parser = new DOMParser();
+						xmlDoc = parser.parseFromString(xmlString, 'application/xml');
+
+						// Now xmlDoc contains the parsed XML document, and you can manipulate it as needed
+						console.log(xmlDoc);
+						}
+					}
 				}
 				break;
 			case "settings":
@@ -570,8 +589,11 @@ DBWorker.onmessage = async function (msg) {
 			case "territory":
 				{
 					console.log(msgData.value)
-					myTerritory = msgData.value
-					territoryVue.geoJsonData.features = msgData.value[0].value
+					if (msgData.value.length !== 0) {
+						myTerritory = msgData.value
+						territoryVue.savedPolygons = msgData.value[0].value
+					}
+					
 					
 				}
 				break;
@@ -1351,6 +1373,24 @@ function w3_close() {
 var draw; // Declare draw globally
 var vectorSource
 var vectorLayer
+var drawnFeatures = [];
+var savedFeaturesSource
+var savedPolygons = []; // Array to store saved polygons
+var modify;
+var select;
+var annotationOverlay; // Overlay for annotations
+var pinLayer; // Layer for dropping pins
+var removeVertex = false;
+var removePolygon = false;
+var geolocationLayer; // Layer for showing user's location and direction
+
+function stopDraw() {
+	if (draw) {
+		draw.setActive(false);
+	}
+}
+
+var initialCoordinatesCopy;
 
 function setDrawType(drawType) {
 	// Remove the existing draw interaction
@@ -1364,12 +1404,381 @@ function setDrawType(drawType) {
 		type: drawType
 	});
 
+	// Function to handle the end of drawing
+    draw.on('drawend', function (event) {
+		var feature = event.feature;
+		var geometry = feature.getGeometry();
+		var coordinates = geometry.getCoordinates();
+		territoryVue.savedPolygons.push({
+			type: 'Polygon',
+			coordinates: coordinates,
+			annotation: '', // Default annotation is an empty string,
+			locality: '',
+			number: '',
+			assignedTo: '',
+			dateAssigned: '',
+			dateCompleted: '',
+			lastDateCompleted: '',
+		});
+		DBWorker.postMessage({ storeName: 'territory', action: "save", value: [{"name": "FeatureCollection", "value": territoryVue.savedPolygons}]});
+		console.log('Polygon coordinates:', coordinates);
+		//showAnnotationPopup(feature);
+	});
+
 	map.addInteraction(draw);
+
+	// Create a Modify interaction for editing polygons
+	modify = new ol.interaction.Modify({
+        source: vectorSource,
+        deleteCondition: function (event) {
+			initialCoordinatesCopy = event
+			return  removeVertex &&
+                 ol.events.condition.singleClick(event);
+        }
+	});
+
+	map.addInteraction(modify);
+
+	// Add a listener for the modifyend event
+	modify.on("modifyend", function (event) {
+        // This event is triggered when the modification is complete
+        // You can handle the modified geometry here
+        const modifiedGeometry = event.features.getArray()[0].getGeometry();
+        console.log("Modified Geometry:", modifiedGeometry.getCoordinates());
+    });
+
+	// Create a Select interaction for selecting polygons to delete
+	select = new ol.interaction.Select({
+        layers: [vectorLayer],
+        style: new ol.style.Style({
+			fill: new ol.style.Fill({
+				color: 'rgba(255, 0, 0, 0.2)'
+			}),
+			stroke: new ol.style.Stroke({
+				color: 'red',
+				width: 2
+			}),
+			image: new ol.style.Circle({
+				radius: 5,
+				fill: new ol.style.Fill({
+					color: 'red'
+				})
+			})
+        })
+    });
+
+    map.addInteraction(select);
+
+      // Handle the selection change event
+    select.on('select', function (event) {
+        if (event.selected.length > 0) {
+			var selectedFeature = event.selected[0];
+			if (removePolygon == true) {
+				//deleteSelectedPolygon()
+				deletePolygon(selectedFeature);
+			}
+			//focusOnPolygon(selectedFeature);
+        }
+    });
+
+	// Initialize the annotation overlay
+	annotationOverlay = createAnnotationOverlay();
+	map.addOverlay(annotationOverlay);
+
+	// Initialize the layer for dropping pins
+	pinLayer = new ol.layer.Vector({
+        source: new ol.source.Vector()
+    });
+    map.addLayer(pinLayer);
+	
+    // Initialize the layer for showing user's location and direction
+	geolocationLayer = new ol.layer.Vector({
+		source: new ol.source.Vector()
+	});
+	map.addLayer(geolocationLayer);
+	
 }
+
+// Function to redraw saved polygons
+function redrawPolygons(polygons) {
+	// Clear existing features on the map
+	map.getLayers().forEach(function (layer) {
+	  if (layer instanceof ol.layer.Vector) {
+		layer.getSource().clear();
+	  }
+	});
+
+	// Iterate over saved polygons and add them to the map
+	polygons.forEach(function (polygon) {
+	  var polygonFeature = new ol.Feature({
+		geometry: new ol.geom.Polygon(polygon.coordinates)
+	  });
+
+	  // Add style if needed
+	  polygonFeature.setStyle(new ol.style.Style({
+			fill: new ol.style.Fill({
+				color: '#76aaf14d'
+			}),
+			stroke: new ol.style.Stroke({
+				color: '#76aaf1',
+				width: 2
+			})
+	  }));
+
+	  // Add the feature to the vector source
+	  map.getLayers().item(1).getSource().addFeature(polygonFeature);
+	});
+}
+
+/*
+drawnLayers.forEach(function (layer) {
+	// Convert Leaflet layer to GeoJSON format
+	var geoJsonFeature = layer.toGeoJSON();
+	territoryVue.geoJsonData.features.push(geoJsonFeature);
+	DBWorker.postMessage({ storeName: 'territory', action: "save", value: [{"name": "FeatureCollection", "value": territoryVue.geoJsonData.features}]});
+  });*/
 
 function clearDrawnFeatures() {
 	// Clear the vector source
 	vectorSource.clear();
+}
+
+function saveDrawnFeatures() {
+	// Add the drawn features to the saved features source
+	savedFeaturesSource.addFeatures(drawnFeatures);
+	drawnFeatures = []; // Clear the drawn features array
+}
+
+function redrawSavedFeatures() {
+	// Clear the existing saved features source
+	savedFeaturesSource.clear();
+
+	// Add the saved features back to the saved features source
+	savedFeaturesSource.addFeatures(drawnFeatures);
+}
+
+function convertFeaturesToArray() {
+	// Convert saved features to a simple array representation
+	var featuresArray = drawnFeatures.map(function (feature) {
+		var geometry = feature.getGeometry();
+		var coordinates = geometry.getCoordinates();
+		return {
+			type: geometry.getType(),
+			coordinates: coordinates
+		};
+	});
+
+	territoryVue.geoJsonData.features.push(featuresArray);
+	
+	// Output the array to the console (you can modify this part)
+	console.log('Features Array:', featuresArray);
+}
+
+
+// Function to delete a selected polygon
+function deleteSelectedPolygon() {
+	var selectedFeatures = select.getFeatures();
+	if (selectedFeatures.getLength() > 0) {
+		selectedFeatures.forEach(function (feature) {
+			deletePolygon(feature);
+		});
+		selectedFeatures.clear();
+	}
+}
+
+// Function to delete a polygon feature
+function deletePolygon(feature) {
+	if (confirm('Are you sure you want to Delete Selected Region?\nPress "Yes" to Delete')) {
+		var source = map.getLayers().item(1).getSource();
+		source.removeFeature(feature);
+
+		territoryVue.savedPolygons.splice(territoryVue.savedPolygons.findIndex(elem=>JSON.stringify(elem.coordinates) == JSON.stringify(feature.getGeometry().getCoordinates())), 1)
+		DBWorker.postMessage({ storeName: 'territory', action: "save", value: [{"name": "FeatureCollection", "value": territoryVue.savedPolygons}]});
+	}
+	console.log(territoryVue.savedPolygons)
+}
+
+ // Function to show an annotation popup for a drawn polygon
+ function showAnnotationPopup(feature) {
+	var geometry = feature.getGeometry();
+	var coordinates = geometry.getInteriorPoint().getCoordinates(); // Use interior point for annotation placement
+	var annotation = prompt('Enter annotation for the polygon:', ''); // Get annotation from user
+
+	if (annotation !== null) { // Check if the user clicked Cancel
+		// Update the territoryVue.savedPolygons array with the annotation
+		territoryVue.savedPolygons[territoryVue.savedPolygons.length - 1].annotation = annotation;
+
+		// Update the annotation overlay content and position
+		var content = annotationOverlay.getElement();
+		content.innerHTML = '<p>' + annotation + '</p>';
+		annotationOverlay.setPosition(coordinates);
+
+		// Show the annotation overlay
+		annotationOverlay.setElement(content);
+	}
+}
+
+  // Function to create the annotation overlay
+function createAnnotationOverlay() {
+	return new ol.Overlay({
+		element: document.createElement('div'),
+		positioning: 'bottom-center',
+		stopEvent: false
+	});
+}
+
+// Function to go to a specific location on the map
+function goToLocation(center, zoom) {
+	map.getView().setCenter(ol.proj.fromLonLat(center));
+	map.getView().setZoom(zoom);
+}
+
+// Function to focus on a selected polygon with a margin
+function focusOnPolygon(feature, margin) {
+	margin = margin || 50; // Default margin size
+
+	var geometry = feature.getGeometry();
+	var extent = geometry.getExtent();
+
+	// Add margin to the extent
+	extent[0] -= margin;
+	extent[1] -= margin;
+	extent[2] += margin;
+	extent[3] += margin;
+
+	map.getView().fit(extent, map.getSize());
+}
+
+// Function to focus on a specific polygon with known coordinates
+function focusOnSpecificPolygon(coordinates) {
+	var polygonFeature = new ol.Feature({
+	  	geometry: new ol.geom.Polygon([coordinates])
+	});
+
+	// Add style if needed
+	polygonFeature.setStyle(new ol.style.Style({
+		fill: new ol.style.Fill({
+			color: 'rgba(255, 0, 0, 0.2)'
+		}),
+		stroke: new ol.style.Stroke({
+			color: 'red',
+			width: 2
+		})
+	}));
+
+	// Add the feature to the vector source
+	map.getLayers().item(1).getSource().clear(); // Clear existing features
+	map.getLayers().item(1).getSource().addFeature(polygonFeature);
+
+	// Focus on the polygon with a margin
+	focusOnPolygon(polygonFeature);
+}
+
+// Function to drop a pin at a specific location
+function dropPin(coordinates) {
+	var pinFeature = new ol.Feature({
+	  geometry: new ol.geom.Point(ol.proj.fromLonLat(coordinates))
+	});
+
+	// Style for the pin
+	pinFeature.setStyle(new ol.style.Style({
+	  image: new ol.style.Icon({
+		anchor: [0.5, 1],
+		src: 'https://openlayers.org/en/latest/examples/data/icon.png'
+	  })
+	}));
+
+	pinLayer.getSource().clear(); // Clear existing pins
+	pinLayer.getSource().addFeature(pinFeature);
+}
+
+// Function to show user's location and direction
+async function showLocation() {
+	if (!draw) {
+		setDrawType('Polygon')
+		await shortWait()
+		await shortWait()
+		await shortWait()
+		stopDraw()
+	}
+    if ('geolocation' in navigator) {
+        navigator.geolocation.getCurrentPosition(
+        function (position) {
+            var coordinates = [position.coords.longitude, position.coords.latitude];
+
+            // Clear existing features
+            geolocationLayer.getSource().clear();
+
+            // Add a point feature for the user's location
+            var locationFeature = new ol.Feature({
+                geometry: new ol.geom.Point(ol.proj.fromLonLat(coordinates))
+            });
+            var markerFeature = new ol.Feature({
+                geometry: new ol.geom.Point(ol.proj.fromLonLat(coordinates))
+            });
+
+            // Style for the location marker
+            markerFeature.setStyle(new ol.style.Style({
+                image: new ol.style.Circle({
+                radius: 12,
+                fill: new ol.style.Fill({
+                    color: '#4285f454'
+                }),
+                })
+            }));
+
+            // Add a rotation feature for the direction
+            var rotationFeature = new ol.Feature({
+                geometry: new ol.geom.Point(ol.proj.fromLonLat(coordinates))
+            });
+
+            rotationFeature.setStyle(new ol.style.Style({
+            image: new ol.style.Icon({
+                anchor: [-0.2, 0.5],
+                src: 'arrow.png',
+                rotateWithView: true,
+                rotation: position.coords.heading
+            })
+            }));
+
+            
+            geolocationLayer.getSource().addFeature(rotationFeature);
+    
+            // Glow effect for the location marker
+            var glowFeature = new ol.Feature({
+                geometry: new ol.geom.Point(ol.proj.fromLonLat(coordinates))
+            });
+    
+            // Style for the glowing effect
+            glowFeature.setStyle(new ol.style.Style({
+            image: new ol.style.Circle({
+                radius: 6,
+                fill: new ol.style.Fill({
+                color: '#4285f4'
+                }),
+                stroke: new ol.style.Stroke({
+                color: 'white',
+                width: 1.5
+                })
+            })
+            }));
+
+            // Add the location marker feature to the vector source
+            geolocationLayer.getSource().addFeature(glowFeature);
+            geolocationLayer.getSource().addFeature(markerFeature);
+          
+
+            // Center the map on the user's location
+            map.getView().setCenter(ol.proj.fromLonLat(coordinates));
+            map.getView().setZoom(18); // Adjust zoom level as needed
+        },
+        function (error) {
+            console.error('Error getting location:', error);
+        }
+        );
+    } else {
+        alert('Geolocation is not supported by your browser');
+    }
 }
 
 async function gotoView(button) {
@@ -1392,10 +1801,11 @@ async function gotoView(button) {
 		navigationVue.display = true
 	}
 	window[`${button}`].display = true
-	if (button == 'territoryVue' && !map) {
+	if (button == 'territoryVue') {
 		await shortWait()
 		await shortWait()
 		await shortWait()
+ 
 		
 		map = new ol.Map({
 			target: 'map',
@@ -1404,11 +1814,21 @@ async function gotoView(button) {
 					source: new ol.source.OSM()
 				})
 			],
-			view: new ol.View({
+            controls: [
+                new ol.control.Zoom(),
+                //new ol.control.ZoomSlider(),
+                new ol.control.ZoomToExtent({
+                    extent: [-1476201.3874956707, 944145.5873182358, -1471968.5385173948, 947437.0717492434],
+                }),
+                new ol.control.ScaleLine(),
+                new ol.control.FullScreen(),
+            ],
+            view: new ol.View({
 				center: ol.proj.fromLonLat([-13.239936, 8.468872]),
 				zoom: 14
 			})
 		});
+
 		await shortWait()
 		await shortWait()
 		await shortWait()
@@ -1418,16 +1838,16 @@ async function gotoView(button) {
 			source: vectorSource,
 			style: new ol.style.Style({
 				fill: new ol.style.Fill({
-					color: 'rgba(255, 255, 255, 0.2)'
+					color: '#76aaf14d'
 				}),
 				stroke: new ol.style.Stroke({
-					color: '#ffcc33',
+					color: '#76aaf1',
 					width: 2
 				}),
 				image: new ol.style.Circle({
 					radius: 7,
 					fill: new ol.style.Fill({
-						color: '#ffcc33'
+						color: '#76aaf1'
 					})
 				})
 			})
@@ -1435,216 +1855,71 @@ async function gotoView(button) {
 
 		map.addLayer(vectorLayer);
 
-		var draw;
+		savedFeaturesSource = new ol.source.Vector();
 
-		
+		redrawPolygons(territoryVue.savedPolygons)
 
-		// Set the initial draw type
-		setDrawType('Point');
-		/*
-		//myZip = await JSZip.loadAsync(myTerritory[1].value)
-		await shortWait()
-		await shortWait()
-		await shortWait()
-		await shortWait()
-		await shortWait()
-		// Initialize the map
-		mymap = L.map('map').setView([
-			8.468872, -13.239936
-		], 19);
-
-		/*
-		// Create a Leaflet layer group to hold the tile layers
-		var tileLayerGroup = L.layerGroup();
-
-		// Iterate through the extracted files and add them as tile layers
-		Object.keys(myZip.files).forEach(fileName => {
-		  var file = myZip.files[fileName];
-		  if (file.dir || !file.name.endsWith('.png')) {
-			// Skip directories and non-PNG files
-			return;
-		  }
-	
-		  // Create a Blob from the extracted PNG file
-		  file.async('arraybuffer').then(arrayBuffer => {
-			var blob = new Blob([arrayBuffer], { type: 'image/png' });
-	
-			// Create a data URL for the Blob
-			var dataUrl = URL.createObjectURL(blob);
-	
-			// Add a tile layer to the layer group
-			var tileLayer = L.tileLayer(dataUrl, {
-			  attribution: '© OpenStreetMap contributors'
-			});
-	
-			tileLayerGroup.addLayer(tileLayer);
-		  });
-		});
-	
-		// Add the layer group to the map
-		tileLayerGroup.addTo(map);
-*/
-/*		
-		// Iterate through the extracted files and add them as tile layers
-		Object.keys(myZip.files).forEach(fileName => {
-			var file = myZip.files[fileName];
-			if (file.dir || !file.name.endsWith('.png')) {
-				// Skip directories and non-PNG files
-				return;
+		const draw = document.createElement("div");
+		draw.innerHTML = `<div class="custom-control" style="pointer-events: auto;position: relative;margin-top: 100px;margin-left: 8px;font-size: 12px;padding: 0;width: 22px;"><button style="margin:0;padding:0 3px"><i class="fas fa-pen"></i></button></div>`
+		document.querySelectorAll('.ol-control')[0].insertAdjacentElement('afterend',draw)
+		draw.addEventListener("click", () => {
+			
+			if (document.querySelectorAll('.custom-control button')[0].innerHTML == '<i class="fas fa-pen"></i>') {
+				document.querySelectorAll('.custom-control button')[0].outerHTML = '<button style="margin:0;padding:0 5.2px"><i class="fas fa-mouse-pointer"></i></button>'
+				document.querySelectorAll('.custom-control')[1].style.display = ''
+				document.querySelectorAll('.custom-control')[2].style.display = ''
+				setDrawType('Polygon');
+				removePolygon = false
+				document.querySelectorAll('.custom-control button')[2].style.color = ''
+			} else {
+				document.querySelectorAll('.custom-control button')[0].outerHTML = '<button style="margin:0;padding:0 3px"><i class="fas fa-pen"></i></button>'
+				stopDraw()
 			}
-	  
-			// Create a Blob from the extracted PNG file
-			file.async('arraybuffer').then(arrayBuffer => {
-				var blob = new Blob([arrayBuffer], { type: 'image/png' });
-		
-				// Create a data URL for the Blob
-				var dataUrl = URL.createObjectURL(blob);
-		console.log(dataUrl)
-				// Add a tile layer to the map
-				L.tileLayer(dataUrl, {
-					attribution: '© OpenStreetMap contributors'
-				}).addTo(map);
-			});
-		});
-*/
-		/*
-		// Add the OpenStreetMap tile layer
-		L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-		attribution: '&copy; OpenStreetMap contributors'
-		}).addTo(mymap);
-
-		// Initialize the draw control
-		drawControl = new L.Control.Draw({
-		draw: {
-			polygon: true,
-			polyline: true,
-			rectangle: true,
-			circle: true,
-			marker: true
-		},
-		edit: {
-			featureGroup: new L.FeatureGroup()
-		}
 		});
 
-		// Add the draw control to the map
-		mymap.addControl(drawControl);
-
-		// Array to store drawn layers
-		//var drawnLayers = [];
-		//var drawnFeaturesLayer;
-
-		// Event listener for drawing completion
-		mymap.on('draw:created', function (e) {
-			var layer = e.layer;
-			mymap.addLayer(layer);
-			drawnLayers.push(layer);
-			territoryVue.updateDrawnFeaturesLayer();
-		});
-
-		// Add a marker for the current location
-		marker = L.marker([0, 0]).addTo(mymap);
-
-
-		var myData = [
-			{
-				"type": "Feature",
-				"properties": {},
-				"geometry": {
-					"type": "Polygon",
-					"coordinates": [
-						[
-							[
-								-13.239824,
-								8.468292
-							],
-							[
-								-13.239673,
-								8.467926
-							],
-							[
-								-13.239464,
-								8.467602
-							],
-							[
-								-13.23925,
-								8.467629
-							],
-							[
-								-13.239046,
-								8.467613
-							],
-							[
-								-13.23889,
-								8.467576
-							],
-							[
-								-13.238735,
-								8.467523
-							],
-							[
-								-13.238584,
-								8.467432
-							],
-							[
-								-13.238456,
-								8.467273
-							],
-							[
-								-13.238322,
-								8.467135
-							],
-							[
-								-13.238246,
-								8.467098
-							],
-							[
-								-13.238381,
-								8.467639
-							],
-							[
-								-13.238402,
-								8.46774
-							],
-							[
-								-13.238681,
-								8.467894
-							],
-							[
-								-13.238917,
-								8.468053
-							],
-							[
-								-13.239582,
-								8.468255
-							],
-							[
-								-13.239824,
-								8.468292
-							]
-						]
-					]
-				}
+		const vertex = document.createElement("div");
+		vertex.innerHTML = `<div class="custom-control" style="pointer-events: auto;position: relative;margin-top: 0;margin-left: 8px;font-size: 12px;padding: 0;width: 22px;display:none"><button style="margin:0;padding:0 5px"><i class="fas fa-times"></i></button></div>`
+		draw.insertAdjacentElement('afterend',vertex)
+		vertex.addEventListener("click", () => {
+			if (!draw) {
+				setDrawType('Polygon')
 			}
-		]
-
-
-		// Get the user's current location
-		navigator.geolocation.getCurrentPosition(function (position) {
-			var lat = position.coords.latitude;
-			var lon = position.coords.longitude;
-
-			// Update the map and marker with the current location
-			mymap.setView([
-				8.468872, -13.239936
-			], 14);
-			marker.setLatLng([
-				8.468872, -13.239936
-			]).bindPopup('You are here!').openPopup();
+			removeVertex = !removeVertex
+			if (removeVertex == true) {
+				document.querySelectorAll('.custom-control button')[1].style.color = 'brown'
+				document.querySelectorAll('.custom-control button')[2].style.color = ''
+				removePolygon = false
+			} else {
+				document.querySelectorAll('.custom-control button')[1].style.color = ''
+			}
 		});
 
-		territoryVue.updateDrawnFeaturesLayer()
-		*/
+		const trash = document.createElement("div");
+		trash.innerHTML = `<div class="custom-control" style="pointer-events: auto;position: relative;margin-top: 0;margin-left: 8px;font-size: 12px;padding: 0;width: 22px;display:none"><button style="margin:0;padding:0 4px"><i class="fas fa-trash"></i></button></div>`
+		vertex.insertAdjacentElement('afterend',trash)
+		trash.addEventListener("click", () => {
+			if (!draw) {
+				setDrawType('Polygon')
+			}
+			removePolygon = !removePolygon
+			if (removePolygon == true) {
+				document.querySelectorAll('.custom-control button')[2].style.color = 'brown'
+				document.querySelectorAll('.custom-control button')[1].style.color = ''
+				document.querySelectorAll('.custom-control button')[0].outerHTML = '<button style="margin:0;padding:0 3px"><i class="fas fa-pen"></i></button>'
+				stopDraw()
+				removeVertex = false
+			} else {
+				document.querySelectorAll('.custom-control button')[2].style.color = ''
+			}
+		});
+
+
+		const currentLocation = document.createElement("div");
+		currentLocation.innerHTML = `<div class="custom-control" style="pointer-events: auto;position: relative;margin-top: 50px;margin-left: 8px;font-size: 12px;padding: 0;width: 22px;"><button style="margin:0;padding:0 3px"><i class="fas fa-crosshairs"></i></button></div>`
+		trash.insertAdjacentElement('afterend',currentLocation)
+		currentLocation.addEventListener("click", () => {
+			showLocation()
+		});	
 	}
 }
 
@@ -1687,35 +1962,66 @@ function processCongregation() {
 
 var map, mymap, drawControl, drawnLayers = [], drawnFeaturesLayer, marker
 
-function showMyLocation() {
-	if ('geolocation' in navigator) {
-		navigator.geolocation.getCurrentPosition(
-			(position) => {
-				const coordinates = [position.coords.longitude, position.coords.latitude];
-				map.getView().animate({ center: coordinates, zoom: 15 });
-			},
-			(error) => {
-				console.error('Error getting location:', error.message);
-				alert('Error getting your location. Please check your browser settings.');
-			}
-		);
-	} else {
-		alert('Geolocation is not supported by your browser.');
-	}
-}
-
 document.querySelector('#territory').innerHTML = `<template>
-	<div v-if="display == true" class="w3-row-padding w3-center" style="margin-top:64px">
+	<div v-if="display == true" class="w3-row-padding" style="margin-top:64px">
 		<h2 class="w3-center">TERRITORY</h2>	
-		<div id="map"></div>
-		<button class="w3-button w3-black" @click="saveDrawing()">Save Drawings</button>
-		<div class="draw-buttons">
-			<button onclick="setDrawType('Point')">Draw Point</button>
-			<button onclick="setDrawType('LineString')">Draw Line</button>
-			<button onclick="setDrawType('Polygon')">Draw Polygon</button>
-			<button onclick="clearDrawnFeatures()">Clear Drawings</button>
-			<button onclick="showMyLocation()">Show My Location</button>
-		</div>
+		<section>
+			<div id="map"></div>
+			<div style="margin-top:20px">
+				<div class="w3-row-padding w3-grayscale" style="margin-top:4px">
+					<div v-for="(territory, count) in savedPolygons" :key="territory + '|' + count" style="cursor:pointer" class="w3-col l2 m4 w3-margin-bottom">
+						<div :class="mode()">
+							<h5 @click="territoryDetail($event.target, territory)" style="padding:10px 15px;margin:0">{{ count + 1 }} | {{ territory.number }}</h5>
+							<div class="w3-container main" style="padding:0 15px 10px 15px">
+								<p style="margin:0" v-if="territory.locality !== ''" title="Locality"><i class="fas fa-map-marker"></i> {{ territory.locality }}</p>
+								<p style="margin:0" v-if="territory.lastDateCompleted !== ''" title="Last Date Completed"><i class="fas fa-calendar-alt"></i> {{ territory.lastDateCompleted }}</p>
+								<p style="margin:0" v-if="territory.assignedTo !== ''" title="Assigned To"><i class="fas fa-user"></i> {{ territory.assignedTo }}</p>
+								<p style="margin:0" v-if="territory.dateAssigned !== ''" title="Date Assigned"><i class="fas fa-calendar-plus"></i> {{ territory.dateAssigned }}</p>
+								<p style="margin:0" v-if="territory.dateCompleted !== ''" title="Date Completed"><i class="fas fa-check-circle"></i> {{ territory.dateCompleted }}</p>
+							</div>
+							<div class="detail" style="display:none; padding:0 15px 15px 15px">
+								<p><label>Number:<input :class="inputMode('number w3-input')" type="text" :value="territory.number" @change="handleInputChange($event.target, territory, 'number')"></label></p>
+								<p><label>Locality:<input :class="inputMode('locality w3-input')" type="text" :value="territory.locality" @change="handleInputChange($event.target, territory, 'locality')"></label></p>
+								<p><label>Last Date Completed:<input :class="inputMode('lastDateCompleted w3-input')" type="date" :value="territory.lastDateCompleted" @change="handleInputChange($event.target, territory, 'lastDateCompleted')"></label></p>
+								<p><label>Assigned To:<input :class="inputMode('assignedTo w3-input')" type="text" :value="territory.assignedTo" @change="handleInputChange($event.target, territory, 'assignedTo')"></label></p>
+								<p><label>Date Assigned:<input :class="inputMode('dateAssigned w3-input')" type="date" :value="territory.dateAssigned" @change="handleInputChange($event.target, territory, 'dateAssigned')"></label></p>
+								<p><label>Date Completed:<input :class="inputMode('dateCompleted w3-input')" type="date" :value="territory.dateCompleted" @change="handleInputChange($event.target, territory, 'dateCompleted')"></label></p>
+								<!--p><label>Coordinates:</label></p>
+								<p v-for="(location, count) in territory.coordinates[0]">
+									<input :class="inputMode('coordinates w3-input')" type="text" :value="location[0]" @change="handleInputChange($event.target, territory, 'coordinate-0')">
+									<input :class="inputMode('coordinates w3-input')" type="text" :value="location[1]" @change="handleInputChange($event.target, territory, 'coordinate-1')">
+								</p-->
+							</div>
+						</div>
+					</div>
+				</div>
+				<!--div>
+					<dl>
+						<dt>Type</dt>
+						<dd>{{ type() }}</dd>
+						<dt>Language</dt>
+						<dd><span>{{ language() }}</span></dd>
+						<dt>Last Updated</dt>
+						<dd>{{ lastUpdated() }}</dd>
+					</dl>
+					<fieldset>
+						<legend>Boundaries</legend>
+						<dl>
+							<dt>North</dt>
+							<dd><span>{{ borderNorth() }}</span></dd>
+							<dt>East</dt>
+							<dd><span>{{ borderEast() }}</span></dd>
+							<dt>South</dt>
+							<dd><span>{{ borderSouth() }}</span>
+							</dd>
+							<dt>West</dt>
+							<dd><span>{{ borderWest() }}</span></dd>
+						</dl>
+					</fieldset>
+				</div-->
+			</div>
+		</section>
+		
 	</div>
 </template>`
 
@@ -1726,7 +2032,8 @@ function processTerritory() {
         data: {
             //congregation: {"name": "New England Congregation", "address": "14 Hannesson Street, New England Ville.", "email": "cong574356@jwpub.org"},
             display: false,
-			geoJsonData: {type: 'FeatureCollection', features: []}
+			geoJsonData: {type: 'FeatureCollection', features: []},
+			savedPolygons: [],
         },
         computed: {
             publishersCount() {
@@ -1741,8 +2048,54 @@ function processTerritory() {
             },
         },
         methods: {
+			type() {
+				return xmlDoc.getElementsByName('Type')[0].innerHTML.split('[CDATA[ ')[1].split(' ]]')[0]
+			},
+			language() {
+				return xmlDoc.getElementsByName('Language')[0].innerHTML.split('[CDATA[ ')[1].split(' ]]')[0]
+			},
+			lastUpdated() {
+				return xmlDoc.getElementsByName('LastUpdated')[0].innerHTML.split('[CDATA[ ')[1].split(' ]]')[0]
+			},
+			borderNorth() {
+				return xmlDoc.getElementsByName('BorderNorth')[0].innerHTML.split('[CDATA[ ')[1].split(' ]]')[0].replaceAll("&apos;",'')
+			},
+			borderEast() {
+				return xmlDoc.getElementsByName('BorderEast')[0].innerHTML.split('[CDATA[ ')[1].split(' ]]')[0]
+			},
+			borderSouth() {
+				return xmlDoc.getElementsByName('BorderSouth')[0].innerHTML.split('[CDATA[ ')[1].split(' ]]')[0]
+			},
+			borderWest() {
+				return xmlDoc.getElementsByName('BorderWest')[0].innerHTML.split('[CDATA[ ')[1].split(' ]]')[0]
+			},
+			coordinates() {
+				return xmlDoc.getElementsByTagName('coordinates')[0].innerHTML.split(',0\n').slice(0, -1).map(elem=>elem.split(',').map(val=>Number(val)))
+			},
+			territoryDetail(item, territory) {
+				if (item.parentNode.querySelector('.main').style.display == '') {
+                    item.parentNode.querySelector('.main').style.display = 'none'
+                    item.parentNode.querySelector('.detail').style.display = ''
+					focusOnSpecificPolygon(territory.coordinates[0])
+                } else {
+					item.parentNode.querySelector('.main').style.display = ''
+                    item.parentNode.querySelector('.detail').style.display = 'none'
+				}
+			},
+			handleInputChange(event, territory, property) {
+				if (property == 'coordinates') {
+					console.log(event, territory, property)
+					return
+				}
+				territory[`${property}`] = event.value
+				//console.log(territory)
+				DBWorker.postMessage({ storeName: 'territory', action: "save", value: [{"name": "FeatureCollection", "value": territoryVue.savedPolygons}]});
+			},
+			inputMode(currentClass) {
+				return currentClass + ' ' + mode.replace('w3-card ','')
+			},
 			mode() {
-				return mode
+				return mode// + ' w3-input w3-border'
 			},
 			saveDrawing() {
 				// Serialize drawn layers to GeoJSON
@@ -3790,6 +4143,25 @@ document.querySelector('#schedule').innerHTML = `<template>
 		<div class="zoom-container1" id="zoomContainer1">
 			<div class="zoom-content1" id="zoomContent1">
 				<div id="content" class="schedulePreview">
+				<!--h2>Male Members of the Congregation</h2>
+				<table>
+					<thead>
+						<tr>
+							<th>S/No</th>
+							<th>Name</th>
+							<th>Field Service Group</th>
+							<th>Status</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr v-for="(member, count) in allPublishers.slice(-31)">
+							<td>{{ count + 32 }}</td>
+							<td>{{ member.name }}</td>
+							<td>{{ member.fieldServiceGroup ? member.fieldServiceGroup : '' }}</td>
+							<td>{{ !member.privilege ? 'Enroled' : member.privilege.includes('Elder') ? 'Elder' : member.privilege.includes('Ministerial Servant') ? 'Ministerial Servant' : member.exemplary == true ? 'Exemplary' : member.active == true ? 'Active' : 'Inactive' }}</td>
+						</tr>
+					</tbody>	
+				<table-->
 					<table style="margin-top:-40px">
 						<tr class="boldText">
 							<td style="padding:0 4px;font-size:120%;border-bottom: 1px solid #000;" colspan="2">NYU INGLAND</td>
@@ -3902,7 +4274,7 @@ function processSchedule() {
         },
         computed: {
             publishers() {
-                return allPublishersVue.publishers.filter(elem=>elem.active == true).concat(allParticipantsVue.enrolments)
+                return allPublishersVue.publishers.filter(elem=>elem.active == true).concat(allParticipantsVue.enrolments).sort((a, b) => collator.compare(a.name, b.name))
             },
 			assignments() {
 				return allAssignmentsVue.allAssignments.sort((a, b) => collator.compare(a.count, b.count))
@@ -3913,11 +4285,23 @@ function processSchedule() {
 			selectedGroup() {
                 return navigationVue.fieldServiceGroup
             },
+			allPublishers() {
+                return allPublishersVue.publishers.concat(allParticipantsVue.enrolments).filter(elem=>elem.gender == 'Male').sort((a, b) => collator.compare(a.name, b.name))
+            },
         },
         methods: {
 			async previewRecord() {
 				downloadsArray = []
-				assignmentsToSend = [].concat(allAssignmentsVue.assignments.map(elem=>elem.parts.filter(ele=>ele.assignTo == 'male' || ele.assignTo == 'all')).reduce((result, currentArray) => result.concat(currentArray), []))
+				var allMonths = ['September', 'October', 'November', 'December', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August']
+				var vernacularMonths = ['Sɛptɛmba', 'Ɔktoba', 'Novɛmba', 'Disɛmba', 'Janwari', 'Fɛbwari', 'Mach', 'Epril', 'Me', 'Jun', 'Julay', 'Ɔgɔst']
+				var initialAssignments = [].concat(allAssignmentsVue.assignments.map(elem=>elem.parts.filter(ele=>ele.assignTo == 'male' || ele.assignTo == 'all').concat(scheduleVue.displayMeetingDay(elem.week))))
+				assignmentsToSend = initialAssignments.map(elem => (
+					elem.slice(0, -1).map(obj => ({
+						...obj,
+						week: elem.slice(-1)[0].replace(vernacularMonths[vernacularMonths.findIndex(val=>elem.slice(-1)[0].includes(val))], allMonths[vernacularMonths.findIndex(val=>elem.slice(-1)[0].includes(val))])
+					})
+				)
+				)).reduce((result, currentArray) => result.concat(currentArray), [])
 				var tempAssignments = [].concat(allAssignmentsVue.allAssignments)
 				var restoreAssignments = [].concat(allAssignmentsVue.allAssignments)
 				await shortWait()
@@ -6579,6 +6963,8 @@ async function getFieldByName(file, variable) {
 				s21 = await PDFLib.PDFDocument.load(pdfData);
 			} else if (variable == 'S-89') {
 				s89 = await PDFLib.PDFDocument.load(pdfData);
+				const font = await s89.embedFont("Helvetica", { subset: true, unicode: true });
+
 			}
             //s21 = await PDFLib.PDFDocument.load(pdfData);
             //s21past = await PDFLib.PDFDocument.load(pdfData);
