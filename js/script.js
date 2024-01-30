@@ -16,30 +16,6 @@ var securityQuestions = [
 	{value: "What month did you get married?".replaceAll(' ',''), label: "What month did you get married?"}
 ]
 
-if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-    DeviceOrientationEvent.requestPermission()
-	.then(permissionState => {
-	    if (permissionState === 'granted') {
-		window.addEventListener('deviceorientation', handleOrientation);
-	    } else {
-	      document.getElementById('headingValue').textContent = 'Permission denied for device orientation';
-	    }
-	})
-	.catch(console.error);
-} else {
-    // DeviceOrientation API not supported
-    document.getElementById('headingValue').textContent = 'DeviceOrientation API not supported';
-}
-
-function handleOrientation(event) {
-    // Check if the event provides heading information
-    if (event.alpha !== null) {
-	const heading = event.alpha; // Heading in degrees
-	document.getElementById('headingValue').textContent = heading.toFixed(2) + ' degrees';
-    } else {
-	document.getElementById('headingValue').textContent = vent.alpha//'Not available';
-    }
-}
 
 function createRadioButtons(containerId, options) {
 	var container = document.getElementById(containerId);
