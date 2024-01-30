@@ -16,11 +16,19 @@ var securityQuestions = [
 	{value: "What month did you get married?".replaceAll(' ',''), label: "What month did you get married?"}
 ]
 
-if ('DeviceOrientationEvent' in window) {
-    // Check if the DeviceOrientationEvent is supported
-    window.addEventListener('deviceorientation', handleOrientation, false);
+if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+    DeviceOrientationEvent.requestPermission()
+	.then(permissionState => {
+	    if (permissionState === 'granted') {
+		window.addEventListener('deviceorientation', handleOrientation);
+	    } else {
+		console.error('Permission denied for device orientation');
+	    }
+	})
+	.catch(console.error);
 } else {
-    document.getElementById('headingValue').textContent = 'Device orientation not supported';
+    // DeviceOrientation API not supported
+    console.error('DeviceOrientation API not supported');
 }
 
 function handleOrientation(event) {
