@@ -29,7 +29,7 @@ function handleOrientation(event) {
 	const heading = event.alpha; // Heading in degrees
 	document.getElementById('headingValue').textContent = heading.toFixed(2) + ' degrees';
     } else {
-	document.getElementById('headingValue').textContent = 'Not available';
+	document.getElementById('headingValue').textContent = event.alpha//'Not available';
     }
 }
 
