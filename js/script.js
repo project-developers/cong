@@ -16,16 +16,21 @@ var securityQuestions = [
 	{value: "What month did you get married?".replaceAll(' ',''), label: "What month did you get married?"}
 ]
 
-window.addEventListener('deviceorientation', handleOrientation);
+if ('DeviceOrientationEvent' in window) {
+    // Check if the DeviceOrientationEvent is supported
+    window.addEventListener('deviceorientation', handleOrientation, false);
+} else {
+    document.getElementById('headingValue').textContent = 'Device orientation not supported';
+}
 
 function handleOrientation(event) {
-	// Check if the event provides heading information
-	if (event.alpha !== null) {
-		const heading = event.alpha; // Heading in degrees
-		document.getElementById('headingValue').textContent = heading.toFixed(2) + ' degrees';
-	} else {
-		document.getElementById('headingValue').textContent = 'Not available';
-	}
+    // Check if the event provides heading information
+    if (event.alpha !== null) {
+	const heading = event.alpha; // Heading in degrees
+	document.getElementById('headingValue').textContent = heading.toFixed(2) + ' degrees';
+    } else {
+	document.getElementById('headingValue').textContent = 'Not available';
+    }
 }
 
 function createRadioButtons(containerId, options) {
