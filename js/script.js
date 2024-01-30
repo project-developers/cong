@@ -16,6 +16,17 @@ var securityQuestions = [
 	{value: "What month did you get married?".replaceAll(' ',''), label: "What month did you get married?"}
 ]
 
+window.addEventListener('deviceorientation', handleOrientation);
+
+function handleOrientation(event) {
+	// Check if the event provides heading information
+	if (event.alpha !== null) {
+		const heading = event.alpha; // Heading in degrees
+		document.getElementById('headingValue').textContent = heading.toFixed(2) + ' degrees';
+	} else {
+		document.getElementById('headingValue').textContent = 'Not available';
+	}
+}
 
 function createRadioButtons(containerId, options) {
 	var container = document.getElementById(containerId);
@@ -1860,7 +1871,7 @@ async function gotoView(button) {
 		redrawPolygons(territoryVue.savedPolygons)
 
 		const draw = document.createElement("div");
-		draw.innerHTML = `<div class="custom-control" style="pointer-events: auto;position: relative;margin-top: 150px;margin-left: 8px;font-size: 12px;padding: 0;width: 22px;"><button style="margin:0;padding:0 3px"><i class="fas fa-pen"></i></button></div>`
+		draw.innerHTML = `<div class="custom-control" style="pointer-events: auto;position: relative;margin-top: 100px;margin-left: 8px;font-size: 12px;padding: 0;width: 22px;"><button style="margin:0;padding:0 3px"><i class="fas fa-pen"></i></button></div>`
 		document.querySelectorAll('.ol-control')[0].insertAdjacentElement('afterend',draw)
 		draw.addEventListener("click", () => {
 			
