@@ -384,7 +384,11 @@ DBWorker.onmessage = async function (msg) {
 				//resetCount--
 				resetCount += msgData.value.length
 				msgData.value.forEach(elem=>{
-					DBWorker.postMessage({ storeName: msgData.name, action: "deleteItem", value: elem.name});
+					if (msgData.name == 'lifeAndMinistryAssignments') {
+						DBWorker.postMessage({ storeName: msgData.name, action: "deleteItem", value: elem.week});
+					} else {
+						DBWorker.postMessage({ storeName: msgData.name, action: "deleteItem", value: elem.name});
+					}
 				})
 			}
 			if (resetCount === 0) {
@@ -457,7 +461,6 @@ DBWorker.onmessage = async function (msg) {
 							navigationVue.buttons = [{"title": "TERRITORY", "function": "territoryVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}]
 							configurationVue.reportEntry = 'so'
 							congregationVue.display = true
-							DBWorker.postMessage({ storeName: 'territory', action: "readAll"});
 						} else if (currentUser.currentProfile == 'Life and Ministry Overseer') {
 							configurationVue.reportEntry = 'lmo'
 							navigationVue.buttons = [{"title": "SCHEDULE", "function": "scheduleVue"}, {"title": "PARTICIPANTS", "function": "allParticipantsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}]
@@ -480,6 +483,7 @@ DBWorker.onmessage = async function (msg) {
 						DBWorker.postMessage({ storeName: 'files', action: "readAll"});
 						DBWorker.postMessage({ storeName: 'lifeAndMinistryAssignments', action: "readAll"});
 						DBWorker.postMessage({ storeName: 'lifeAndMinistryEnrolments', action: "readAll"});
+						DBWorker.postMessage({ storeName: 'territory', action: "readAll"});
 					}
 					if (msgData.value.filter(elem=>elem.name == "Display").length !== 0) {
 						//console.log(msgData.value.filter(elem=>elem.name == "Display"))
@@ -509,25 +513,6 @@ DBWorker.onmessage = async function (msg) {
 						//console.log(msgData.value.filter(elem=>elem.name == 'S-21_E.pdf')[0])
 						if (!s89) {
 							await getFieldByName(msgData.value.filter(elem=>elem.name == 'S-89')[0].value, 'S-89')
-						}
-					}
-					if (msgData.value.filter(elem=>elem.name.endsWith('.kml')).length !== 0) {
-
-						var reader = new FileReader();
-
-						reader.onload = function (event) {
-						const xmlString = event.target.result;
-						parseXml(xmlString);
-						};
-
-						reader.readAsText(msgData.value.filter(elem=>elem.name.endsWith('.kml'))[0].value);
-
-						function parseXml(xmlString) {
-						const parser = new DOMParser();
-						xmlDoc = parser.parseFromString(xmlString, 'application/xml');
-
-						// Now xmlDoc contains the parsed XML document, and you can manipulate it as needed
-						console.log(xmlDoc);
 						}
 					}
 				}
@@ -1383,6 +1368,8 @@ var pinLayer; // Layer for dropping pins
 var removeVertex = false;
 var removePolygon = false;
 var geolocationLayer; // Layer for showing user's location and direction
+var selectedFeature
+var selectedPolygon
 
 function stopDraw() {
 	if (draw) {
@@ -1397,6 +1384,13 @@ function setDrawType(drawType) {
 	if (draw) {
 		map.removeInteraction(draw);
 	}
+	
+	// Clear existing features on the map
+	map.getLayers().forEach(function (layer) {
+		if (layer instanceof ol.layer.Vector) {
+		layer.getSource().clear();
+		}
+	});
 
 	// Create a new draw interaction with the specified type
 	draw = new ol.interaction.Draw({
@@ -1407,8 +1401,12 @@ function setDrawType(drawType) {
 	// Function to handle the end of drawing
     draw.on('drawend', function (event) {
 		var feature = event.feature;
+		selectedFeature = event.feature;
 		var geometry = feature.getGeometry();
 		var coordinates = geometry.getCoordinates();
+		selectedPolygon = territoryVue.savedPolygons.length
+		focusOnPolygon(feature);
+		
 		territoryVue.savedPolygons.push({
 			type: 'Polygon',
 			coordinates: coordinates,
@@ -1421,8 +1419,8 @@ function setDrawType(drawType) {
 			lastDateCompleted: '',
 		});
 		DBWorker.postMessage({ storeName: 'territory', action: "save", value: [{"name": "FeatureCollection", "value": territoryVue.savedPolygons}]});
-		console.log('Polygon coordinates:', coordinates);
-		//showAnnotationPopup(feature);
+		document.querySelectorAll('.custom-control button')[0].outerHTML = '<button style="margin:0;padding:0 3px"><i class="fas fa-pen"></i></button>'
+		stopDraw()
 	});
 
 	map.addInteraction(draw);
@@ -1441,43 +1439,63 @@ function setDrawType(drawType) {
 
 	// Add a listener for the modifyend event
 	modify.on("modifyend", function (event) {
+		//selectedFeature = event
         // This event is triggered when the modification is complete
         // You can handle the modified geometry here
         const modifiedGeometry = event.features.getArray()[0].getGeometry();
-        console.log("Modified Geometry:", modifiedGeometry.getCoordinates());
+        //console.log("Modified Geometry:", modifiedGeometry.getCoordinates());
+		territoryVue.savedPolygons[selectedPolygon].coordinates = modifiedGeometry.getCoordinates()
+		DBWorker.postMessage({ storeName: 'territory', action: "save", value: [{"name": "FeatureCollection", "value": territoryVue.savedPolygons}]});
     });
+
+	/*
+	// Event listener for click events to enable modification
+	map.on("click", function (event) {
+        const clickedFeature = map.forEachFeatureAtPixel(
+          event.pixel,
+          function (feature) {
+            return feature;
+          }
+        );
+
+        if (clickedFeature && clickedFeature.getGeometry().getType() === "Polygon") {
+          // Enable modification for the selected polygon
+          modify.setActive(true);
+        } else {
+          // Disable modification if no polygon is selected
+          modify.setActive(false);
+        }
+    });*/
 
 	// Create a Select interaction for selecting polygons to delete
 	select = new ol.interaction.Select({
         layers: [vectorLayer],
         style: new ol.style.Style({
 			fill: new ol.style.Fill({
-				color: 'rgba(255, 0, 0, 0.2)'
+				color: '#76aaf14d'
 			}),
 			stroke: new ol.style.Stroke({
-				color: 'red',
+				color: '#76aaf1',
 				width: 2
 			}),
 			image: new ol.style.Circle({
-				radius: 5,
+				radius: 7,
 				fill: new ol.style.Fill({
-					color: 'red'
+					color: '#76aaf1'
 				})
 			})
-        })
+		})
     });
 
     map.addInteraction(select);
 
       // Handle the selection change event
     select.on('select', function (event) {
-        if (event.selected.length > 0) {
-			var selectedFeature = event.selected[0];
-			if (removePolygon == true) {
-				//deleteSelectedPolygon()
+		if (event.selected.length > 0) {
+			selectedFeature = event.selected[0];
+			/*if (removePolygon == true) {
 				deletePolygon(selectedFeature);
-			}
-			//focusOnPolygon(selectedFeature);
+			}*/
         }
     });
 
@@ -1574,7 +1592,7 @@ function convertFeaturesToArray() {
 	console.log('Features Array:', featuresArray);
 }
 
-
+/*
 // Function to delete a selected polygon
 function deleteSelectedPolygon() {
 	var selectedFeatures = select.getFeatures();
@@ -1584,7 +1602,7 @@ function deleteSelectedPolygon() {
 		});
 		selectedFeatures.clear();
 	}
-}
+}*/
 
 // Function to delete a polygon feature
 function deletePolygon(feature) {
@@ -1658,10 +1676,10 @@ function focusOnSpecificPolygon(coordinates) {
 	// Add style if needed
 	polygonFeature.setStyle(new ol.style.Style({
 		fill: new ol.style.Fill({
-			color: 'rgba(255, 0, 0, 0.2)'
+			color: '#76aaf14d'
 		}),
 		stroke: new ol.style.Stroke({
-			color: 'red',
+			color: '#76aaf1',
 			width: 2
 		})
 	}));
@@ -1859,26 +1877,40 @@ async function gotoView(button) {
 
 		redrawPolygons(territoryVue.savedPolygons)
 
+		await shortWait()
+		await shortWait()
+		await shortWait()
+
+		const north = document.createElement("div");
+		north.innerHTML = `<div class="custom-control ol-control" style="pointer-events: auto;position: relative;margin-top: 10rem;margin-left: 8px;font-size: 14px;font-weight: 900;padding-top: 1px;width: 22px;height:24px"><button style="margin:1px;padding:1px;width: 20px;height:20px">N</button></div>`
+		document.querySelectorAll('.ol-control')[0].insertAdjacentElement('afterend',north)
+		north.addEventListener("click", () => {
+			map.getView().setRotation(0)
+		});	
+
+
+
 		const draw = document.createElement("div");
-		draw.innerHTML = `<div class="custom-control" style="pointer-events: auto;position: relative;margin-top: 100px;margin-left: 8px;font-size: 12px;padding: 0;width: 22px;"><button style="margin:0;padding:0 3px"><i class="fas fa-pen"></i></button></div>`
-		document.querySelectorAll('.ol-control')[0].insertAdjacentElement('afterend',draw)
+		draw.innerHTML = `<div class="custom-control ol-control" style="pointer-events: auto;position: relative;margin-top: 30px;margin-left: 8px;font-size: 12px;padding-top: 1px;width: 22px;height:21px;"><button style="width: 20px;height:19px;margin:1px;padding:1px"><i class="fas fa-pen"></i></button></div>`
+		north.insertAdjacentElement('afterend',draw)
 		draw.addEventListener("click", () => {
 			
-			if (document.querySelectorAll('.custom-control button')[0].innerHTML == '<i class="fas fa-pen"></i>') {
-				document.querySelectorAll('.custom-control button')[0].outerHTML = '<button style="margin:0;padding:0 5.2px"><i class="fas fa-mouse-pointer"></i></button>'
-				document.querySelectorAll('.custom-control')[1].style.display = ''
+			if (document.querySelectorAll('.custom-control button')[1].innerHTML == '<i class="fas fa-pen"></i>') {
+				document.querySelectorAll('.custom-control button')[1].outerHTML = '<button style="width: 20px;height:18px;margin:1px;padding:1px"><i class="fas fa-mouse-pointer"></i></button>'
 				document.querySelectorAll('.custom-control')[2].style.display = ''
+				document.querySelectorAll('.custom-control')[3].style.display = ''
+				
 				setDrawType('Polygon');
 				removePolygon = false
-				document.querySelectorAll('.custom-control button')[2].style.color = ''
+				document.querySelectorAll('.custom-control button')[3].style.color = ''
 			} else {
-				document.querySelectorAll('.custom-control button')[0].outerHTML = '<button style="margin:0;padding:0 3px"><i class="fas fa-pen"></i></button>'
+				document.querySelectorAll('.custom-control button')[1].outerHTML = '<button style="width: 20px;height:19px;margin:1px;padding:1px"><i class="fas fa-pen"></i></button>'
 				stopDraw()
 			}
 		});
 
 		const vertex = document.createElement("div");
-		vertex.innerHTML = `<div class="custom-control" style="pointer-events: auto;position: relative;margin-top: 0;margin-left: 8px;font-size: 12px;padding: 0;width: 22px;display:none"><button style="margin:0;padding:0 5px"><i class="fas fa-times"></i></button></div>`
+		vertex.innerHTML = `<div class="custom-control ol-control" style="pointer-events: auto;position: relative;margin-top: 0px;margin-left: 8px;font-size: 12px;padding: 0px;width: 22px;height: 20px;display:none"><button style="width: 20px;height: 20px;margin: 1px;padding: 1px;"><i class="fas fa-times"></i></button></div>`
 		draw.insertAdjacentElement('afterend',vertex)
 		vertex.addEventListener("click", () => {
 			if (!draw) {
@@ -1886,16 +1918,16 @@ async function gotoView(button) {
 			}
 			removeVertex = !removeVertex
 			if (removeVertex == true) {
-				document.querySelectorAll('.custom-control button')[1].style.color = 'brown'
-				document.querySelectorAll('.custom-control button')[2].style.color = ''
+				document.querySelectorAll('.custom-control button')[2].style.color = 'brown'
+				document.querySelectorAll('.custom-control button')[3].style.color = ''
 				removePolygon = false
 			} else {
-				document.querySelectorAll('.custom-control button')[1].style.color = ''
+				document.querySelectorAll('.custom-control button')[2].style.color = ''
 			}
 		});
 
 		const trash = document.createElement("div");
-		trash.innerHTML = `<div class="custom-control" style="pointer-events: auto;position: relative;margin-top: 0;margin-left: 8px;font-size: 12px;padding: 0;width: 22px;display:none"><button style="margin:0;padding:0 4px"><i class="fas fa-trash"></i></button></div>`
+		trash.innerHTML = `<div class="custom-control ol-control" style="pointer-events: auto;position: relative;margin-top: 0px;margin-left: 8px;font-size: 12px;padding: 0px;width: 22px;height: 22px;display:none"><button style="width: 20px;height: 20px;margin:1px;padding:1px"><i class="fas fa-trash"></i></button></div>`
 		vertex.insertAdjacentElement('afterend',trash)
 		trash.addEventListener("click", () => {
 			if (!draw) {
@@ -1903,19 +1935,27 @@ async function gotoView(button) {
 			}
 			removePolygon = !removePolygon
 			if (removePolygon == true) {
-				document.querySelectorAll('.custom-control button')[2].style.color = 'brown'
-				document.querySelectorAll('.custom-control button')[1].style.color = ''
-				document.querySelectorAll('.custom-control button')[0].outerHTML = '<button style="margin:0;padding:0 3px"><i class="fas fa-pen"></i></button>'
+				document.querySelectorAll('.custom-control button')[3].style.color = 'brown'
+				document.querySelectorAll('.custom-control button')[2].style.color = ''
+				document.querySelectorAll('.custom-control button')[1].outerHTML = '<button style="width: 20px;height:19px;margin:1px;padding:1px"><i class="fas fa-pen"></i></button>'
 				stopDraw()
 				removeVertex = false
-			} else {
-				document.querySelectorAll('.custom-control button')[2].style.color = ''
+				deletePolygon(selectedFeature);
+			
+				document.querySelectorAll('.custom-control button')[3].style.color = ''
+				removePolygon = !removePolygon
+				// Clear existing features on the map
+				map.getLayers().forEach(function (layer) {
+					if (layer instanceof ol.layer.Vector) {
+					layer.getSource().clear();
+					}
+				});
 			}
 		});
 
 
 		const currentLocation = document.createElement("div");
-		currentLocation.innerHTML = `<div class="custom-control" style="pointer-events: auto;position: relative;margin-top: 50px;margin-left: 8px;font-size: 12px;padding: 0;width: 22px;"><button style="margin:0;padding:0 3px"><i class="fas fa-crosshairs"></i></button></div>`
+		currentLocation.innerHTML = `<div class="custom-control ol-control" style="pointer-events: auto;position: relative;margin-top: 50px;margin-left: 8px;font-size: 12px;padding: 0;width: 22px;height: 22px;"><button style="width: 20px;height: 20px;margin: 1px;padding: 1px;x"><i class="fas fa-crosshairs"></i></button></div>`
 		trash.insertAdjacentElement('afterend',currentLocation)
 		currentLocation.addEventListener("click", () => {
 			showLocation()
@@ -1971,7 +2011,11 @@ document.querySelector('#territory').innerHTML = `<template>
 				<div class="w3-row-padding w3-grayscale" style="margin-top:4px">
 					<div v-for="(territory, count) in savedPolygons" :key="territory + '|' + count" style="cursor:pointer" class="w3-col l2 m4 w3-margin-bottom">
 						<div :class="mode()">
-							<h5 @click="territoryDetail($event.target, territory)" style="padding:10px 15px;margin:0">{{ count + 1 }} | {{ territory.number }}</h5>
+							<div style="display:flex; justify-content:space-between" @click="territoryDetail($event.target, territory, count)">
+								<h5 style="padding:10px 15px;margin:0">{{ count + 1 }} | {{ territory.number }}</h5>
+								<i class="fas fa-pencil-alt" style="text-align: right;margin:20px;padding:0" title="Edit"></i>
+							</div>
+							
 							<div class="w3-container main" style="padding:0 15px 10px 15px">
 								<p style="margin:0" v-if="territory.locality !== ''" title="Locality"><i class="fas fa-map-marker"></i> {{ territory.locality }}</p>
 								<p style="margin:0" v-if="territory.lastDateCompleted !== ''" title="Last Date Completed"><i class="fas fa-calendar-alt"></i> {{ territory.lastDateCompleted }}</p>
@@ -1986,39 +2030,11 @@ document.querySelector('#territory').innerHTML = `<template>
 								<p><label>Assigned To:<input :class="inputMode('assignedTo w3-input')" type="text" :value="territory.assignedTo" @change="handleInputChange($event.target, territory, 'assignedTo')"></label></p>
 								<p><label>Date Assigned:<input :class="inputMode('dateAssigned w3-input')" type="date" :value="territory.dateAssigned" @change="handleInputChange($event.target, territory, 'dateAssigned')"></label></p>
 								<p><label>Date Completed:<input :class="inputMode('dateCompleted w3-input')" type="date" :value="territory.dateCompleted" @change="handleInputChange($event.target, territory, 'dateCompleted')"></label></p>
-								<!--p><label>Coordinates:</label></p>
-								<p v-for="(location, count) in territory.coordinates[0]">
-									<input :class="inputMode('coordinates w3-input')" type="text" :value="location[0]" @change="handleInputChange($event.target, territory, 'coordinate-0')">
-									<input :class="inputMode('coordinates w3-input')" type="text" :value="location[1]" @change="handleInputChange($event.target, territory, 'coordinate-1')">
-								</p-->
 							</div>
 						</div>
 					</div>
 				</div>
-				<!--div>
-					<dl>
-						<dt>Type</dt>
-						<dd>{{ type() }}</dd>
-						<dt>Language</dt>
-						<dd><span>{{ language() }}</span></dd>
-						<dt>Last Updated</dt>
-						<dd>{{ lastUpdated() }}</dd>
-					</dl>
-					<fieldset>
-						<legend>Boundaries</legend>
-						<dl>
-							<dt>North</dt>
-							<dd><span>{{ borderNorth() }}</span></dd>
-							<dt>East</dt>
-							<dd><span>{{ borderEast() }}</span></dd>
-							<dt>South</dt>
-							<dd><span>{{ borderSouth() }}</span>
-							</dd>
-							<dt>West</dt>
-							<dd><span>{{ borderWest() }}</span></dd>
-						</dl>
-					</fieldset>
-				</div-->
+				
 			</div>
 		</section>
 		
@@ -2048,38 +2064,20 @@ function processTerritory() {
             },
         },
         methods: {
-			type() {
-				return xmlDoc.getElementsByName('Type')[0].innerHTML.split('[CDATA[ ')[1].split(' ]]')[0]
-			},
-			language() {
-				return xmlDoc.getElementsByName('Language')[0].innerHTML.split('[CDATA[ ')[1].split(' ]]')[0]
-			},
-			lastUpdated() {
-				return xmlDoc.getElementsByName('LastUpdated')[0].innerHTML.split('[CDATA[ ')[1].split(' ]]')[0]
-			},
-			borderNorth() {
-				return xmlDoc.getElementsByName('BorderNorth')[0].innerHTML.split('[CDATA[ ')[1].split(' ]]')[0].replaceAll("&apos;",'')
-			},
-			borderEast() {
-				return xmlDoc.getElementsByName('BorderEast')[0].innerHTML.split('[CDATA[ ')[1].split(' ]]')[0]
-			},
-			borderSouth() {
-				return xmlDoc.getElementsByName('BorderSouth')[0].innerHTML.split('[CDATA[ ')[1].split(' ]]')[0]
-			},
-			borderWest() {
-				return xmlDoc.getElementsByName('BorderWest')[0].innerHTML.split('[CDATA[ ')[1].split(' ]]')[0]
-			},
-			coordinates() {
-				return xmlDoc.getElementsByTagName('coordinates')[0].innerHTML.split(',0\n').slice(0, -1).map(elem=>elem.split(',').map(val=>Number(val)))
-			},
-			territoryDetail(item, territory) {
-				if (item.parentNode.querySelector('.main').style.display == '') {
-                    item.parentNode.querySelector('.main').style.display = 'none'
-                    item.parentNode.querySelector('.detail').style.display = ''
-					focusOnSpecificPolygon(territory.coordinates[0])
+			territoryDetail(item, territory, count) {
+				focusOnSpecificPolygon(territory.coordinates[0])
+				selectedPolygon = count
+				if (item.tagName !== 'I') { return }
+				if (item.parentNode.parentNode.querySelector('.main').style.display == '') {
+					item.parentNode.parentNode.querySelector('.main').style.display = 'none'
+                    item.parentNode.parentNode.querySelector('.detail').style.display = ''
+					item.className = 'fas fa-times'
+					item.title = 'Close'
                 } else {
-					item.parentNode.querySelector('.main').style.display = ''
-                    item.parentNode.querySelector('.detail').style.display = 'none'
+					item.parentNode.parentNode.querySelector('.main').style.display = ''
+                    item.parentNode.parentNode.querySelector('.detail').style.display = 'none'
+					item.className = 'fas fa-pencil-alt'
+					item.title = 'Edit'
 				}
 			},
 			handleInputChange(event, territory, property) {
@@ -5191,7 +5189,7 @@ Thanks a lot
                 var a = document.createElement("a");
 				var file;
 				if (getSelectedOption(document.getElementsByName("exportGroup")) == 'all') {
-					file = new Blob([JSON.stringify({"exportType":"all", "configuration":configurationVue.configuration, "data":allPublishersVue.publishers, "lifeAndMinistryEnrolments":allParticipantsVue.enrolments, "lifeAndMinistryAssignments":allAssignmentsVue.allAssignments, "attendance": [attendanceVue.currentMonth, attendanceVue.meetingAttendanceRecord]})], {type: 'text/plain'});
+					file = new Blob([JSON.stringify({"exportType":"all", "configuration":configurationVue.configuration, "data":allPublishersVue.publishers, "territory":territoryVue.savedPolygons, "lifeAndMinistryEnrolments":allParticipantsVue.enrolments, "lifeAndMinistryAssignments":allAssignmentsVue.allAssignments, "attendance": [attendanceVue.currentMonth, attendanceVue.meetingAttendanceRecord]})], {type: 'text/plain'});
 					await shortWait()
 					await shortWait()
 				} else if (getSelectedOption(document.getElementsByName("exportGroup")) == 'reportEntry') {
@@ -5304,6 +5302,7 @@ Thanks a lot
 						allPublishersVue.publishers = result.data
 						allParticipantsVue.enrolments = result.lifeAndMinistryEnrolments
 						allAssignmentsVue.allAssignments = result.lifeAndMinistryAssignments
+						territoryVue.savedPolygons = result.territory
 	
 						await shortWait()
 						await shortWait()
@@ -5316,6 +5315,7 @@ Thanks a lot
 						DBWorker.postMessage({ storeName: 'attendance', action: "save", value: result.attendance});
 						DBWorker.postMessage({ storeName: 'lifeAndMinistryEnrolments', action: "save", value: result.lifeAndMinistryEnrolments});
 						DBWorker.postMessage({ storeName: 'lifeAndMinistryAssignments', action: "save", value: result.lifeAndMinistryAssignments});
+						DBWorker.postMessage({ storeName: 'territory', action: "save", value: [{"name": "FeatureCollection", "value": result.territory}]});
 	
 						await shortWait()
 						await shortWait()
@@ -5482,13 +5482,14 @@ Thanks a lot
 				var confirmReset = prompt('Are you sure you want to Reset records?\nType "Reset" to Reset')
                 if (confirmReset !== null && confirmReset.toLowerCase() == 'reset') {
 					this.reset = true
-					resetCount = 6
+					resetCount = 7
 					DBWorker.postMessage({ storeName: 'data', action: "readAll"});
                     DBWorker.postMessage({ storeName: 'configuration', action: "readAll"});
                     DBWorker.postMessage({ storeName: 'attendance', action: "readAll"});
                     DBWorker.postMessage({ storeName: 'files', action: "readAll"});
+                    DBWorker.postMessage({ storeName: 'lifeAndMinistryEnrolments', action: "readAll"});
                     DBWorker.postMessage({ storeName: 'lifeAndMinistryAssignments', action: "readAll"});
-                    DBWorker.postMessage({ storeName: 'lifeAndMinistryAssignments', action: "readAll"});
+                    DBWorker.postMessage({ storeName: 'territory', action: "readAll"});
 
 					// Open a connection to the database
 					/*var request = indexedDB.open('congRec');
