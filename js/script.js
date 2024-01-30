@@ -22,13 +22,13 @@ if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEve
 	    if (permissionState === 'granted') {
 		window.addEventListener('deviceorientation', handleOrientation);
 	    } else {
-		console.error('Permission denied for device orientation');
+	      document.getElementById('headingValue').textContent = 'Permission denied for device orientation';
 	    }
 	})
 	.catch(console.error);
 } else {
     // DeviceOrientation API not supported
-    console.error('DeviceOrientation API not supported');
+    document.getElementById('headingValue').textContent = 'DeviceOrientation API not supported';
 }
 
 function handleOrientation(event) {
@@ -37,7 +37,7 @@ function handleOrientation(event) {
 	const heading = event.alpha; // Heading in degrees
 	document.getElementById('headingValue').textContent = heading.toFixed(2) + ' degrees';
     } else {
-	document.getElementById('headingValue').textContent = event.alpha//'Not available';
+	document.getElementById('headingValue').textContent = vent.alpha//'Not available';
     }
 }
 
