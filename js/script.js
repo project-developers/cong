@@ -1439,6 +1439,7 @@ var pinLayer; // Layer for dropping pins
 var removeVertex = false;
 var removePolygon = false;
 var geolocationLayer; // Layer for showing user's location and direction
+var geolocation;
 var selectedFeature
 var selectedPolygon
 
@@ -1490,7 +1491,7 @@ function setDrawType(drawType) {
 			lastDateCompleted: '',
 		});
 		DBWorker.postMessage({ storeName: 'territory', action: "save", value: [{"name": "FeatureCollection", "value": territoryVue.savedPolygons}]});
-		document.querySelectorAll('.custom-control button')[1].outerHTML = '<button style="margin:0;padding:0 3px"><i class="fas fa-pen"></i></button>'
+		document.querySelectorAll('.custom-control button')[0].outerHTML = '<button style="margin:0;padding:0 3px"><i class="fas fa-pen"></i></button>'
 		stopDraw()
 	});
 
@@ -1911,6 +1912,7 @@ async function gotoView(button) {
                 }),
                 new ol.control.ScaleLine(),
                 new ol.control.FullScreen(),
+				new ol.control.Rotate(),
             ],/*
             view: new ol.View({
 				center: ol.proj.fromLonLat([-13.239936, 8.468872]),
@@ -1952,28 +1954,95 @@ async function gotoView(button) {
 		await shortWait()
 		await shortWait()
 
+		const view = new ol.View({
+			center: [0, 0],
+			zoom: 2,
+		  });
+
+		geolocation = new ol.Geolocation({
+			trackingOptions: {
+			  enableHighAccuracy: true,
+			},
+			projection: view.getProjection(),
+		  });
+		
+		  function el(id) {
+			return document.getElementById(id);
+		  }
+		
+		  el('track').addEventListener('change', function () {
+			geolocation.setTracking(this.checked);
+		  });
+		
+		  geolocation.on('change', function () {
+			el('accuracy').innerText = geolocation.getAccuracy() + ' [m]';
+			el('altitude').innerText = geolocation.getAltitude() + ' [m]';
+			el('altitudeAccuracy').innerText = geolocation.getAltitudeAccuracy() + ' [m]';
+			el('heading').innerText = geolocation.getHeading() + ' [rad]';
+			el('speed').innerText = geolocation.getSpeed() + ' [m/s]';
+		  });
+		
+		  geolocation.on('error', function (error) {
+			const info = document.getElementById('info');
+			info.innerHTML = error.message;
+			info.style.display = '';
+		  });
+		
+		  const accuracyFeature = new ol.Feature();
+		  geolocation.on('change:accuracyGeometry', function () {
+			accuracyFeature.setGeometry(geolocation.getAccuracyGeometry());
+		  });
+		
+		  const positionFeature = new ol.Feature();
+		  positionFeature.setStyle(
+			new ol.style.Style({
+			  image: new ol.style.Circle({
+				radius: 6,
+				fill: new ol.style.Fill({
+				  color: '#3399CC',
+				}),
+				stroke: new ol.style.Stroke({
+				  color: '#fff',
+				  width: 2,
+				}),
+			  }),
+			})
+		  );
+		
+		  geolocation.on('change:position', function () {
+			const coordinates = geolocation.getPosition();
+			positionFeature.setGeometry(coordinates ? new ol.geom.Point(coordinates) : null);
+		  });
+		
+		  new ol.layer.Vector({
+			map: map,
+			source: new ol.source.Vector({
+			  features: [accuracyFeature, positionFeature],
+			}),
+		  });
+/*
 		const north = document.createElement("div");
 		north.innerHTML = `<div class="custom-control ol-control" style="pointer-events: auto;position: relative;margin-top: 10rem;margin-left: 8px;font-size: 14px;font-weight: 900;padding-top: 1px;width: 22px;height:24px"><button style="margin:1px;padding:1px;width: 20px;height:20px">N</button></div>`
 		document.querySelectorAll('.ol-control')[0].insertAdjacentElement('afterend',north)
 		north.addEventListener("click", () => {
 			map.getView().setRotation(0)
-		});
+		});*/
 
 		const draw = document.createElement("div");
-		draw.innerHTML = `<div class="custom-control ol-control" style="pointer-events: auto;position: relative;margin-top: 30px;margin-left: 8px;font-size: 12px;padding-top: 1px;width: 22px;height:21px;"><button style="width: 20px;height:19px;margin:1px;padding:1px"><i class="fas fa-pen"></i></button></div>`
-		north.insertAdjacentElement('afterend',draw)
+		draw.innerHTML = `<div class="custom-control ol-control" style="pointer-events: auto;position: relative;margin-top: 140px;margin-left: 8px;font-size: 12px;padding-top: 1px;width: 22px;height:21px;"><button style="width: 20px;height:19px;margin:1px;padding:1px"><i class="fas fa-pen"></i></button></div>`
+		document.querySelectorAll('.ol-control')[0].insertAdjacentElement('afterend',draw)
 		draw.addEventListener("click", () => {
 			
-			if (document.querySelectorAll('.custom-control button')[1].innerHTML == '<i class="fas fa-pen"></i>') {
-				document.querySelectorAll('.custom-control button')[1].outerHTML = '<button style="width: 20px;height:18px;margin:1px;padding:1px"><i class="fas fa-mouse-pointer"></i></button>'
+			if (document.querySelectorAll('.custom-control button')[0].innerHTML == '<i class="fas fa-pen"></i>') {
+				document.querySelectorAll('.custom-control button')[0].outerHTML = '<button style="width: 20px;height:18px;margin:1px;padding:1px"><i class="fas fa-mouse-pointer"></i></button>'
+				document.querySelectorAll('.custom-control')[1].style.display = ''
 				document.querySelectorAll('.custom-control')[2].style.display = ''
-				document.querySelectorAll('.custom-control')[3].style.display = ''
 				
 				setDrawType('Polygon');
 				removePolygon = false
-				document.querySelectorAll('.custom-control button')[3].style.color = ''
+				document.querySelectorAll('.custom-control button')[2].style.color = ''
 			} else {
-				document.querySelectorAll('.custom-control button')[1].outerHTML = '<button style="width: 20px;height:19px;margin:1px;padding:1px"><i class="fas fa-pen"></i></button>'
+				document.querySelectorAll('.custom-control button')[0].outerHTML = '<button style="width: 20px;height:19px;margin:1px;padding:1px"><i class="fas fa-pen"></i></button>'
 				stopDraw()
 			}
 		});
@@ -1991,11 +2060,11 @@ async function gotoView(button) {
 			}
 			removeVertex = !removeVertex
 			if (removeVertex == true) {
-				document.querySelectorAll('.custom-control button')[2].style.color = 'brown'
-				document.querySelectorAll('.custom-control button')[3].style.color = ''
+				document.querySelectorAll('.custom-control button')[1].style.color = 'brown'
+				document.querySelectorAll('.custom-control button')[2].style.color = ''
 				removePolygon = false
 			} else {
-				document.querySelectorAll('.custom-control button')[2].style.color = ''
+				document.querySelectorAll('.custom-control button')[1].style.color = ''
 			}
 		});
 
@@ -2008,14 +2077,14 @@ async function gotoView(button) {
 			}
 			removePolygon = !removePolygon
 			if (removePolygon == true) {
-				document.querySelectorAll('.custom-control button')[3].style.color = 'brown'
-				document.querySelectorAll('.custom-control button')[2].style.color = ''
-				document.querySelectorAll('.custom-control button')[1].outerHTML = '<button style="width: 20px;height:19px;margin:1px;padding:1px"><i class="fas fa-pen"></i></button>'
+				document.querySelectorAll('.custom-control button')[2].style.color = 'brown'
+				document.querySelectorAll('.custom-control button')[1].style.color = ''
+				document.querySelectorAll('.custom-control button')[0].outerHTML = '<button style="width: 20px;height:19px;margin:1px;padding:1px"><i class="fas fa-pen"></i></button>'
 				stopDraw()
 				removeVertex = false
 				deletePolygon(selectedFeature);
 			
-				document.querySelectorAll('.custom-control button')[3].style.color = ''
+				document.querySelectorAll('.custom-control button')[2].style.color = ''
 				removePolygon = !removePolygon
 				// Clear existing features on the map
 				map.getLayers().forEach(function (layer) {
@@ -2082,12 +2151,17 @@ document.querySelector('#territory').innerHTML = `<template>
 		<h2 class="w3-center">TERRITORY</h2>	
 		<section>
 			<div id="map"></div>
-			<button v-if="currentProfile() !== 'Territory Map'" class="w3-button w3-black filterBtn" style="margin:5px 5px 10px 5px" @click="redrawPolygons($event.target)">All</button>
-			<button v-if="currentProfile() !== 'Territory Map'" class="w3-button w3-black filterBtn" style="margin:5px 5px 10px 5px" @click="redrawPolygons($event.target)">Assigned</button>
-			<button v-if="currentProfile() !== 'Territory Map'" class="w3-button w3-black filterBtn" style="margin:5px 5px 10px 5px; display:none" @click="redrawPolygons($event.target)">Unassigned</button>
+			<div style="display:flex;">
+				<select v-if="currentProfile() !== 'Territory Map'" v-model="selectedView" @change="redrawPolygons()" :class="inputMode('view w3-input')" style="width:150px;margin:15px 5px">
+					<option v-for="view in views" :value="view">{{ view }}</option>
+				</select>
+				<select v-if="currentProfile() !== 'Territory Map'" v-model="selectedLocality" :class="inputMode('locality w3-input')" style="width:250px;margin:15px 5px">
+					<option v-for="locality in localities()" :value="locality">{{ locality }}</option>
+				</select>
+			</div>
 			<div style="margin-top:20px">
 				<div class="w3-row-padding w3-grayscale" style="margin-top:4px">
-					<div v-for="(territory, count) in savedPolygons" :key="territory + '|' + count" style="cursor:pointer" class="w3-col l2 m4 w3-margin-bottom">
+					<div v-for="(territory, count) in displayPolygons()" :key="territory + '|' + count" v-if="territory.locality == selectedLocality || selectedLocality == 'All Localities'" style="cursor:pointer" class="w3-col l2 m4 w3-margin-bottom">
 						<div :class="mode()">
 							<div style="display:flex; justify-content:space-between" @click="territoryDetail($event.target, territory, count)">
 								<h5 style="padding:10px 15px;margin:0">{{ count + 1 }} | {{ territory.number }}</h5>
@@ -2115,6 +2189,14 @@ document.querySelector('#territory').innerHTML = `<template>
 				</div>
 				
 			</div>
+			<div id="info" style="display: none;"></div>
+			<label><input type="checkbox" id="track"> Track</label>
+			<div id="info" style="display: none;"></div>
+			<div>Accuracy: <span id="accuracy"></span></div>
+			<div>Altitude: <span id="altitude"></span></div>
+			<div>Altitude Accuracy: <span id="altitudeAccuracy"></span></div>
+			<div>Heading: <span id="heading"></span></div>
+			<div>Speed: <span id="speed"></span></div>
 		</section>
 		
 	</div>
@@ -2129,6 +2211,9 @@ function processTerritory() {
             display: false,
 			geoJsonData: {type: 'FeatureCollection', features: []},
 			savedPolygons: [],
+			selectedView: 'All',
+			selectedLocality: 'All Localities',
+			views: ['Congregation', 'All', 'Assigned', 'Unassigned', 'Overlay'],
         },
         computed: {
             publishersCount() {
@@ -2169,8 +2254,8 @@ function processTerritory() {
 
 					await shortWait()
 					await shortWait()
-
-					territory.dateAssigned = new Date()
+					const options = { year: 'numeric', month: 'long', day: 'numeric' };
+					territory.dateAssigned = new Date().toLocaleDateString('en-US', options);
 
 					file = new Blob([JSON.stringify({"exportType":"territoryMap", "territory":[territory]})], {type: 'text/plain'});
 					
@@ -2179,12 +2264,18 @@ function processTerritory() {
 
 					a.href = URL.createObjectURL(file);
 				
-					a.download = 'congData-' + new Date() + '.txt';
+					a.download = 'Territory-' + territory.number + '-' + territory.locality + '.txt';
 					a.click();
 
 					DBWorker.postMessage({ storeName: 'territory', action: "save", value: [{"name": "FeatureCollection", "value": territoryVue.savedPolygons}]});
 
 				}
+				if (modify) {
+					modify.setActive(true);
+				}
+			},
+			localities() {
+				return ['All Localities'].concat(getUniqueElementsByProperty(this.savedPolygons, ['locality']).map(elem=>elem.locality))
 			},
 			handleInputChange(event, territory, property) {
 				if (property == 'coordinates') {
@@ -2201,10 +2292,33 @@ function processTerritory() {
 			mode() {
 				return mode// + ' w3-input w3-border'
 			},
-			redrawPolygons(event) {
-				var selectedView = event.innerHTML
-				if (selectedView == 'All') {
+			redrawPolygons() {
+				if (this.selectedView == 'All') {
 					redrawPolygons(this.savedPolygons.slice(1))
+				} else if (this.selectedView == 'Assigned') {
+					redrawPolygons(this.savedPolygons.slice(1).filter(elem=>elem.assignedTo !== ''))
+				} else if (this.selectedView == 'Unassigned') {
+					redrawPolygons(this.savedPolygons.slice(1).filter(elem=>elem.assignedTo == ''))
+				} else if (this.selectedView == 'Congregation') {
+					redrawPolygons(this.savedPolygons.slice(0, 1))
+				} else if (this.selectedView == 'Overlay') {
+					redrawPolygons(this.savedPolygons)
+				}
+				if (modify) {
+					modify.setActive(false);
+				}
+			},
+			displayPolygons() {
+				if (this.selectedView == 'All') {
+					return this.savedPolygons.slice(1)
+				} else if (this.selectedView == 'Assigned') {
+					return this.savedPolygons.slice(1).filter(elem=>elem.assignedTo !== '')
+				} else if (this.selectedView == 'Unassigned') {
+					return this.savedPolygons.slice(1).filter(elem=>elem.assignedTo == '')
+				} else if (this.selectedView == 'Congregation') {
+					return this.savedPolygons.slice(0, 1)
+				} else if (this.selectedView == 'Overlay') {
+					return this.savedPolygons
 				}
 			},
 			updateDrawnFeaturesLayer() {
