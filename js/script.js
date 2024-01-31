@@ -2003,7 +2003,7 @@ async function gotoView(button) {
 			})
 		
 		  const positionFeature = new ol.Feature();
-		  positionFeature.setStyle(
+		  positionFeature.setStyle([
 			new ol.style.Style({
 				image: new ol.style.Circle({
 					radius: 6,
@@ -2017,7 +2017,7 @@ async function gotoView(button) {
 				}),
 			}),
 			iconStyle,
-		  );
+		]);
 		
 		  geolocation.on('change:position', function () {
 			const coordinates = geolocation.getPosition();
