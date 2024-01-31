@@ -2010,7 +2010,7 @@ async function gotoView(button) {
 					anchor: [-0.2, 0.5],
 					src: 'arrow.png',
 					rotateWithView: true,
-					rotation: position.coords.heading
+					rotation: geolocation.getHeading() || 0,
 				})
 			})
 		  );
