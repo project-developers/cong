@@ -1995,7 +1995,7 @@ async function gotoView(button) {
 		  
 		  const iconStyle = new ol.style.Style({
 				image: new ol.style.Icon({
-					anchor: [-0.2, 0.5],
+					anchor: [-0.3, 0.5],
 					src: 'arrow.png',
 					rotateWithView: true,
 					rotation: geolocation.getHeading() || 0,
