@@ -1823,12 +1823,12 @@ async function showLocation() {
             });
 
             rotationFeature.setStyle(new ol.style.Style({
-            image: new ol.style.Icon({
-                anchor: [-0.2, 0.5],
-                src: 'arrow.png',
-                rotateWithView: true,
-                rotation: position.coords.heading
-            })
+				image: new ol.style.Icon({
+					anchor: [-0.2, 0.5],
+					src: 'arrow.png',
+					rotateWithView: true,
+					rotation: position.coords.heading
+				})
             }));
 
             
@@ -1996,16 +1996,22 @@ async function gotoView(button) {
 		  const positionFeature = new ol.Feature();
 		  positionFeature.setStyle(
 			new ol.style.Style({
-			  image: new ol.style.Circle({
-				radius: 6,
-				fill: new ol.style.Fill({
-				  color: '#3399CC',
+				image: new ol.style.Circle({
+					radius: 6,
+					fill: new ol.style.Fill({
+					  color: '#3399CC',
+					}),
+					stroke: new ol.style.Stroke({
+					  color: '#fff',
+					  width: 2,
+					}),
 				}),
-				stroke: new ol.style.Stroke({
-				  color: '#fff',
-				  width: 2,
-				}),
-			  }),
+				image: new ol.style.Icon({
+					anchor: [-0.2, 0.5],
+					src: 'arrow.png',
+					rotateWithView: true,
+					rotation: position.coords.heading
+				})
 			})
 		  );
 		
