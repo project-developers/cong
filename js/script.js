@@ -127,6 +127,27 @@ loginButton.addEventListener("click", (e) => {
 				DBWorker.postMessage({ dbName: 'cong-' + currentUser.username.toLowerCase(), action: "init"});
 				loginErrorMsg.style.opacity = 0;
 			}
+			if (currentUser.currentProfile == 'Territory Map') {
+				console.log("You have successfully logged in.");
+				document.getElementById("securityQuestions").style.display = 'none';
+				loginForm.username.value = ''
+				loginForm.password.value = ''
+				loginForm.confirmPassword.value = ''
+				loginForm.confirmPassword.style.display = 'none';
+				currentUser.name = currentUser.username
+				hiddenElements.forEach(elem=>{
+					document.getElementById(`${elem}`).style.display = ''
+				})
+				logged = true
+				//reportEntry = true
+
+				allUsers.push(currentUser)
+
+				document.getElementById("home").style.display = 'none'
+				DBWorker.postMessage({ storeName: 'settings', action: "save", value: [currentUser]});
+				DBWorker.postMessage({ dbName: 'cong-' + currentUser.username.toLowerCase(), action: "init"});
+				loginErrorMsg.style.opacity = 0;
+			}
 			if (currentUser.currentProfile == 'Secretary') {
 				console.log("You have successfully logged in.");
 				document.getElementById("securityQuestions").style.display = 'none';
@@ -231,6 +252,27 @@ loginButton.addEventListener("click", (e) => {
 		currentUser.currentProfile = 'Service Overseer'
 		configurationVue.reportEntry = 'so'
 		configurationVue.selectedProfile = 'Service Overseer'
+		loginErrorMsg.style.opacity = 1;
+		
+    } else if (username.toLowerCase() === "territory".toLowerCase() && password === "map") {
+		navigationVue.buttons = [
+			{
+				"title": "BACK",
+				"function": "missingReportVue"
+			}
+		]
+		loginButton.innerText = 'Create Account'
+		document.getElementById("securityQuestions").style.display = '';
+        loginErrorMsg.innerHTML = 'You will need to create an account to continue:'
+		loginForm.username.value="";
+		loginForm.password.value="";
+		loginForm.confirmPassword.style.display = '';
+		loginForm.username.select()
+		loginButton.value = 'Create Account'
+		currentUser.accesses = ['ter']
+		currentUser.currentProfile = 'Territory Map'
+		configurationVue.reportEntry = 'ter'
+		configurationVue.selectedProfile = 'Territory Map'
 		loginErrorMsg.style.opacity = 1;
 		
     } else if (username.toLowerCase() === "lifeAndMinistry".toLowerCase() && password === "handler") {
@@ -437,6 +479,10 @@ DBWorker.onmessage = async function (msg) {
 							navigationVue.buttons = [{"title": "TERRITORY", "function": "territoryVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}]
 							configurationVue.reportEntry = 'so'
 							//congregationVue.display = true
+						} else if (currentUser.currentProfile == 'Territory Map') {
+							navigationVue.buttons = []
+							configurationVue.reportEntry = 'ter'
+							//congregationVue.display = true
 						} else if (currentUser.currentProfile == 'Life and Ministry Overseer') {
 							configurationVue.reportEntry = 'lmo'
 							navigationVue.buttons = [{"title": "SCHEDULE", "function": "scheduleVue"}, {"title": "PARTICIPANTS", "function": "allParticipantsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}]
@@ -461,6 +507,12 @@ DBWorker.onmessage = async function (msg) {
 							navigationVue.buttons = [{"title": "TERRITORY", "function": "territoryVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}]
 							configurationVue.reportEntry = 'so'
 							congregationVue.display = true
+						} else if (currentUser.currentProfile == 'Territory Map') {
+							navigationVue.buttons = []
+							configurationVue.reportEntry = 'ter'
+							territoryVue.display = true
+							DBWorker.postMessage({ storeName: 'territory', action: "readAll"});
+							return
 						} else if (currentUser.currentProfile == 'Life and Ministry Overseer') {
 							configurationVue.reportEntry = 'lmo'
 							navigationVue.buttons = [{"title": "SCHEDULE", "function": "scheduleVue"}, {"title": "PARTICIPANTS", "function": "allParticipantsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}]
@@ -577,9 +629,10 @@ DBWorker.onmessage = async function (msg) {
 					if (msgData.value.length !== 0) {
 						myTerritory = msgData.value
 						territoryVue.savedPolygons = msgData.value[0].value
+						if (currentUser.currentProfile == 'Territory Map') {
+							gotoView('territoryVue')
+						}
 					}
-					
-					
 				}
 				break;
 			case "done":
@@ -875,7 +928,11 @@ function processNavigation() {
 					this.displayDropdown = false
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
-					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}]
+					if (currentUser.currentProfile == 'Territory Map') {
+						this.buttons = []
+					} else {
+						this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}]
+					}
 				} else {
 					this.displayDropdown = false
 					allPublishersVue.request = false
@@ -943,6 +1000,11 @@ function processNavigation() {
 				allPublishersVue.request = false
 				allPublishersVue.transfer = false
 				navigationVue.displayDropdown = false
+				
+				if (currentUser.currentProfile == 'Territory Map') {
+					navigationVue.buttons = [{"title": "TERRITORY", "function": "territoryVue"}]
+				}
+
 				gotoView('configurationVue')
 			},
 			signOut() {
@@ -1213,7 +1275,11 @@ function processNavigation2() {
 					navigationVue.displayDropdown = false
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
-					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}]
+					if (currentUser.currentProfile == 'Territory Map') {
+						navigationVue.buttons = []
+					} else {
+						navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}]
+					}
 				} else {
 					navigationVue.displayDropdown = false
 					allPublishersVue.request = false
@@ -1284,6 +1350,11 @@ function processNavigation2() {
 				allPublishersVue.request = false
 				allPublishersVue.transfer = false
 				navigationVue.displayDropdown = false
+				
+				if (currentUser.currentProfile == 'Territory Map') {
+					navigationVue.buttons = [{"title": "TERRITORY", "function": "territoryVue"}]
+				}
+
 				gotoView('configurationVue')
 			},
 			signOut() {
@@ -1419,7 +1490,7 @@ function setDrawType(drawType) {
 			lastDateCompleted: '',
 		});
 		DBWorker.postMessage({ storeName: 'territory', action: "save", value: [{"name": "FeatureCollection", "value": territoryVue.savedPolygons}]});
-		document.querySelectorAll('.custom-control button')[0].outerHTML = '<button style="margin:0;padding:0 3px"><i class="fas fa-pen"></i></button>'
+		document.querySelectorAll('.custom-control button')[1].outerHTML = '<button style="margin:0;padding:0 3px"><i class="fas fa-pen"></i></button>'
 		stopDraw()
 	});
 
@@ -1840,11 +1911,11 @@ async function gotoView(button) {
                 }),
                 new ol.control.ScaleLine(),
                 new ol.control.FullScreen(),
-            ],
+            ],/*
             view: new ol.View({
 				center: ol.proj.fromLonLat([-13.239936, 8.468872]),
 				zoom: 14
-			})
+			})*/
 		});
 
 		await shortWait()
@@ -1875,7 +1946,7 @@ async function gotoView(button) {
 
 		savedFeaturesSource = new ol.source.Vector();
 
-		redrawPolygons(territoryVue.savedPolygons)
+		territoryVue.savedPolygons.sort((a, b) => collator.compare(a.number, b.number))
 
 		await shortWait()
 		await shortWait()
@@ -1886,9 +1957,7 @@ async function gotoView(button) {
 		document.querySelectorAll('.ol-control')[0].insertAdjacentElement('afterend',north)
 		north.addEventListener("click", () => {
 			map.getView().setRotation(0)
-		});	
-
-
+		});
 
 		const draw = document.createElement("div");
 		draw.innerHTML = `<div class="custom-control ol-control" style="pointer-events: auto;position: relative;margin-top: 30px;margin-left: 8px;font-size: 12px;padding-top: 1px;width: 22px;height:21px;"><button style="width: 20px;height:19px;margin:1px;padding:1px"><i class="fas fa-pen"></i></button></div>`
@@ -1908,6 +1977,10 @@ async function gotoView(button) {
 				stopDraw()
 			}
 		});
+
+		if (currentUser.currentProfile == 'Territory Map') {
+			draw.style.display = 'none'
+		}
 
 		const vertex = document.createElement("div");
 		vertex.innerHTML = `<div class="custom-control ol-control" style="pointer-events: auto;position: relative;margin-top: 0px;margin-left: 8px;font-size: 12px;padding: 0px;width: 22px;height: 20px;display:none"><button style="width: 20px;height: 20px;margin: 1px;padding: 1px;"><i class="fas fa-times"></i></button></div>`
@@ -1959,7 +2032,9 @@ async function gotoView(button) {
 		trash.insertAdjacentElement('afterend',currentLocation)
 		currentLocation.addEventListener("click", () => {
 			showLocation()
-		});	
+		});
+
+		focusOnSpecificPolygon(territoryVue.savedPolygons[0].coordinates[0])
 	}
 }
 
@@ -2007,13 +2082,17 @@ document.querySelector('#territory').innerHTML = `<template>
 		<h2 class="w3-center">TERRITORY</h2>	
 		<section>
 			<div id="map"></div>
+			<button v-if="currentProfile() !== 'Territory Map'" class="w3-button w3-black filterBtn" style="margin:5px 5px 10px 5px" @click="redrawPolygons($event.target)">All</button>
+			<button v-if="currentProfile() !== 'Territory Map'" class="w3-button w3-black filterBtn" style="margin:5px 5px 10px 5px" @click="redrawPolygons($event.target)">Assigned</button>
+			<button v-if="currentProfile() !== 'Territory Map'" class="w3-button w3-black filterBtn" style="margin:5px 5px 10px 5px; display:none" @click="redrawPolygons($event.target)">Unassigned</button>
 			<div style="margin-top:20px">
 				<div class="w3-row-padding w3-grayscale" style="margin-top:4px">
 					<div v-for="(territory, count) in savedPolygons" :key="territory + '|' + count" style="cursor:pointer" class="w3-col l2 m4 w3-margin-bottom">
 						<div :class="mode()">
 							<div style="display:flex; justify-content:space-between" @click="territoryDetail($event.target, territory, count)">
 								<h5 style="padding:10px 15px;margin:0">{{ count + 1 }} | {{ territory.number }}</h5>
-								<i class="fas fa-pencil-alt" style="text-align: right;margin:20px;padding:0" title="Edit"></i>
+								<p v-if="currentProfile() !== 'Territory Map'" style="text-align: right;margin:20px;padding:0"><i class="fas fa-paper-plane" style="text-align: right;margin:5px" title="Send"></i>
+								<i class="fas fa-pencil-alt" title="Edit"></i></p>
 							</div>
 							
 							<div class="w3-container main" style="padding:0 15px 10px 15px">
@@ -2064,20 +2143,47 @@ function processTerritory() {
             },
         },
         methods: {
-			territoryDetail(item, territory, count) {
+			async territoryDetail(item, territory, count) {
 				focusOnSpecificPolygon(territory.coordinates[0])
 				selectedPolygon = count
-				if (item.tagName !== 'I') { return }
-				if (item.parentNode.parentNode.querySelector('.main').style.display == '') {
-					item.parentNode.parentNode.querySelector('.main').style.display = 'none'
-                    item.parentNode.parentNode.querySelector('.detail').style.display = ''
+				//console.log(item.className)
+				if (item.className == 'fas fa-pencil-alt') {
+					item.parentNode.parentNode.parentNode.querySelector('.main').style.display = 'none'
+					item.parentNode.parentNode.parentNode.querySelector('.detail').style.display = ''
 					item.className = 'fas fa-times'
 					item.title = 'Close'
-                } else {
-					item.parentNode.parentNode.querySelector('.main').style.display = ''
-                    item.parentNode.parentNode.querySelector('.detail').style.display = 'none'
+				} else if (item.className == 'fas fa-times') {
+					item.parentNode.parentNode.parentNode.querySelector('.main').style.display = ''
+					item.parentNode.parentNode.parentNode.querySelector('.detail').style.display = 'none'
 					item.className = 'fas fa-pencil-alt'
 					item.title = 'Edit'
+				} else if (item.className == 'fas fa-paper-plane') {
+					if (territory.assignedTo == '') {
+						alert('Please enter name of Publisher Assigned')
+						return
+					}
+					console.log('Send Message')
+
+					var a = document.createElement("a");
+					var file;
+
+					await shortWait()
+					await shortWait()
+
+					territory.dateAssigned = new Date()
+
+					file = new Blob([JSON.stringify({"exportType":"territoryMap", "territory":[territory]})], {type: 'text/plain'});
+					
+					await shortWait()
+					await shortWait()
+
+					a.href = URL.createObjectURL(file);
+				
+					a.download = 'congData-' + new Date() + '.txt';
+					a.click();
+
+					DBWorker.postMessage({ storeName: 'territory', action: "save", value: [{"name": "FeatureCollection", "value": territoryVue.savedPolygons}]});
+
 				}
 			},
 			handleInputChange(event, territory, property) {
@@ -2095,18 +2201,11 @@ function processTerritory() {
 			mode() {
 				return mode// + ' w3-input w3-border'
 			},
-			saveDrawing() {
-				// Serialize drawn layers to GeoJSON
-				var geoJsonData = [];
-				
-				drawnLayers.forEach(function (layer) {
-					// Convert Leaflet layer to GeoJSON format
-					var geoJsonFeature = layer.toGeoJSON();
-					geoJsonData.push(geoJsonFeature);
-				});
-
-				// Log or send GeoJSON data to a server
-				console.log('GeoJSON data:', geoJsonData);
+			redrawPolygons(event) {
+				var selectedView = event.innerHTML
+				if (selectedView == 'All') {
+					redrawPolygons(this.savedPolygons.slice(1))
+				}
 			},
 			updateDrawnFeaturesLayer() {
 				if (drawnFeaturesLayer) {
@@ -2128,7 +2227,10 @@ function processTerritory() {
 			  
 				// Create a new GeoJSON layer and add it to the map
 				drawnFeaturesLayer = L.geoJSON(territoryVue.geoJsonData).addTo(mymap);
-			}			
+			},
+			currentProfile() {
+				return configurationVue.currentProfile()
+			}		
         }
     })
 }
@@ -4911,7 +5013,7 @@ document.querySelector("#configuration").innerHTML = `<template>
 							<div class="main">
 								<button v-if="reportEntry == 'secretary'" :class="buttonMode('w3-button w3-dark-grey')" @click="publisherDetail($event.target)">New Publisher</button>
 								<button v-if="reportEntry == 'lmo'" :class="buttonMode('w3-button w3-dark-grey')" @click="publisherDetail($event.target)">New Enrolment</button>
-								<button :class="buttonMode('w3-button w3-dark-grey')" @click="backupData($event.target)">Backup</button>
+								<button v-if="reportEntry !== 'ter'" :class="buttonMode('w3-button w3-dark-grey')" @click="backupData($event.target)">Backup</button>
 								<button :class="buttonMode('w3-button w3-dark-grey')" @click="resetConfiguration($event.target)">Reset</button>
 							</div>
 							<div v-if="reportEntry == 'secretary'" class="detail" style="display:none; border: 1px solid gray; padding:5px">
@@ -5076,7 +5178,7 @@ function processConfiguration() {
 				}
 			},
 			profiles() {
-				return currentUser.accesses.map(elem=>elem.replace('secretary','Secretary').replace('sendReport','Secretary - Assistant').replace('lmo','Life and Ministry Overseer').replace('lma','Life and Ministry Assistant').replace('so','Service Overseer')).sort()
+				return currentUser.accesses.map(elem=>elem.replace('secretary','Secretary').replace('sendReport','Secretary - Assistant').replace('lmo','Life and Ministry Overseer').replace('lma','Life and Ministry Assistant').replace('so','Service Overseer').replace('ter','Territory Map')).sort()
 			},
 			elders() {
 				return allPublishersVue.publishers.filter(elem=>elem.privilege.includes('Elder')).map(elem=>elem.name)
@@ -5428,6 +5530,23 @@ Thanks a lot
 	
 						configured = true
 						gotoView('allAssignmentsVue')
+					} else if (exportType == 'territoryMap') {
+
+						territoryVue.savedPolygons = result.territory
+						console.log(result.territory)
+						
+						await shortWait()
+						await shortWait()
+
+						DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [{"name":"Congregation","congregationName":"","address":""}]});						
+						DBWorker.postMessage({ storeName: 'territory', action: "save", value: [{"name": "FeatureCollection", "value": territoryVue.savedPolygons}]});
+	
+						await shortWait()
+							
+						configured = true
+						
+						gotoView('territoryVue')
+
 					} else if (exportType == 'update') {
 
 						attendanceVue.currentMonth = result.attendance[0]
