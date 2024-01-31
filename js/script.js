@@ -1992,6 +1992,15 @@ async function gotoView(button) {
 		  geolocation.on('change:accuracyGeometry', function () {
 			accuracyFeature.setGeometry(geolocation.getAccuracyGeometry());
 		  });
+		  
+		  const iconStyle = new ol.style.Style({
+				image: new ol.style.Icon({
+					anchor: [-0.2, 0.5],
+					src: 'arrow.png',
+					rotateWithView: true,
+					rotation: geolocation.getHeading() || 0,
+				}),
+			})
 		
 		  const positionFeature = new ol.Feature();
 		  positionFeature.setStyle(
@@ -2006,18 +2015,15 @@ async function gotoView(button) {
 					  width: 2,
 					}),
 				}),
-				image: new ol.style.Icon({
-					anchor: [-0.2, 0.5],
-					src: 'arrow.png',
-					rotateWithView: true,
-					rotation: geolocation.getHeading() || 0,
-				})
-			})
+			}),
+			iconStyle,
 		  );
 		
 		  geolocation.on('change:position', function () {
 			const coordinates = geolocation.getPosition();
 			positionFeature.setGeometry(coordinates ? new ol.geom.Point(coordinates) : null);
+			const rotation = geolocation.getHeading() || 0;
+			iconStyle.getImage().setRotation(rotation);
 		  });
 		
 		  new ol.layer.Vector({
