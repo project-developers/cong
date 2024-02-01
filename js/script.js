@@ -4667,7 +4667,7 @@ function processSchedule() {
 				document.querySelector('#content').style.display = 'none'
 				document.querySelector('.weekSelector').style.display = 'none'
 
-				await assignmentSlip(assignmentsToSend.splice(0, 4))
+				assignmentSlip(assignmentsToSend.splice(0, 4))
 			},
 			displayMeetingDay(value) {
 				var date;
@@ -5649,6 +5649,7 @@ Thanks a lot
 						await shortWait()
 	
 						configurationVue.configuration = result.configuration
+						configurationVue.midweekMeetingDay = result.configuration.midweekMeetingDay
 						navigationVue.allGroups = result.configuration.fieldServiceGroups
 						allPublishersVue.publishers = result.data
 						allParticipantsVue.enrolments = result.lifeAndMinistryEnrolments
@@ -7250,6 +7251,10 @@ async function assignmentSlip(data, count) {
 	mainHall3.check()
 	mainHall4.check()
 
+	await shortWait()
+	await shortWait()
+	await shortWait()
+
 	var newPdfholder = document.createElement('div')
 	var newPdfbutton = document.createElement('button')
 	var newPdfViewer = document.createElement('iframe')
@@ -7264,11 +7269,20 @@ async function assignmentSlip(data, count) {
 	newPdfholder.appendChild(newPdfViewer)
 	document.getElementById("pdfViewer").appendChild(newPdfholder)
 
+	await shortWait()
+	await shortWait()
+	await shortWait()
+
+
 	downloadsArray.push([newPdfViewer.src, `Assignment Slips - ${count}`])
 
 	if (assignmentsToSend.length !== 0) {
 		count++
-		await assignmentSlip(assignmentsToSend.splice(0, 4), count)
+		await shortWait()
+		await shortWait()
+		await shortWait()
+
+		assignmentSlip(assignmentsToSend.splice(0, 4), count)
 	}
 
     //download(modifiedPdfBytes, publisher.name + ".pdf", "application/pdf");
