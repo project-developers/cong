@@ -2023,7 +2023,7 @@ async function getRouteToPolygon(startPoint, endPoint) {
 		// Style for the route
         const routeStyle = new ol.style.Style({
 			stroke: new ol.style.Stroke({
-			  color: '#0000FF',
+			  color: '#0f53ff',
 			  width: 4,
 			}),
 		});
@@ -2424,7 +2424,11 @@ function processTerritory() {
 					navigator.geolocation.getCurrentPosition(
 						function (position) {
 							var coordinates = [position.coords.longitude, position.coords.latitude];
-							getRouteToPolygon(coordinates, [(territory.coordinates[0][0][0] / 100000) + 1.5,(territory.coordinates[0][0][1] / 100000) - 1])
+							getRouteToPolygon(coordinates, 
+								territory.coordinates[0].map(coord =>
+									ol.proj.toLonLat(coord).map(val => parseFloat(val.toFixed(6)))
+								)[0]
+							)
 						}
 					)
 					return
