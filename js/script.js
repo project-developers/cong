@@ -2390,6 +2390,7 @@ document.querySelector('#territory').innerHTML = `<template>
 								<p v-if="currentProfile() !== 'Territory Map'" style="text-align: right;margin:20px;padding:0">
 									<i class="fas fa-route" style="text-align: right;margin:5px" title="Route To"></i>
 									<i class="fas fa-paper-plane" style="text-align: right;margin:5px" title="Send"></i>
+									<i class="fas fa-image" style="text-align: right;margin:5px" title="Download Picture"></i>
 									<i class="fas fa-pencil-alt" title="Edit"></i>
 								</p>
 							</div>
@@ -2498,9 +2499,20 @@ function processTerritory() {
 					a.click();
 
 					DBWorker.postMessage({ storeName: 'territory', action: "save", value: [{"name": "FeatureCollection", "value": territoryVue.savedPolygons}]});
+
+				} else if (item.className == 'fas fa-image') {
+					if (territory.assignedTo == '') {
+						alert('Please enter name of Publisher Assigned')
+						return
+					}
 					
+					const options = { year: 'numeric', month: 'long', day: 'numeric' };
+					territory.dateAssigned = new Date().toLocaleDateString('en-US', options);
+
 					downloadMap('Territory-' + territory.number + '-' + territory.locality)
 
+					DBWorker.postMessage({ storeName: 'territory', action: "save", value: [{"name": "FeatureCollection", "value": territoryVue.savedPolygons}]});
+					
 				}
 
 				if (modify) {
