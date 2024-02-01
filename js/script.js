@@ -1976,6 +1976,68 @@ async function showLocation() {
     }
 }
 
+async function getRouteToPolygon(startPoint, endPoint) {
+    // Example start and end points (longitude, latitude)
+    //const startPoint = [8.681495, 49.41461]; // Frankfurt, Germany
+    //const endPoint = [2.352222, 48.856613]; // Paris, France
+/*
+    // Create a vector source and layer for the route
+    const vectorSource = new ol.source.Vector();
+    const vectorLayer = new ol.layer.Vector({
+      source: vectorSource,
+    });
+
+    map.addLayer(vectorLayer);*/
+
+    // Add start and end point markers
+    const startMarker = new ol.Feature({
+      geometry: new ol.geom.Point(ol.proj.fromLonLat(startPoint)),
+    });
+
+    const endMarker = new ol.Feature({
+      geometry: new ol.geom.Point(ol.proj.fromLonLat(endPoint)),
+    });
+
+    vectorSource.addFeature(startMarker);
+    vectorSource.addFeature(endMarker);
+
+    // Create a route using OpenRouteService
+    const apiKey = '5b3ce3597851110001cf6248ae9629e18d1a42559a4ce52e63be67fc'; // Replace with your API key
+    const routeUrl = `https://api.openrouteservice.org/v2/directions/driving-car?api_key=${apiKey}&start=${startPoint[0]},${startPoint[1]}&end=${endPoint[0]},${endPoint[1]}`;
+
+    fetch(routeUrl)
+      .then((response) => response.json())
+      .then((data) => {
+        const routeCoordinates = data.features[0].geometry.coordinates;
+
+        // Create a line string geometry for the route
+        const routeGeometry = new ol.geom.LineString(
+          routeCoordinates.map((coord) => ol.proj.fromLonLat(coord))
+        );
+
+        // Create a feature for the route
+        const routeFeature = new ol.Feature({
+          geometry: routeGeometry,
+        });
+
+		// Style for the route
+        const routeStyle = new ol.style.Style({
+			stroke: new ol.style.Stroke({
+			  color: '#0000FF',
+			  width: 4,
+			}),
+		});
+		routeFeature.setStyle(routeStyle);
+  
+
+        vectorSource.addFeature(routeFeature);
+
+        // Fit the map to the extent of the route
+        map.getView().fit(routeGeometry.getExtent(), map.getSize());
+      })
+      .catch((error) => console.error('Error fetching route:', error));
+  }
+
 async function gotoView(button) {
 	congregationVue.display = false
 	allPublishersVue.display = false
@@ -2299,8 +2361,11 @@ document.querySelector('#territory').innerHTML = `<template>
 						<div :class="mode()">
 							<div style="display:flex; justify-content:space-between" @click="territoryDetail($event.target, territory, count)">
 								<h5 style="padding:10px 15px;margin:0">{{ count + 1 }} | {{ territory.number }}</h5>
-								<p v-if="currentProfile() !== 'Territory Map'" style="text-align: right;margin:20px;padding:0"><i class="fas fa-paper-plane" style="text-align: right;margin:5px" title="Send"></i>
-								<i class="fas fa-pencil-alt" title="Edit"></i></p>
+								<p v-if="currentProfile() !== 'Territory Map'" style="text-align: right;margin:20px;padding:0">
+									<i class="fas fa-route" style="text-align: right;margin:5px" title="Route To"></i>
+									<i class="fas fa-paper-plane" style="text-align: right;margin:5px" title="Send"></i>
+									<i class="fas fa-pencil-alt" title="Edit"></i>
+								</p>
 							</div>
 							
 							<div class="w3-container main" style="padding:0 15px 10px 15px">
@@ -2355,6 +2420,15 @@ function processTerritory() {
         },
         methods: {
 			async territoryDetail(item, territory, count) {
+				if (item.className == 'fas fa-route') {
+					navigator.geolocation.getCurrentPosition(
+						function (position) {
+							var coordinates = [position.coords.longitude, position.coords.latitude];
+							getRouteToPolygon(coordinates, [(territory.coordinates[0][0][0] / 100000) + 1.5,(territory.coordinates[0][0][1] / 100000) - 1])
+						}
+					)
+					return
+				}
 				focusOnSpecificPolygon(territory.coordinates[0])
 				selectedPolygon = count
 				//console.log(item.className)
@@ -2396,6 +2470,7 @@ function processTerritory() {
 					DBWorker.postMessage({ storeName: 'territory', action: "save", value: [{"name": "FeatureCollection", "value": territoryVue.savedPolygons}]});
 
 				}
+
 				if (modify) {
 					modify.setActive(true);
 				}
@@ -5539,6 +5614,8 @@ Thanks a lot
             async exportData() {
                 var a = document.createElement("a");
 				var file;
+				const options = { year: 'numeric', month: 'long', day: 'numeric' };
+
 				if (getSelectedOption(document.getElementsByName("exportGroup")) == 'all') {
 					file = new Blob([JSON.stringify({"exportType":"all", "configuration":configurationVue.configuration, "data":allPublishersVue.publishers, "territory":territoryVue.savedPolygons, "lifeAndMinistryEnrolments":allParticipantsVue.enrolments, "lifeAndMinistryAssignments":allAssignmentsVue.allAssignments, "attendance": [attendanceVue.currentMonth, attendanceVue.meetingAttendanceRecord]})], {type: 'text/plain'});
 					await shortWait()
@@ -5570,6 +5647,17 @@ Thanks a lot
 					await shortWait()
 
 					file = new Blob([JSON.stringify({"exportType":"reportEntry", "configuration":currentConfiguration, "data":currentData, "attendance": [attendanceVue.currentMonth, attendanceVue.meetingAttendanceRecord]})], {type: 'text/plain'});
+					await shortWait()
+					await shortWait()
+	
+					a.href = URL.createObjectURL(file);
+					
+					
+					
+					a.download = 'report-' + new Date().toLocaleDateString('en-US', options) + '.txt';
+					a.click();
+
+					return
 				} else if (getSelectedOption(document.getElementsByName("exportGroup")) == 'lifeAndMinistry') {
 					var currentConfiguration = JSON.parse(JSON.stringify(configurationVue.configuration))
 					await shortWait()
@@ -5614,7 +5702,7 @@ Thanks a lot
 
 				a.href = URL.createObjectURL(file);
 				
-				a.download = 'congData-' + new Date() + '.txt';
+				a.download = 'congData-' + new Date().toLocaleDateString('en-US', options) + '.txt';
 				a.click();
 				//window.indexedDB.deleteDatabase('congRec');
             },
