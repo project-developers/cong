@@ -148,6 +148,27 @@ loginButton.addEventListener("click", (e) => {
 				DBWorker.postMessage({ dbName: 'cong-' + currentUser.username.toLowerCase(), action: "init"});
 				loginErrorMsg.style.opacity = 0;
 			}
+			if (currentUser.currentProfile == 'Territory Servant') {
+				console.log("You have successfully logged in.");
+				document.getElementById("securityQuestions").style.display = 'none';
+				loginForm.username.value = ''
+				loginForm.password.value = ''
+				loginForm.confirmPassword.value = ''
+				loginForm.confirmPassword.style.display = 'none';
+				currentUser.name = currentUser.username
+				hiddenElements.forEach(elem=>{
+					document.getElementById(`${elem}`).style.display = ''
+				})
+				logged = true
+				//reportEntry = true
+
+				allUsers.push(currentUser)
+
+				document.getElementById("home").style.display = 'none'
+				DBWorker.postMessage({ storeName: 'settings', action: "save", value: [currentUser]});
+				DBWorker.postMessage({ dbName: 'cong-' + currentUser.username.toLowerCase(), action: "init"});
+				loginErrorMsg.style.opacity = 0;
+			}
 			if (currentUser.currentProfile == 'Secretary') {
 				console.log("You have successfully logged in.");
 				document.getElementById("securityQuestions").style.display = 'none';
@@ -273,6 +294,27 @@ loginButton.addEventListener("click", (e) => {
 		currentUser.currentProfile = 'Territory Map'
 		configurationVue.reportEntry = 'ter'
 		configurationVue.selectedProfile = 'Territory Map'
+		loginErrorMsg.style.opacity = 1;
+		
+    } else if (username.toLowerCase() === "territory".toLowerCase() && password === "servant") {
+		navigationVue.buttons = [
+			{
+				"title": "BACK",
+				"function": "missingReportVue"
+			}
+		]
+		loginButton.innerText = 'Create Account'
+		document.getElementById("securityQuestions").style.display = '';
+        loginErrorMsg.innerHTML = 'You will need to create an account to continue:'
+		loginForm.username.value="";
+		loginForm.password.value="";
+		loginForm.confirmPassword.style.display = '';
+		loginForm.username.select()
+		loginButton.value = 'Create Account'
+		currentUser.accesses = ['terServant']
+		currentUser.currentProfile = 'Territory Servant'
+		configurationVue.reportEntry = 'terServant'
+		configurationVue.selectedProfile = 'Territory Servant'
 		loginErrorMsg.style.opacity = 1;
 		
     } else if (username.toLowerCase() === "lifeAndMinistry".toLowerCase() && password === "handler") {
@@ -483,6 +525,10 @@ DBWorker.onmessage = async function (msg) {
 							navigationVue.buttons = []
 							configurationVue.reportEntry = 'ter'
 							//congregationVue.display = true
+						} else if (currentUser.currentProfile == 'Territory Servant') {
+							navigationVue.buttons = []
+							configurationVue.reportEntry = 'terServant'
+							//congregationVue.display = true
 						} else if (currentUser.currentProfile == 'Life and Ministry Overseer') {
 							configurationVue.reportEntry = 'lmo'
 							navigationVue.buttons = [{"title": "SCHEDULE", "function": "scheduleVue"}, {"title": "PARTICIPANTS", "function": "allParticipantsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}]
@@ -511,8 +557,14 @@ DBWorker.onmessage = async function (msg) {
 							navigationVue.buttons = []
 							configurationVue.reportEntry = 'ter'
 							territoryVue.display = true
-							DBWorker.postMessage({ storeName: 'territory', action: "readAll"});
-							return
+							//DBWorker.postMessage({ storeName: 'territory', action: "readAll"});
+							//return
+						} else if (currentUser.currentProfile == 'Territory Servant') {
+							navigationVue.buttons = []
+							configurationVue.reportEntry = 'terServant'
+							territoryVue.display = true
+							//DBWorker.postMessage({ storeName: 'territory', action: "readAll"});
+							//return
 						} else if (currentUser.currentProfile == 'Life and Ministry Overseer') {
 							configurationVue.reportEntry = 'lmo'
 							navigationVue.buttons = [{"title": "SCHEDULE", "function": "scheduleVue"}, {"title": "PARTICIPANTS", "function": "allParticipantsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}]
@@ -629,7 +681,7 @@ DBWorker.onmessage = async function (msg) {
 					if (msgData.value.length !== 0) {
 						myTerritory = msgData.value
 						territoryVue.savedPolygons = msgData.value[0].value
-						if (currentUser.currentProfile == 'Territory Map') {
+						if (currentUser.currentProfile == 'Territory Map' || currentUser.currentProfile == 'Territory Servant') {
 							gotoView('territoryVue')
 						}
 					}
@@ -869,7 +921,11 @@ function processNavigation() {
 					this.displayDropdown = false
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
-					this.buttons = [{"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+					if (currentUser.currentProfile == 'Service Overseer') {
+						this.buttons = [{"title": "TERRITORY", "function": "territoryVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}]
+					} else {
+						this.buttons = [{"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+					}
 				} else if (button.innerHTML == "CONTACTS") {
 					this.displayDropdown = true
 					allPublishersVue.request = false
@@ -928,7 +984,7 @@ function processNavigation() {
 					this.displayDropdown = false
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
-					if (currentUser.currentProfile == 'Territory Map') {
+					if (currentUser.currentProfile == 'Territory Map' || currentUser.currentProfile == 'Territory Servant') {
 						this.buttons = []
 					} else {
 						this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}]
@@ -938,6 +994,13 @@ function processNavigation() {
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
 					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+				}
+
+				if (currentUser.currentProfile == 'Service Overseer') {
+					this.buttons = this.buttons.filter(elem=>elem.title !== "RECORDS" && elem.title !== "REPORTS")
+					if (button.innerHTML !== "TERRITORY" && this.buttons.findIndex(elem=>elem.title == "TERRITORY") == -1) {
+						this.buttons.splice(1, 0, {"title": "TERRITORY", "function": "territoryVue"})
+					}
 				}
 
 				if (currentUser.currentProfile == 'Secretary - Assistant') {
@@ -1001,7 +1064,7 @@ function processNavigation() {
 				allPublishersVue.transfer = false
 				navigationVue.displayDropdown = false
 				
-				if (currentUser.currentProfile == 'Territory Map') {
+				if (currentUser.currentProfile == 'Territory Map' || currentUser.currentProfile == 'Territory Servant') {
 					navigationVue.buttons = [{"title": "TERRITORY", "function": "territoryVue"}]
 				}
 
@@ -1216,7 +1279,11 @@ function processNavigation2() {
 					navigationVue.displayDropdown = false
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
-					navigationVue.buttons = [{"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+					if (currentUser.currentProfile == 'Service Overseer') {
+						navigationVue.buttons = [{"title": "TERRITORY", "function": "territoryVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}]
+					} else {
+						navigationVue.buttons = [{"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+					}
 				} else if (button.innerHTML == "CONTACTS") {
 					navigationVue.displayDropdown = true
 					allPublishersVue.request = false
@@ -1275,7 +1342,7 @@ function processNavigation2() {
 					navigationVue.displayDropdown = false
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
-					if (currentUser.currentProfile == 'Territory Map') {
+					if (currentUser.currentProfile == 'Territory Map' || currentUser.currentProfile == 'Territory Servant') {
 						navigationVue.buttons = []
 					} else {
 						navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}]
@@ -1285,6 +1352,13 @@ function processNavigation2() {
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
 					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+				}
+
+				if (currentUser.currentProfile == 'Service Overseer') {
+					navigationVue.buttons = navigationVue.buttons.filter(elem=>elem.title !== "RECORDS" && elem.title !== "REPORTS")
+					if (button.innerHTML !== "TERRITORY" && navigationVue.buttons.findIndex(elem=>elem.title == "TERRITORY") == -1) {
+						navigationVue.buttons.splice(1, 0, {"title": "TERRITORY", "function": "territoryVue"})
+					}
 				}
 
 				if (currentUser.currentProfile == 'Secretary - Assistant') {
@@ -1351,7 +1425,7 @@ function processNavigation2() {
 				allPublishersVue.transfer = false
 				navigationVue.displayDropdown = false
 				
-				if (currentUser.currentProfile == 'Territory Map') {
+				if (currentUser.currentProfile == 'Territory Map' || currentUser.currentProfile == 'Territory Servant') {
 					navigationVue.buttons = [{"title": "TERRITORY", "function": "territoryVue"}]
 				}
 
@@ -1782,6 +1856,37 @@ function dropPin(coordinates) {
 	pinLayer.getSource().addFeature(pinFeature);
 }
 
+// Function to go to the current geolocation position
+function goToCurrentPosition() {
+	const view = new ol.View({
+		center: [0, 0],
+		zoom: 2,
+	  });
+    const coordinates = geolocation.getPosition();
+    if (coordinates) {
+      view.animate({
+        center: ol.proj.fromLonLat(coordinates),
+        duration: 1000,
+        zoom: 15,
+      });
+    }
+  }
+
+  // Function to go to a random position on the map
+  function goToRandomPosition() {
+	const view = new ol.View({
+		center: [0, 0],
+		zoom: 2,
+	  });
+    const randomLon = Math.random() * 360 - 180;
+    const randomLat = Math.random() * 180 - 90;
+    view.animate({
+      center: ol.proj.fromLonLat([randomLon, randomLat]),
+      duration: 1000,
+      zoom: 10,
+    });
+  }
+
 // Function to show user's location and direction
 async function showLocation() {
 	if (!draw) {
@@ -1824,7 +1929,7 @@ async function showLocation() {
 
             rotationFeature.setStyle(new ol.style.Style({
 				image: new ol.style.Icon({
-					anchor: [-0.2, 0.5],
+					anchor: [-0.35, 0.5],
 					src: 'arrow.png',
 					rotateWithView: true,
 					rotation: position.coords.heading
@@ -1975,11 +2080,12 @@ async function gotoView(button) {
 		  });
 		
 		  geolocation.on('change', function () {
+			/*
 			el('accuracy').innerText = geolocation.getAccuracy() + ' [m]';
 			el('altitude').innerText = geolocation.getAltitude() + ' [m]';
 			el('altitudeAccuracy').innerText = geolocation.getAltitudeAccuracy() + ' [m]';
 			el('heading').innerText = geolocation.getHeading() + ' [rad]';
-			el('speed').innerText = geolocation.getSpeed() + ' [m/s]';
+			el('speed').innerText = geolocation.getSpeed() + ' [m/s]';*/
 		  });
 		
 		  geolocation.on('error', function (error) {
@@ -1993,17 +2099,17 @@ async function gotoView(button) {
 			accuracyFeature.setGeometry(geolocation.getAccuracyGeometry());
 		  });
 		  
-		  const iconStyle = new ol.style.Style({
-				image: new ol.style.Icon({
-					anchor: [-0.3, 0.5],
-					src: 'arrow.png',
-					rotateWithView: true,
-					rotation: geolocation.getHeading() || 0,
-				}),
-			})
+		const iconStyle = new ol.style.Style({
+			image: new ol.style.Icon({
+				anchor: [-0.35, 0.5],
+				src: 'arrow.png',
+				rotateWithView: true,
+				rotation: geolocation.getHeading() || 0,
+			}),
+		})
 		
-		  const positionFeature = new ol.Feature();
-		  positionFeature.setStyle([
+		const positionFeature = new ol.Feature();
+		positionFeature.setStyle([
 			new ol.style.Style({
 				image: new ol.style.Circle({
 					radius: 6,
@@ -2059,9 +2165,7 @@ async function gotoView(button) {
 			}
 		});
 
-		if (currentUser.currentProfile == 'Territory Map') {
-			draw.style.display = 'none'
-		}
+		
 
 		const vertex = document.createElement("div");
 		vertex.innerHTML = `<div class="custom-control ol-control" style="pointer-events: auto;position: relative;margin-top: 0px;margin-left: 8px;font-size: 12px;padding: 0px;width: 22px;height: 20px;display:none"><button style="width: 20px;height: 20px;margin: 1px;padding: 1px;"><i class="fas fa-times"></i></button></div>`
@@ -2080,6 +2184,7 @@ async function gotoView(button) {
 			}
 		});
 
+		
 		const trash = document.createElement("div");
 		trash.innerHTML = `<div class="custom-control ol-control" style="pointer-events: auto;position: relative;margin-top: 0px;margin-left: 8px;font-size: 12px;padding: 0px;width: 22px;height: 22px;display:none"><button style="width: 20px;height: 20px;margin:1px;padding:1px"><i class="fas fa-trash"></i></button></div>`
 		vertex.insertAdjacentElement('afterend',trash)
@@ -2107,13 +2212,19 @@ async function gotoView(button) {
 			}
 		});
 
-
+		
 		const currentLocation = document.createElement("div");
 		currentLocation.innerHTML = `<div class="custom-control ol-control" style="pointer-events: auto;position: relative;margin-top: 50px;margin-left: 8px;font-size: 12px;padding: 0;width: 22px;height: 22px;"><button style="width: 20px;height: 20px;margin: 1px;padding: 1px;x"><i class="fas fa-crosshairs"></i></button></div>`
 		trash.insertAdjacentElement('afterend',currentLocation)
 		currentLocation.addEventListener("click", () => {
 			showLocation()
 		});
+
+		if (currentUser.currentProfile == 'Territory Map') {
+			draw.style.display = 'none'
+			currentLocation.querySelector('div').style.marginTop = '150px'			
+		}
+
 
 		focusOnSpecificPolygon(territoryVue.savedPolygons[0].coordinates[0])
 	}
@@ -2163,13 +2274,24 @@ document.querySelector('#territory').innerHTML = `<template>
 		<h2 class="w3-center">TERRITORY</h2>	
 		<section>
 			<div id="map"></div>
+			
 			<div style="display:flex;">
 				<select v-if="currentProfile() !== 'Territory Map'" v-model="selectedView" @change="redrawPolygons()" :class="inputMode('view w3-input')" style="width:150px;margin:15px 5px">
 					<option v-for="view in views" :value="view">{{ view }}</option>
 				</select>
-				<select v-if="currentProfile() !== 'Territory Map'" v-model="selectedLocality" :class="inputMode('locality w3-input')" style="width:250px;margin:15px 5px">
+				<select v-if="currentProfile() !== 'Territory Map'" v-model="selectedLocality" @change="redrawPolygons()" :class="inputMode('locality w3-input')" style="width:250px;margin:15px 5px">
 					<option v-for="locality in localities()" :value="locality">{{ locality }}</option>
 				</select>
+				<label><input type="checkbox" style="margin:15px 5px" id="track"> Track</label>
+				<div style="display: none;">
+				
+				<div id="info" style="display: none;"></div>
+				<div>Accuracy: <span id="accuracy"></span></div>
+				<div>Altitude: <span id="altitude"></span></div>
+				<div>Altitude Accuracy: <span id="altitudeAccuracy"></span></div>
+				<div>Heading: <span id="heading"></span></div>
+				<div>Speed: <span id="speed"></span></div>
+				</div>
 			</div>
 			<div style="margin-top:20px">
 				<div class="w3-row-padding w3-grayscale" style="margin-top:4px">
@@ -2201,14 +2323,6 @@ document.querySelector('#territory').innerHTML = `<template>
 				</div>
 				
 			</div>
-			<div id="info" style="display: none;"></div>
-			<label><input type="checkbox" id="track"> Track</label>
-			<div id="info" style="display: none;"></div>
-			<div>Accuracy: <span id="accuracy"></span></div>
-			<div>Altitude: <span id="altitude"></span></div>
-			<div>Altitude Accuracy: <span id="altitudeAccuracy"></span></div>
-			<div>Heading: <span id="heading"></span></div>
-			<div>Speed: <span id="speed"></span></div>
 		</section>
 		
 	</div>
@@ -5301,10 +5415,19 @@ function processConfiguration() {
 				} else if (currentUser.currentProfile == 'Life and Ministry Assistant') {
 					navigationVue.buttons = [{"title": "ASSIGNMENTS", "function": "allAssignmentsVue"}, {"title": "SCHEDULE", "function": "scheduleVue"}, {"title": "PARTICIPANTS", "function": "allParticipantsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}]
 					this.reportEntry = 'lma'
+				} else if (currentUser.currentProfile == 'Service Overseer') {
+					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "TERRITORY", "function": "territoryVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}]
+					this.reportEntry = 'so'
+				} else if (currentUser.currentProfile == 'Territory Map' || currentUser.currentProfile == 'Territory Servant') {
+					navigationVue.buttons = [{"title": "TERRITORY", "function": "territoryVue"}]
+					this.reportEntry = 'ter'
+				} else if (currentUser.currentProfile == 'Territory Servant') {
+					navigationVue.buttons = [{"title": "TERRITORY", "function": "territoryVue"}]
+					this.reportEntry = 'terServant'
 				}
 			},
 			profiles() {
-				return currentUser.accesses.map(elem=>elem.replace('secretary','Secretary').replace('sendReport','Secretary - Assistant').replace('lmo','Life and Ministry Overseer').replace('lma','Life and Ministry Assistant').replace('so','Service Overseer').replace('ter','Territory Map')).sort()
+				return currentUser.accesses.map(elem=>elem.replace('secretary','Secretary').replace('sendReport','Secretary - Assistant').replace('lmo','Life and Ministry Overseer').replace('lma','Life and Ministry Assistant').replace('so','Service Overseer').replace('terServant','Territory Servant').replace('ter','Territory Map')).sort()
 			},
 			elders() {
 				return allPublishersVue.publishers.filter(elem=>elem.privilege.includes('Elder')).map(elem=>elem.name)
