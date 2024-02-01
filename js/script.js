@@ -2387,11 +2387,11 @@ document.querySelector('#territory').innerHTML = `<template>
 						<div :class="mode()">
 							<div style="display:flex; justify-content:space-between" @click="territoryDetail($event.target, territory, count)">
 								<h5 style="padding:10px 15px;margin:0">{{ count + 1 }} | {{ territory.number }}</h5>
-								<p v-if="currentProfile() !== 'Territory Map'" style="text-align: right;margin:20px;padding:0">
+								<p style="text-align: right;margin:20px;padding:0">
 									<i class="fas fa-route" style="text-align: right;margin:5px" title="Route To"></i>
 									<i class="fas fa-paper-plane" style="text-align: right;margin:5px" title="Send"></i>
 									<i class="fas fa-image" style="text-align: right;margin:5px" title="Download Picture"></i>
-									<i class="fas fa-pencil-alt" title="Edit"></i>
+									<i v-if="currentProfile() !== 'Territory Map'" class="fas fa-pencil-alt" title="Edit"></i>
 								</p>
 							</div>
 							
