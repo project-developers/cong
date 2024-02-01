@@ -2036,7 +2036,33 @@ async function getRouteToPolygon(startPoint, endPoint) {
         map.getView().fit(routeGeometry.getExtent(), map.getSize());
       })
       .catch((error) => console.error('Error fetching route:', error));
-  }
+}
+
+// Function to download the map as an image
+function downloadMap(fileName) {
+    // Get the map's canvas element
+    const mapCanvas = document.getElementById('map').getElementsByTagName('canvas')[0];
+
+    // Create a new canvas to avoid modifying the original map canvas
+    const downloadCanvas = document.createElement('canvas');
+    downloadCanvas.width = mapCanvas.width;
+    downloadCanvas.height = mapCanvas.height;
+    const downloadContext = downloadCanvas.getContext('2d');
+
+    // Draw the map canvas onto the download canvas
+    downloadContext.drawImage(mapCanvas, 0, 0);
+
+    // Create a data URL from the download canvas
+    const dataUrl = downloadCanvas.toDataURL('image/png');
+
+    // Create a temporary anchor element to trigger the download
+    const downloadLink = document.createElement('a');
+    downloadLink.href = dataUrl;
+    downloadLink.download = fileName + '.png';
+
+    // Trigger a click on the anchor element to initiate the download
+    downloadLink.click();
+}
 
 async function gotoView(button) {
 	congregationVue.display = false
@@ -2451,7 +2477,7 @@ function processTerritory() {
 						alert('Please enter name of Publisher Assigned')
 						return
 					}
-					console.log('Send Message')
+					//console.log('Send Message')
 
 					var a = document.createElement("a");
 					var file;
@@ -2472,6 +2498,8 @@ function processTerritory() {
 					a.click();
 
 					DBWorker.postMessage({ storeName: 'territory', action: "save", value: [{"name": "FeatureCollection", "value": territoryVue.savedPolygons}]});
+					
+					downloadMap('Territory-' + territory.number + '-' + territory.locality)
 
 				}
 
