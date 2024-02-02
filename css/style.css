@@ -164,7 +164,7 @@ th, td {
 .schedulePreview td {
   margin:0 5px;
   padding:0 5px;
-  /*border: none;*/
+  border: none;
 }
 
 .guideText {
