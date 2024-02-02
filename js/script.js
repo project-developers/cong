@@ -380,7 +380,7 @@ loginButton.addEventListener("click", (e) => {
 		configurationVue.selectedProfile = 'Secretary - Assistant'
 		loginErrorMsg.style.opacity = 1;
 		
-    } else if (username.toLowerCase() === "reporter".toLowerCase() && password === "super") {
+    } else if (username.toLowerCase() === "reporter".toLowerCase() && password === "sec") {
 		navigationVue.buttons = [
 			{
 				"title": "BACK",
@@ -5319,7 +5319,7 @@ document.querySelector("#configuration").innerHTML = `<template>
 						</p>
 						<p v-if="reportEntry == 'secretary' && reset !== true"><label>Coordinator:</label></p>
 						<p v-if="reportEntry == 'secretary' && reset !== true && elders().length !== 0">
-							<select @change="saveConfiguration()" :class="inputMode('cboe w3-input')" value="MACFOY Ernest">
+							<select @change="saveConfiguration()" :class="inputMode('cboe w3-input')" :value="configuration.cboe">
 								<option v-if="!elders().includes(configuration.cboe)" value="">Select Coordinator</option>
 								<option v-if="elders().includes(configuration.cboe)" :value="configuration.cboe">{{ configuration.cboe }}</option>
 								<option v-for="elder in elders().filter(elem=>elem !== configuration.cboe)" :value="elder">{{ elder }}</option>
@@ -5975,7 +5975,7 @@ Thanks a lot
 
                 allGroups.sort()
 
-				var currentConfiguration = { "name": "Congregation", "congregationName": document.querySelector('.name').value, "address": document.querySelector('.address').value, "email": document.querySelector('.email').value, "fieldServiceGroups": allGroups, "cboe": document.querySelector('.cboe').value, "sec": document.querySelector('.sec').value, "so":  document.querySelector('.so').value, "currentProfile": currentUser.currentProfile }
+				var currentConfiguration = { "name": "Congregation", "congregationName": document.querySelector('.name').value, "address": document.querySelector('.address').value, "email": document.querySelector('.email').value, "fieldServiceGroups": allGroups, "cboe": document.querySelector('.cboe') ? document.querySelector('.cboe').value : '', "sec": document.querySelector('.sec') ? document.querySelector('.sec').value : '', "so":  document.querySelector('.so') ? document.querySelector('.so').value : '', "currentProfile": currentUser.currentProfile }
                 DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [currentConfiguration]});
                 configured = true
             },
