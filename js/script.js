@@ -582,6 +582,7 @@ DBWorker.onmessage = async function (msg) {
 						configurationVue.configuration = msgData.value.filter(elem=>elem.name == "Congregation")[0]
 						navigationVue.allGroups = msgData.value.filter(elem=>elem.name == "Congregation")[0].fieldServiceGroups
 						configurationVue.midweekMeetingDay = configurationVue.configuration.midweekMeetingDay
+						configurationVue.midweekMeetingTime = configurationVue.configuration.midweekMeetingTime
 						DBWorker.postMessage({ storeName: 'data', action: "readAll"});
 						DBWorker.postMessage({ storeName: 'attendance', action: "readAll"});
 						DBWorker.postMessage({ storeName: 'files', action: "readAll"});
@@ -4637,13 +4638,13 @@ document.querySelector('#schedule').innerHTML = `<template>
 						</table>
 						<table style="margin-bottom:0;margin-top:0">
 							<tr>
-								<td class="guideText">0:00</td>
+								<td class="guideText">{{ startTime(0) }}</td>
 								<td colspan="2">{{ week.parts[1].meetingPart.split('|')[0].trim() }}</td>
 								<td style="text-align:right" class="guideText">Prea:</td>						
 								<td>{{ week.parts[1].assignedTo }}</td>						
 							</tr>
 							<tr>
-								<td class="guideText">0:00</td>
+								<td class="guideText">{{ startTime(1) }}</td>
 								<td colspan="2">{{ week.parts[1].meetingPart.split('|')[1].trim() }}</td>				
 							</tr>
 						</table>
@@ -4654,7 +4655,7 @@ document.querySelector('#schedule').innerHTML = `<template>
 								<td class="guideText">Men Ɔl</td>						
 							</tr>
 							<tr v-for="(part, count) in week.parts.filter(elem=>elem.section == week.parts[1].section).slice(2)">
-								<td class="guideText">0:00</td>
+								<td class="guideText">{{ startTime(count + 2)}}</td>
 								<td v-if="part.assignTo !== 'male'" colspan="3">{{ part.meetingPart }}</td>
 								<td v-if="part.assignTo == 'male'">{{ part.meetingPart }}</td>
 								<td v-if="part.assignTo == 'male'" class="guideText">Studɛnt:</td>
@@ -4669,7 +4670,7 @@ document.querySelector('#schedule').innerHTML = `<template>
 								<td class="guideText">Men Ɔl</td>						
 							</tr>
 							<tr v-for="(part, count) in week.parts.filter(elem=>elem.section == week.parts[5].section)">
-								<td class="guideText">0:00</td>
+								<td class="guideText">{{ startTime(count + 5, part, week.parts.filter(elem=>elem.section == week.parts[5].section))}}</td>
 								<td>{{ part.meetingPart }}</td>
 								<td v-if="part.assistant" style="text-align:right" class="guideText">Studɛnt/Pɔsin we de ɛp:</td>
 								<td v-if="!part.assistant" style="text-align:right" class="guideText">Studɛnt:</td>
@@ -4683,23 +4684,23 @@ document.querySelector('#schedule').innerHTML = `<template>
 								<td colspan="2"></td>
 							</tr>
 							<tr>
-								<td class="guideText">0:00</td>
+								<td class="guideText">{{ startTime(6) }}</td>
 								<td>{{ week.parts.filter(elem=>!elem.assignTo)[0].meetingPart }}</td>				
 							</tr>
 							<tr v-for="(part, count) in week.parts.slice(week.parts.findIndex(elem=>!elem.assignTo) + 1).slice(0, -1)">
-								<td class="guideText">0:00</td>
+								<td class="guideText">{{ startTime(count + 7, part, week.parts.slice(week.parts.findIndex(elem=>!elem.assignTo) + 1).slice(0, -1))}}</td>
 								<td v-if="part.assignTo == 'cbs'">{{ part.meetingPart }}</td>
 								<td v-if="part.assignTo !== 'cbs'" colspan="2">{{ part.meetingPart }}</td>
 								<td v-if="part.assignTo == 'cbs'" style="text-align:right" class="guideText">Kɔndɔktɔ/Rida:</td>
 								<td>{{ part.assignedTo }}{{ part.assistant ? ' / ' + part.assistant : '' }}</td>				
 							</tr>
 							<tr>
-								<td class="guideText">0:00</td>
+								<td class="guideText">{{ startTime(7) }}</td>
 								<td colspan="2">{{ week.parts.slice(week.parts.findIndex(elem=>!elem.assignTo) + 1).slice(-1)[0].meetingPart.split('|')[0].trim() }}</td>
 								<td></td>						
 							</tr>
 							<tr>
-								<td class="guideText">0:00</td>
+								<td class="guideText">{{ startTime(8) }}</td>
 								<td>{{ week.parts.slice(week.parts.findIndex(elem=>!elem.assignTo) + 1).slice(-1)[0].meetingPart.split('|')[1].trim() }}</td>
 								<td style="text-align:right" class="guideText">Prea:</td>
 								<td>{{ week.parts.slice(week.parts.findIndex(elem=>!elem.assignTo) + 1).slice(-1)[0].assignedTo }}</td>				
@@ -4788,6 +4789,63 @@ function processSchedule() {
 
 				assignmentSlip(assignmentsToSend.splice(0, 4))
 			},
+			startTime(count, part, assignments) {
+				// Parse the input value
+				const [hours, minutes] = configurationVue.midweekMeetingTime.split(':').map(Number);
+
+				// Convert to 12-hour format without AM/PM
+				const formattedHours = hours % 12 || 12;
+
+				if (count == 0) {
+					
+					// Construct the formatted time
+					return `${formattedHours}:${String(minutes).padStart(2, '0')}`;
+				} else if (count == 1) {
+					return this.convertMinutes((formattedHours * 60 ) + minutes + 5)
+				} else if (count == 2) {
+					return this.convertMinutes((formattedHours * 60 ) + minutes + 6)
+				} else if (count == 3) {
+					return this.convertMinutes((formattedHours * 60 ) + minutes + 16)
+				} else if (count == 4) {
+					return this.convertMinutes((formattedHours * 60 ) + minutes + 26)
+				} else if (count == 5) {
+					return this.convertMinutes((formattedHours * 60 ) + minutes + 31)
+				} else if (count > 5 && part && part.assignTo == 'all') {
+					return this.extractNumbersFromString(assignments[count - 6].meetingPart) > 5 ? this.convertMinutes((formattedHours * 60 ) + minutes + 31 + this.sumArray(assignments.slice(0, count - 5).map(elem=>this.extractNumbersFromString(elem.meetingPart)))) : this.convertMinutes((formattedHours * 60 ) + minutes + 31 + this.sumArray(assignments.slice(0, count - 5).map(elem=>this.extractNumbersFromString(elem.meetingPart) + 1)))
+				} else if (count == 6) {
+					return this.convertMinutes((formattedHours * 60 ) + minutes + 45)
+				} else if (count > 6 && part && (part.assignTo == 'appointed' || part.assignTo == 'cbs')) {
+					return this.convertMinutes((formattedHours * 60 ) + minutes + 51 + this.sumArray(assignments.slice(0, count - 7).map(elem=>this.extractNumbersFromString(elem.meetingPart))))
+				} else if (count == 7) {
+					return this.convertMinutes((formattedHours * 60 ) + minutes + 96)
+				} else if (count == 8) {
+					return this.convertMinutes((formattedHours * 60 ) + minutes + 99)
+				} else {
+					return ''
+				}
+			},
+			convertMinutes(minutes) {
+				const hours = Math.floor(minutes / 60);
+				const remainingMinutes = minutes % 60;
+			  
+				// Display the result
+				return `${hours}:${String(remainingMinutes).padStart(2, '0')}`;
+			},
+			extractNumbersFromString(text) {
+				// Use a regular expression to match numbers in the text
+				const numbers = text.match(/\d+/g);
+			  
+				// Convert matched numbers from strings to integers
+				const numericValues = numbers ? numbers.map(Number) : [];
+			  
+				return numericValues.slice(-1)[0];
+			},
+			sumArray(numbers) {
+				// Use the reduce method to calculate the sum
+				const total = numbers.reduce((accumulator, currentValue) => accumulator + currentValue, 0);
+			  
+				return total;
+			},		  
 			displayMeetingDay(value) {
 				var date;
 				if (value.split('–').length == 1) {
@@ -5352,6 +5410,10 @@ document.querySelector("#configuration").innerHTML = `<template>
 								<option v-for="day in weekdays" :value="day">{{ day }}</option>
 							</select></label>
 						</div>
+						<div v-if="reportEntry == 'secretary' || reportEntry == 'lmo'" id="midweekMeetingTime">
+							<label>Midweek Meeting Time: 
+							<input v-model="midweekMeetingTime" @change="setMeetingTime()" type="time" :class="inputMode('appearance w3-input')"></label>
+						</div>
 						<div v-if="profiles().length > 1" id="profile">
 							<label>Profile: 
 							<select v-model="selectedProfile" @change="setProfile($event.target)" :class="inputMode('appearance w3-input')">
@@ -5487,6 +5549,7 @@ function processConfiguration() {
 			publisher: {},
 			selectedProfile: '',
 			midweekMeetingDay: '',
+			midweekMeetingTime: '',
 			weekdays: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
 			hopes: ['Unbaptized Publisher', 'Other Sheep', 'Anointed'],
 			privileges: ['Elder', 'Ministerial Servant', 'Regular Pioneer', 'Special Pioneer', 'Field Missionary'],
@@ -5506,6 +5569,10 @@ function processConfiguration() {
         methods: {
 			setMeetingDay() {
 				this.configuration.midweekMeetingDay = this.midweekMeetingDay
+				DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [this.configuration]});
+			},
+			setMeetingTime() {
+				this.configuration.midweekMeetingTime = this.midweekMeetingTime
 				DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [this.configuration]});
 			},
 			currentProfile() {
@@ -5782,6 +5849,7 @@ Thanks a lot
 	
 						configurationVue.configuration = result.configuration
 						configurationVue.midweekMeetingDay = result.configuration.midweekMeetingDay
+						configurationVue.midweekMeetingTime = result.configuration.midweekMeetingTime
 						navigationVue.allGroups = result.configuration.fieldServiceGroups
 						allPublishersVue.publishers = result.data
 						allParticipantsVue.enrolments = result.lifeAndMinistryEnrolments
