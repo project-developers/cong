@@ -4184,7 +4184,17 @@ function processMissingReport() {
 			},
             message(event, group) {
 
-				console.log(event.parentNode.parentNode.parentNode, group)
+				var reportDetails = ``
+
+				event.parentNode.parentNode.parentNode.querySelectorAll('.main').forEach(elem=>{
+					reportDetails += elem.querySelector('h5').innerText
+					reportDetails += `
+`
+					reportDetails += elem.querySelector('p').innerText
+					reportDetails += `
+
+`
+				})
 				//return
 
 				var elementToCopy = event.parentNode.parentNode.parentNode;//document.getElementById('elementToCopy');
@@ -4209,11 +4219,14 @@ function processMissingReport() {
 
 				var recipient = ''//group.OverseerMail//'someone@example.com';
 				var subject = 'MISSING - ' + group + ' - ' + attendanceVue.cleanDate(new Date());
-				var body = `Dear Brother :
+				var body = `Dear Brothers:
 Please these are the reports still missing for your field service group.
-Thanks,
+Thanks a lot
 
+______________________
+${group.toUpperCase()}
 
+${reportDetails}
 `
 				
 				var mailtoLink = 'mailto:' + encodeURIComponent(recipient) +
