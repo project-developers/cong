@@ -4232,7 +4232,6 @@ ${group.toUpperCase()}
 __________________
 
 ${reportDetails}
-
 Thanks,
 ${configurationVue.selectedProfile == 'Secretary' ? toTitleCase(configurationVue.configuration.sec.split(' ')[0]) : toTitleCase(configurationVue.configuration.assistantSec.split(' ')[0])}
 
