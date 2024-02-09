@@ -583,6 +583,7 @@ DBWorker.onmessage = async function (msg) {
 						navigationVue.allGroups = msgData.value.filter(elem=>elem.name == "Congregation")[0].fieldServiceGroups
 						configurationVue.midweekMeetingDay = configurationVue.configuration.midweekMeetingDay
 						configurationVue.midweekMeetingTime = configurationVue.configuration.midweekMeetingTime
+						configurationVue.fieldServiceGroupDetails = configurationVue.configuration.fieldServiceGroupDetails ? configurationVue.configuration.fieldServiceGroupDetails : []
 						DBWorker.postMessage({ storeName: 'data', action: "readAll"});
 						DBWorker.postMessage({ storeName: 'attendance', action: "readAll"});
 						DBWorker.postMessage({ storeName: 'files', action: "readAll"});
@@ -3647,12 +3648,14 @@ document.querySelector('#contactInformation').innerHTML = `<template>
 						<div class="w3-container main" style="padding:0 15px 10px 15px">
 							<p style="margin:0" v-if="publisher.contactInformation.phoneNumber !== null" v-for="(number) in getEachNumber(publisher.contactInformation.phoneNumber)" @click="call(number)" title="Call Number"><i class="fas fa-phone"></i> {{ number }}</p>
 							<p style="margin:0" v-if="publisher.contactInformation.address !== null" title="Address"><i class="fas fa-home"></i> {{ publisher.contactInformation.address }}</p>
+							<p style="margin:0" v-if="publisher.contactInformation.email" title="Address"><i class="fas fa-envelope"></i> {{ publisher.contactInformation.email }}</p>
 							<p style="margin:0" v-if="publisher.emergencyContactInformation && publisher.emergencyContactInformation.name !== null" title="Emergency Contact"><i class="fas fa-user"></i> {{ publisher.emergencyContactInformation.name }}</p>
 							<p style="margin:0" v-if="publisher.emergencyContactInformation && publisher.emergencyContactInformation.phoneNumber !== null" v-for="(number) in getEachNumber(publisher.emergencyContactInformation.phoneNumber)" @click="call(number)" title="Call Emergency Number"><i class="fas fa-address-book"></i> {{ number }}</p>
 						</div>
 						<div class="detail" style="display:none; padding:0 15px 15px 15px">
 							<p><label>Phone Number: <input :class="inputMode('contactInformation w3-input')" type="tel" :value="publisher.contactInformation.phoneNumber" @change="handleInputChange($event.target, publisher, 'phoneNumber')"></label></p>
 							<p><label>Address:<input :class="inputMode('contactInformation w3-input')" type="text" :value="publisher.contactInformation.address" @change="handleInputChange($event.target, publisher, 'address')"></label></p>
+							<p><label>Email:<input :class="inputMode('contactInformation w3-input')" type="text" :value="publisher.contactInformation.email" @change="handleInputChange($event.target, publisher, 'email')"></label></p>
 							<p v-if="publisher.emergencyContactInformation"><label>Emergency Contact: <input :class="inputMode('emergencyContactInformation w3-input')" type="text" :value="publisher.emergencyContactInformation.name" @change="handleInputChange($event.target, publisher, 'name')"></label></p>
 							<p v-if="publisher.emergencyContactInformation"><label>Contact Number: <input :class="inputMode('emergencyContactInformation w3-input')" type="tel" :value="publisher.emergencyContactInformation.phoneNumber" @change="handleInputChange($event.target, publisher, 'phoneNumber')"></label></p>
 						</div>
@@ -4217,21 +4220,28 @@ function processMissingReport() {
 				// Clear the selection
 				window.getSelection().removeAllRanges();
 
-				var recipient = ''//group.OverseerMail//'someone@example.com';
+				const groupDetail = configurationVue.fieldServiceGroupDetails.filter(elem=>elem.name == group)[0]
+
+				var recipient = allPublishersVue.publishers.filter(elem=>elem.name == groupDetail.overseer)[0].contactInformation.email;
+				var cc = allPublishersVue.publishers.filter(elem=>elem.name == configurationVue.configuration.sec)[0].contactInformation.email + (allPublishersVue.publishers.filter(elem=>elem.name == groupDetail.assistant)[0].contactInformation.email ? ';' + allPublishersVue.publishers.filter(elem=>elem.name == groupDetail.assistant)[0].contactInformation.email : '');
 				var subject = 'MISSING REPORTS - ' + group + ' - ' + attendanceVue.cleanDate(new Date());
-				var body = `Dear Brothers,
+				var body = `Dear Brother ${toTitleCase(groupDetail.overseer.split(' ')[0])},
 Please these are the reports still missing for your field service group.
 __________________
 ${group.toUpperCase()}
+__________________
 
 ${reportDetails}
+
 Thanks,
+${configurationVue.selectedProfile == 'Secretary' ? toTitleCase(configurationVue.configuration.sec.split(' ')[0]) : toTitleCase(configurationVue.configuration.assistantSec.split(' ')[0])}
 
 
 `
 				
 				var mailtoLink = 'mailto:' + encodeURIComponent(recipient) +
-								'?subject=' + encodeURIComponent(subject) +
+								'?cc=' + encodeURIComponent(cc) +
+								'&subject=' + encodeURIComponent(subject) +
 								'&body=' + encodeURIComponent(body);
 
 				window.location.href = mailtoLink;
@@ -5389,6 +5399,22 @@ document.querySelector("#configuration").innerHTML = `<template>
 								<i style="color:#b02c07;padding:13px" onclick="removeRecord(this)" class="fa fa-minus"></i>
 							</span>
 						</p>
+						<p v-if="reportEntry == 'secretary' && reset !== true" v-for="(group, count) in configuration.fieldServiceGroups" :key="group + '|' + count">
+							<label>{{ group.toUpperCase() }}</label>
+							<br>
+							<label>Overseer:</label>
+							<select @change="saveConfiguration()" :class="inputMode('overseer w3-input')">
+								<option v-if="!appointed().includes(currentGroup(group).overseer)" value="">Select Overseer</option>
+								<option v-if="appointed().includes(currentGroup(group).overseer)" :value="currentGroup(group).overseer">{{ currentGroup(group).overseer }}</option>
+								<option v-for="elder in appointed().filter(elem=>elem !== currentGroup(group).overseer)" :value="elder">{{ elder }}</option>
+							</select>
+							<label>Assistant:</label>
+							<select @change="saveConfiguration()" :class="inputMode('assistant w3-input')">
+								<option v-if="!appointed().includes(currentGroup(group).assistant)" value="">Select Assistant</option>
+								<option v-if="appointed().includes(currentGroup(group).assistant)" :value="currentGroup(group).assistant">{{ currentGroup(group).assistant }}</option>
+								<option v-for="elder in appointed().filter(elem=>elem !== currentGroup(group).assistant)" :value="elder">{{ elder }}</option>
+							</select>
+						</p>
 						<p v-if="reportEntry == 'secretary' && reset !== true"><label>Coordinator:</label></p>
 						<p v-if="reportEntry == 'secretary' && reset !== true && elders().length !== 0">
 							<select @change="saveConfiguration()" :class="inputMode('cboe w3-input')" :value="configuration.cboe">
@@ -5403,6 +5429,14 @@ document.querySelector("#configuration").innerHTML = `<template>
 								<option v-if="!elders().includes(configuration.sec)" value="">Select Secretary</option>
 								<option v-if="elders().includes(configuration.sec)" :value="configuration.sec">{{ configuration.sec }}</option>
 								<option v-for="elder in elders().filter(elem=>elem !== configuration.sec)" :value="elder">{{ elder }}</option>
+							</select>
+						</p>
+						<p v-if="reportEntry == 'secretary' && reset !== true"><label>Assistant Secretary:</label></p>
+						<p v-if="reportEntry == 'secretary' && reset !== true && appointed().length !== 0">
+							<select @change="saveConfiguration()" :class="inputMode('assistantSec w3-input')">
+								<option v-if="!appointed().includes(configuration.assistantSec)" value="">Select Assistant Secretary</option>
+								<option v-if="appointed().includes(configuration.assistantSec)" :value="configuration.assistantSec">{{ configuration.assistantSec }}</option>
+								<option v-for="elder in appointed().filter(elem=>elem !== configuration.assistantSec)" :value="elder">{{ elder }}</option>
 							</select>
 						</p>
 						<p v-if="reportEntry == 'secretary' && reset !== true"><label>Service Overseer:</label></p>
@@ -5564,6 +5598,7 @@ function processConfiguration() {
 			selectedProfile: '',
 			midweekMeetingDay: '',
 			midweekMeetingTime: '',
+			fieldServiceGroupDetails: [],
 			weekdays: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
 			hopes: ['Unbaptized Publisher', 'Other Sheep', 'Anointed'],
 			privileges: ['Elder', 'Ministerial Servant', 'Regular Pioneer', 'Special Pioneer', 'Field Missionary'],
@@ -5591,6 +5626,14 @@ function processConfiguration() {
 			},
 			currentProfile() {
 				return currentUser.currentProfile
+			},
+			currentGroup(group) {
+				var detail = this.fieldServiceGroupDetails.filter(elem=>elem.name == group)
+				if (detail.length !== 0) {
+					return detail[0]
+				} else {
+					return {}
+				}
 			},
 			fileName(event) {
 				if (document.querySelector('#pdfFile') && document.querySelector('#pdfFile').files[0]) {
@@ -5631,6 +5674,9 @@ function processConfiguration() {
 			},
 			elders() {
 				return allPublishersVue.publishers.filter(elem=>elem.privilege.includes('Elder')).map(elem=>elem.name)
+			},
+			appointed() {
+				return allPublishersVue.publishers.filter(elem=>elem.privilege.includes('Elder') || elem.privilege.includes('Ministerial Servant')).map(elem=>elem.name)
 			},
 			inputMode(currentClass) {
 				return currentClass + ' ' + mode.replace('w3-card ','')
@@ -5753,7 +5799,8 @@ Thanks a lot
 					delete currentConfiguration.address
 					delete currentConfiguration.email
 					delete currentConfiguration.cboe
-					delete currentConfiguration.sec
+					//delete currentConfiguration.sec
+					//delete currentConfiguration.assistantSec
 					delete currentConfiguration.so
 					var currentData = JSON.parse(JSON.stringify(allPublishersVue.publishers.filter(elem=>elem.active == true || elem.reactivated == true)))
 					await shortWait()
@@ -5792,6 +5839,7 @@ Thanks a lot
 					delete currentConfiguration.email
 					delete currentConfiguration.cboe
 					delete currentConfiguration.sec
+					delete currentConfiguration.assistantSec
 					delete currentConfiguration.so
 					var currentData = JSON.parse(JSON.stringify(allPublishersVue.publishers.filter(elem=>elem.active == true)))
 					await shortWait()
@@ -5862,6 +5910,7 @@ Thanks a lot
 						await shortWait()
 	
 						configurationVue.configuration = result.configuration
+						configurationVue.fieldServiceGroupDetails = result.configuration.fieldServiceGroupDetails
 						configurationVue.midweekMeetingDay = result.configuration.midweekMeetingDay
 						configurationVue.midweekMeetingTime = result.configuration.midweekMeetingTime
 						navigationVue.allGroups = result.configuration.fieldServiceGroups
@@ -5914,6 +5963,7 @@ Thanks a lot
 						await shortWait()
 	
 						configurationVue.configuration = result.configuration
+						configurationVue.fieldServiceGroupDetails = result.configuration.fieldServiceGroupDetails
 						navigationVue.allGroups = result.configuration.fieldServiceGroups
 						allPublishersVue.publishers = result.data
 						
@@ -6013,30 +6063,51 @@ Thanks a lot
 
 					} else if (exportType == 'update') {
 
-						attendanceVue.currentMonth = result.attendance[0]
+						if (result.attendance) {
+							if (result.attendance[0]) {
+								attendanceVue.currentMonth = result.attendance[0]
+							}
+							if (result.attendance[1]) {
+								attendanceVue.meetingAttendanceRecord = result.attendance[1]
+							}
+							await shortWait()
+							await shortWait()
+							DBWorker.postMessage({ storeName: 'attendance', action: "save", value: [attendanceVue.currentMonth, attendanceVue.meetingAttendanceRecord]});	
+						}
+						
+						if (result.data) {
+							allPublishersVue.publishers.forEach(elem=>{
+								const currentReport = result.data.filter(ele=>ele.name === elem.name)
+								if (currentReport.length !== 0) {
+									elem.report = currentReport[0].report
+								}
+							})
+							await shortWait()
+							await shortWait()
+							await shortWait()
+							await shortWait()
+							DBWorker.postMessage({ storeName: 'data', action: "save", value: allPublishersVue.publishers});
+						}
 
-						allPublishersVue.publishers.forEach(elem=>{
-							elem.report = result.data.filter(ele=>ele.name === elem.name)[0].report
-						})
+						if (result.lifeAndMinistryEnrolments) {
+							allParticipantsVue.enrolments = result.lifeAndMinistryEnrolments
+							await shortWait()
+							await shortWait()
+							DBWorker.postMessage({ storeName: 'lifeAndMinistryEnrolments', action: "save", value: result.lifeAndMinistryEnrolments});
+						}
 
-						allParticipantsVue.enrolments = result.lifeAndMinistryEnrolments
-						allAssignmentsVue.allAssignments = result.lifeAndMinistryAssignments
+						if (result.lifeAndMinistryAssignments) {
+							allAssignmentsVue.allAssignments = result.lifeAndMinistryAssignments
+							await shortWait()
+							await shortWait()
+							DBWorker.postMessage({ storeName: 'lifeAndMinistryAssignments', action: "save", value: result.lifeAndMinistryAssignments});
+						}					
 
-						await shortWait()
-						await shortWait()
-	
-						DBWorker.postMessage({ storeName: 'data', action: "save", value: allPublishersVue.publishers});
-						DBWorker.postMessage({ storeName: 'attendance', action: "save", value: result.attendance});
-						DBWorker.postMessage({ storeName: 'lifeAndMinistryEnrolments', action: "save", value: result.lifeAndMinistryEnrolments});
-						DBWorker.postMessage({ storeName: 'lifeAndMinistryAssignments', action: "save", value: result.lifeAndMinistryAssignments});
-	
-						await shortWait()
-						await shortWait()
 						await shortWait()
 						await shortWait()
 		
 						configured = true
-						gotoView('contactInformationVue')
+						gotoView(navigationVue.buttons[0].function)
 						
 					}
 					
@@ -6057,7 +6128,29 @@ Thanks a lot
 
                 allGroups.sort()
 
-				var currentConfiguration = { "name": "Congregation", "congregationName": document.querySelector('.name').value, "address": document.querySelector('.address').value, "email": document.querySelector('.email').value, "fieldServiceGroups": allGroups, "cboe": document.querySelector('.cboe') ? document.querySelector('.cboe').value : '', "sec": document.querySelector('.sec') ? document.querySelector('.sec').value : '', "so":  document.querySelector('.so') ? document.querySelector('.so').value : '', "currentProfile": currentUser.currentProfile }
+				var overseers = []
+				document.querySelectorAll('.overseer').forEach(elem=>{
+					overseers.push(elem.value)
+				})
+
+				var assistants = []
+				document.querySelectorAll('.assistant').forEach(elem=>{
+					assistants.push(elem.value)
+				})
+
+				//var detail = []
+
+				for (let i = 0; i < this.configuration.fieldServiceGroups.length; i++) {
+					//console.log(i);
+					this.fieldServiceGroupDetails[i] = {name: this.configuration.fieldServiceGroups[i], overseer: overseers[i], assistant: assistants[i]}
+				}
+
+				/*
+				this.configuration.fieldServiceGroups.forEach(elem=>{
+					detail.push(elem.value)
+				})*/
+
+				var currentConfiguration = { "name": "Congregation", "congregationName": document.querySelector('.name').value, "address": document.querySelector('.address').value, "email": document.querySelector('.email').value, "fieldServiceGroups": allGroups, "fieldServiceGroupDetails": this.fieldServiceGroupDetails, "cboe": document.querySelector('.cboe') ? document.querySelector('.cboe').value : '', "sec": document.querySelector('.sec') ? document.querySelector('.sec').value : '', "assistantSec": document.querySelector('.assistantSec') ? document.querySelector('.assistantSec').value : '', "so":  document.querySelector('.so') ? document.querySelector('.so').value : '', "currentProfile": currentUser.currentProfile }
                 DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [currentConfiguration]});
                 configured = true
             },
@@ -6459,7 +6552,7 @@ navigator.geolocation.getCurrentPosition(function (position) {
 
 configurationVue.displayMode({"value": "System"})
 
-var defaultConfiguration = { "congregationName": "", "name": "Congregation", "address": "", "email": "", "fieldServiceGroups": ["Group 1"], "cboe": "", "sec": "", "so": "" }
+var defaultConfiguration = { "congregationName": "", "name": "Congregation", "address": "", "email": "", "fieldServiceGroups": ["Group 1"], "cboe": "", "sec": "", "assistantSec": "", "so": "" }
 
 var currentMonthAttendance = {
 	"name": "Monthly",
