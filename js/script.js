@@ -4219,14 +4219,15 @@ function processMissingReport() {
 
 				var recipient = ''//group.OverseerMail//'someone@example.com';
 				var subject = 'MISSING - ' + group + ' - ' + attendanceVue.cleanDate(new Date());
-				var body = `Dear Brothers:
+				var body = `Dear Brothers,
 Please these are the reports still missing for your field service group.
-Thanks a lot
-
-______________________
+__________________
 ${group.toUpperCase()}
 
 ${reportDetails}
+Thanks,
+
+
 `
 				
 				var mailtoLink = 'mailto:' + encodeURIComponent(recipient) +
