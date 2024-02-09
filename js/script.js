@@ -4218,7 +4218,7 @@ function processMissingReport() {
 				window.getSelection().removeAllRanges();
 
 				var recipient = ''//group.OverseerMail//'someone@example.com';
-				var subject = 'MISSING - ' + group + ' - ' + attendanceVue.cleanDate(new Date());
+				var subject = 'MISSING REPORTS - ' + group + ' - ' + attendanceVue.cleanDate(new Date());
 				var body = `Dear Brothers,
 Please these are the reports still missing for your field service group.
 __________________
