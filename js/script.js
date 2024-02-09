@@ -6010,6 +6010,8 @@ Thanks a lot
 						await shortWait()
 	
 						configurationVue.configuration = result.configuration
+						configurationVue.midweekMeetingDay = result.configuration.midweekMeetingDay
+						configurationVue.midweekMeetingTime = result.configuration.midweekMeetingTime
 						navigationVue.allGroups = result.configuration.fieldServiceGroups
 						allPublishersVue.publishers = result.data
 						allParticipantsVue.enrolments = result.lifeAndMinistryEnrolments
