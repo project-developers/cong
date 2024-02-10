@@ -5807,7 +5807,8 @@ Thanks a lot
 
 					currentData.forEach(elem=>{
 						delete elem.hope
-						delete elem.contactInformation
+						delete elem.contactInformation.address
+						delete elem.contactInformation.phoneNumber
 						delete elem.dateOfBaptism
 						delete elem.dateOfBirth
 						delete elem.emergencyContactInformation
