@@ -5764,8 +5764,8 @@ function processConfiguration() {
 				return
 				location.href = '/cong/'
 			},
-			backupData() {
-				this.exportData()
+			async backupData() {
+				await this.exportData()
 				var recipient = ''//group.OverseerMail//'someone@example.com';
 				var subject = 'Congregation Data Backup - ' + new Date();
 				var body = `Dear Brothers:
