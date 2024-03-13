@@ -62,7 +62,7 @@ createRadioButtons("securityQuestions", securityQuestions)
 
 loginButton.addEventListener("click", (e) => {
     e.preventDefault();
-    const username = loginForm.username.value;
+    const username = loginForm.username.value.trim();
     const password = loginForm.password.value;
 
     if (loginButton.value == 'Create Account') {
