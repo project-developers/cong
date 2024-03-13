@@ -4223,7 +4223,7 @@ function processMissingReport() {
 				const groupDetail = configurationVue.fieldServiceGroupDetails.filter(elem=>elem.name == group)[0]
 
 				var recipient = allPublishersVue.publishers.filter(elem=>elem.name == groupDetail.overseer)[0].contactInformation.email;
-				var cc = allPublishersVue.publishers.filter(elem=>elem.name == configurationVue.configuration.sec)[0].contactInformation.email + (allPublishersVue.publishers.filter(elem=>elem.name == groupDetail.assistant)[0].contactInformation.email ? ';' + allPublishersVue.publishers.filter(elem=>elem.name == groupDetail.assistant)[0].contactInformation.email : '');
+				var cc = allPublishersVue.publishers.filter(elem=>elem.name == configurationVue.configuration.sec)[0].contactInformation.email + (allPublishersVue.publishers.filter(elem=>elem.name == groupDetail.assistant)[0].contactInformation.email ? '; ' + allPublishersVue.publishers.filter(elem=>elem.name == groupDetail.assistant)[0].contactInformation.email : '');
 				var subject = 'MISSING REPORTS - ' + group + ' - ' + attendanceVue.cleanDate(new Date());
 				var body = `Dear Brother ${toTitleCase(groupDetail.overseer.split(' ')[0])},
 Please these are the reports still missing for your field service group.
