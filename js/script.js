@@ -94,6 +94,7 @@ loginButton.addEventListener("click", (e) => {
 				logged = true
 				existingUser.accesses = existingUser.accesses.concat(currentUser.accesses)
 				currentUser = existingUser
+				currentUser.loggedIn = true
 				
 				document.getElementById("home").style.display = 'none'
 				DBWorker.postMessage({ storeName: 'settings', action: "save", value: [currentUser]});
@@ -119,6 +120,7 @@ loginButton.addEventListener("click", (e) => {
 				})
 				logged = true
 				//reportEntry = true
+				currentUser.loggedIn = true
 
 				allUsers.push(currentUser)
 
@@ -140,6 +142,7 @@ loginButton.addEventListener("click", (e) => {
 				})
 				logged = true
 				//reportEntry = true
+				currentUser.loggedIn = true
 
 				allUsers.push(currentUser)
 
@@ -161,6 +164,7 @@ loginButton.addEventListener("click", (e) => {
 				})
 				logged = true
 				//reportEntry = true
+				currentUser.loggedIn = true
 
 				allUsers.push(currentUser)
 
@@ -182,6 +186,7 @@ loginButton.addEventListener("click", (e) => {
 				})
 				logged = true
 				//reportEntry = true
+				currentUser.loggedIn = true
 
 				allUsers.push(currentUser)
 
@@ -202,6 +207,7 @@ loginButton.addEventListener("click", (e) => {
 				})
 				logged = true
 				//reportEntry = false
+				currentUser.loggedIn = true
 				navigationVue.displayDropdown = true
 
 				allUsers.push(currentUser)
@@ -224,6 +230,7 @@ loginButton.addEventListener("click", (e) => {
 				})
 				logged = true
 				//reportEntry = false
+				currentUser.loggedIn = true
 				navigationVue.displayDropdown = true
 
 				allUsers.push(currentUser)
@@ -250,7 +257,9 @@ loginButton.addEventListener("click", (e) => {
 			//reportEntry = false
 		}
 		logged = true
+		currentUser.loggedIn = true
 		document.getElementById("home").style.display = 'none'
+		DBWorker.postMessage({ storeName: 'settings', action: "save", value: [currentUser]});
 		DBWorker.postMessage({ dbName: 'cong-' + currentUser.username.toLowerCase(), action: "init"});
 		loginErrorMsg.style.opacity = 0;
 		
@@ -627,7 +636,14 @@ DBWorker.onmessage = async function (msg) {
 				{
 					console.log(msgData.value)
 					//if (msgData.value.filter(elem=>elem.name == currentUser.username).length !== 0) {
-						allUsers = msgData.value//.filter(elem=>elem.name == currentUser.username)[0]
+					allUsers = msgData.value//.filter(elem=>elem.name == currentUser.username)[0]
+					console.log(allUsers.filter(elem=>elem.loggedIn == true))
+					const loggedInUser = allUsers.filter(elem=>elem.loggedIn == true)
+					if (loggedInUser.length !== 0) {
+						loginForm.username.value = loggedInUser[0].username
+						loginForm.password.value = loggedInUser[0].password
+						loginButton.click()
+					}
 					//}
 				}
 				break;
@@ -847,7 +863,7 @@ function processNavigation() {
 				return 'w3-bar-item w3-select ' + mode.replace('w3-card ','')
 			},
 			async openButton(button) {
-				if (logged == false) { 
+				if (logged == false) {
 
 					navigationVue.buttons = [
 						{
@@ -1073,22 +1089,22 @@ function processNavigation() {
 				gotoView('configurationVue')
 			},
 			signOut() {
-				location.reload()
-				return
-				navigationVue.buttons = []
-				congregationVue.display = false
-				allPublishersVue.display = false
-				fieldServiceGroupsVue.display = false
-				configurationVue.display = false
-				monthlyReportVue.display = false
-				missingReportVue.display = false
-				attendanceVue.display = false
-				contactInformationVue.display = false
-				branchReportVue.display = false
-				logged = false
-				navigationVue.displayDropdown = false
-				document.getElementById("home").style.display = ''//v-if="button.title == 'ACTIVE' || button.title == 'ALL' || button.title == 'REQUEST'" //v-for="(button) in buttons().filter(elem=>elem.title == 'ACTIVE' || elem.title == 'ALL' || elem.title == 'REQUEST' || elem.title == 'TRANSFER')"
-				//location.href = "/cong/"
+				signOut()
+		  
+							  
+								   
+									
+										 
+									
+									
+									
+								 
+										 
+								   
+				  
+										 
+																																																																								
+							  
 			},
 			clearFilter() {
 				
@@ -1435,22 +1451,22 @@ function processNavigation2() {
 			},
 			signOut() {
 				w3_close()
-				location.reload()
-				return
-				navigationVue.buttons = []
-				congregationVue.display = false
-				allPublishersVue.display = false
-				fieldServiceGroupsVue.display = false
-				configurationVue.display = false
-				monthlyReportVue.display = false
-				missingReportVue.display = false
-				attendanceVue.display = false
-				contactInformationVue.display = false
-				branchReportVue.display = false
-				logged = false
-				navigationVue.displayDropdown = false
-				document.getElementById("home").style.display = ''
-				//location.href = "/cong/"
+				signOut()
+		  
+							  
+								   
+									
+										 
+									
+									
+									
+								 
+										 
+								   
+				  
+										 
+													  
+							  
 			},
 			logged() {
                 return logged
@@ -4223,7 +4239,7 @@ function processMissingReport() {
 				const groupDetail = configurationVue.fieldServiceGroupDetails.filter(elem=>elem.name == group)[0]
 
 				var recipient = allPublishersVue.publishers.filter(elem=>elem.name == groupDetail.overseer)[0].contactInformation.email;
-				var cc = allPublishersVue.publishers.filter(elem=>elem.name == configurationVue.configuration.sec)[0].contactInformation.email + (allPublishersVue.publishers.filter(elem=>elem.name == groupDetail.assistant)[0].contactInformation.email ? '; ' + allPublishersVue.publishers.filter(elem=>elem.name == groupDetail.assistant)[0].contactInformation.email : '');
+				var cc = allPublishersVue.publishers.filter(elem=>elem.name == configurationVue.configuration.sec)[0].contactInformation.email + (allPublishersVue.publishers.filter(elem=>elem.name == groupDetail.assistant)[0].contactInformation.email ? ';' + allPublishersVue.publishers.filter(elem=>elem.name == groupDetail.assistant)[0].contactInformation.email : '');
 				var subject = 'MISSING REPORTS - ' + group + ' - ' + attendanceVue.cleanDate(new Date());
 				var body = `Dear Brother ${toTitleCase(groupDetail.overseer.split(' ')[0])},
 Please these are the reports still missing for your field service group.
@@ -5760,9 +5776,9 @@ function processConfiguration() {
 				location.reload()
 			},
 			signOut() {
-				location.reload()
-				return
-				location.href = '/cong/'
+				signOut()
+		  
+							
 			},
 			async backupData() {
 				await this.exportData()
@@ -6355,6 +6371,56 @@ processSchedule()
 processAttendance()
 contactInformation()
 branchReportDetails()
+
+function signOut() {
+	// Open or create a database
+	const dbName = "handler";
+	
+	const request = indexedDB.open(dbName);
+
+	// Open a connection to the database
+	//var request = indexedDB.open('myDatabase', 1);
+
+	request.onsuccess = function(event) {
+	var db = event.target.result;
+	
+	// Start a transaction
+	var transaction = db.transaction(['settings'], 'readwrite');
+	var objectStore = transaction.objectStore('settings');
+	
+	// Get the object you want to update
+	//var getRequest = objectStore.get('someKey');
+	var getRequest = objectStore.get(currentUser.name);
+	
+	getRequest.onsuccess = function(event) {
+		var data = event.target.result;
+		
+		// Update the data
+		data.loggedIn = false;
+		
+		// Put the updated data back into the object store
+		var putRequest = objectStore.put(data);
+		
+		putRequest.onsuccess = function(event) {
+			console.log('Data updated successfully');
+			location.reload()
+		};
+		
+		putRequest.onerror = function(event) {
+			console.error('Error updating data');
+		};
+	};
+	
+	getRequest.onerror = function(event) {
+		console.error('Error getting data');
+	};
+	};
+
+	request.onerror = function(event) {
+		console.error('Error opening database');
+	};
+
+}
 
 /*
 // Initialize the map
