@@ -151,6 +151,28 @@ loginButton.addEventListener("click", (e) => {
 				DBWorker.postMessage({ dbName: 'cong-' + currentUser.username.toLowerCase(), action: "init"});
 				loginErrorMsg.style.opacity = 0;
 			}
+			if (currentUser.currentProfile == 'Accounts Servant') {
+				console.log("You have successfully logged in.");
+				document.getElementById("securityQuestions").style.display = 'none';
+				loginForm.username.value = ''
+				loginForm.password.value = ''
+				loginForm.confirmPassword.value = ''
+				loginForm.confirmPassword.style.display = 'none';
+				currentUser.name = currentUser.username
+				hiddenElements.forEach(elem=>{
+					document.getElementById(`${elem}`).style.display = ''
+				})
+				logged = true
+				//reportEntry = true
+				currentUser.loggedIn = true
+
+				allUsers.push(currentUser)
+
+				document.getElementById("home").style.display = 'none'
+				DBWorker.postMessage({ storeName: 'settings', action: "save", value: [currentUser]});
+				DBWorker.postMessage({ dbName: 'cong-' + currentUser.username.toLowerCase(), action: "init"});
+				loginErrorMsg.style.opacity = 0;
+			}
 			if (currentUser.currentProfile == 'Territory Servant') {
 				console.log("You have successfully logged in.");
 				document.getElementById("securityQuestions").style.display = 'none';
@@ -347,6 +369,27 @@ loginButton.addEventListener("click", (e) => {
 		configurationVue.selectedProfile = 'Life and Ministry Overseer'
 		loginErrorMsg.style.opacity = 1;
 		
+    } else if (username.toLowerCase() === "accounts".toLowerCase() && password === "record") {
+		navigationVue.buttons = [
+			{
+				"title": "BACK",
+				"function": "missingReportVue"
+			}
+		]
+		loginButton.innerText = 'Create Account'
+		document.getElementById("securityQuestions").style.display = '';
+        loginErrorMsg.innerHTML = 'You will need to create an account to continue:'
+		loginForm.username.value="";
+		loginForm.password.value="";
+		loginForm.confirmPassword.style.display = '';
+		loginForm.username.select()
+		loginButton.value = 'Create Account'
+		currentUser.accesses = ['acct']
+		currentUser.currentProfile = 'Accounts Servant'
+		configurationVue.reportEntry = 'acct'
+		configurationVue.selectedProfile = 'Accounts Servant'
+		loginErrorMsg.style.opacity = 1;
+		
     } else if (username.toLowerCase() === "lifeAndMinistry".toLowerCase() && password === "assist") {
 		navigationVue.buttons = [
 			{
@@ -419,7 +462,7 @@ loginButton.addEventListener("click", (e) => {
 var currentUser = { "name": "currentUser", "username": null, "password": null, "accesses": [], "selectedQuestion": null, "answer": null }
 var allUsers;
 
-var navigationVue, navigationVue2, allPublishersVue, congregationVue, configurationVue, branchReportVue, contactInformationVue, fieldServiceGroupsVue, monthlyReportVue, missingReportVue, allAssignmentsVue, scheduleVue, territoryVue;
+var navigationVue, navigationVue2, allPublishersVue, congregationVue, configurationVue, branchReportVue, contactInformationVue, fieldServiceGroupsVue, monthlyReportVue, missingReportVue, allAssignmentsVue, scheduleVue, territoryVue, entryVue, approvalsVue, fileVue, archiveVue;
 var allButtons = [
 	{"title": "CONG", "function": "congregationVue"}, 
 	{"title": "RECORDS", "function": "allPublishersVue"}, 
@@ -437,7 +480,11 @@ var allButtons = [
 	{"title": "ATTENDANCE", "function": "attendanceVue"},
 	{"title": "PARTICIPANTS", "function": "allParticipantsVue"},
 	{"title": "TERRITORY", "function": "territoryVue"},
-	{"title": "SETTINGS", "function": "configurationVue"}
+	{"title": "SETTINGS", "function": "configurationVue"},
+	{"title": "ENTRY", "function": "entryVue"},
+	{"title": "APPROVALS", "function": "approvalsVue"},
+	{"title": "FILE", "function": "fileVue"},
+	{"title": "ARCHIVE", "function": "archiveVue"}
 ]
 //var CongregationData = JSON.parse(localStorage.getItem('CongregationData'));
 
@@ -546,6 +593,10 @@ DBWorker.onmessage = async function (msg) {
 							configurationVue.reportEntry = 'lma'
 							navigationVue.buttons = [{"title": "SCHEDULE", "function": "scheduleVue"}, {"title": "PARTICIPANTS", "function": "allParticipantsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}]
 							//allAssignmentsVue.display = true
+						} else if (currentUser.currentProfile == 'Accounts Servant') {
+							configurationVue.reportEntry = 'acct'
+							navigationVue.buttons = [{"title": "FILE", "function": "currentVue"}, {"title": "APPROVALS", "function": "approvalsVue"}, {"title": "ARCHIVE", "function": "archiveVue"}]//, {"title": "PARTICIPANTS", "function": "allParticipantsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}]
+							//allAssignmentsVue.display = true
 						}
 					}
 					if (msgData.value.filter(elem=>elem.name == "Congregation").length !== 0) {
@@ -582,6 +633,10 @@ DBWorker.onmessage = async function (msg) {
 							configurationVue.reportEntry = 'lma'
 							navigationVue.buttons = [{"title": "SCHEDULE", "function": "scheduleVue"}, {"title": "PARTICIPANTS", "function": "allParticipantsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}]
 							allAssignmentsVue.display = true
+						} else if (currentUser.currentProfile == 'Accounts Servant') {
+							configurationVue.reportEntry = 'acct'
+							navigationVue.buttons = [{"title": "FILE", "function": "currentVue"}, {"title": "APPROVALS", "function": "approvalsVue"}, {"title": "ARCHIVE", "function": "archiveVue"}]//, {"title": "PARTICIPANTS", "function": "allParticipantsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}]
+							entryVue.display = true
 						}
 
 						configured = true
@@ -593,6 +648,7 @@ DBWorker.onmessage = async function (msg) {
 						configurationVue.midweekMeetingDay = configurationVue.configuration.midweekMeetingDay
 						configurationVue.midweekMeetingTime = configurationVue.configuration.midweekMeetingTime
 						configurationVue.fieldServiceGroupDetails = configurationVue.configuration.fieldServiceGroupDetails ? configurationVue.configuration.fieldServiceGroupDetails : []
+						DBWorker.postMessage({ storeName: 'account', action: "readAll"});
 						DBWorker.postMessage({ storeName: 'data', action: "readAll"});
 						DBWorker.postMessage({ storeName: 'attendance', action: "readAll"});
 						DBWorker.postMessage({ storeName: 'files', action: "readAll"});
@@ -622,6 +678,12 @@ DBWorker.onmessage = async function (msg) {
 						//console.log(msgData.value.filter(elem=>elem.name == 'S-21_E.pdf')[0])
 						if (!s21) {
 							await getFieldByName(msgData.value.filter(elem=>elem.name == 'S-21')[0].value, 'S-21')
+						}
+					}
+					if (msgData.value.filter(elem=>elem.name == 'S-26').length !== 0) {
+						//console.log(msgData.value.filter(elem=>elem.name == 'S-21_E.pdf')[0])
+						if (!s26) {
+							await getFieldByName(msgData.value.filter(elem=>elem.name == 'S-26')[0].value, 'S-26')
 						}
 					}
 					if (msgData.value.filter(elem=>elem.name == 'S-89').length !== 0) {
@@ -664,6 +726,14 @@ DBWorker.onmessage = async function (msg) {
 						attendanceVue.meetingAttendanceRecord = meetingAttendanceRecord
 						DBWorker.postMessage({ storeName: 'attendance', action: "save", value: [attendanceVue.meetingAttendanceRecord]});
 					}
+					
+				}
+				break;
+			case "account":
+				{
+					console.log(msgData.value)
+					entryVue.allEntries = msgData.value
+					//allAssignmentsVue.allAssignments = msgData.value
 					
 				}
 				break;
@@ -890,7 +960,7 @@ function processNavigation() {
 
 				currentView = button.innerHTML                
 				
-				if (allPublishersVue.transfer == true || scheduleVue.display == true) {
+				if (allPublishersVue.transfer == true || scheduleVue.display == true || fileVue.display == true) {
 					selectedTransferPublishers.length = 0
 					var i = 0
 					document.querySelectorAll('#publisherRequest select').forEach(elem=>{
@@ -998,6 +1068,27 @@ function processNavigation() {
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
 					this.buttons = [{"title": "ASSIGNMENTS", "function": "allAssignmentsVue"}, {"title": "PARTICIPANTS", "function": "allParticipantsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}]
+				} else if (button.innerHTML == "FILE") {
+					this.displayDropdown = false
+					allPublishersVue.request = false
+					allPublishersVue.transfer = false
+					this.buttons = [{"title": "ENTRY", "function": "entryVue"}, {"title": "APPROVALS", "function": "approvalsVue"}, {"title": "ARCHIVE", "function": "archiveVue"}]
+					fillAccountSheet()
+				} else if (button.innerHTML == "ENTRY") {
+					this.displayDropdown = false
+					allPublishersVue.request = false
+					allPublishersVue.transfer = false
+					this.buttons = [{"title": "FILE", "function": "fileVue"}, {"title": "APPROVALS", "function": "approvalsVue"}, {"title": "ARCHIVE", "function": "archiveVue"}]
+				} else if (button.innerHTML == "APPROVALS") {
+					this.displayDropdown = false
+					allPublishersVue.request = false
+					allPublishersVue.transfer = false
+					this.buttons = [{"title": "ENTRY", "function": "entryVue"}, {"title": "FILE", "function": "fileVue"}, {"title": "ARCHIVE", "function": "archiveVue"}]
+				} else if (button.innerHTML == "ARCHIVE") {
+					this.displayDropdown = false
+					allPublishersVue.request = false
+					allPublishersVue.transfer = false
+					this.buttons = [{"title": "ENTRY", "function": "entryVue"}, {"title": "FILE", "function": "fileVue"}, {"title": "APPROVALS", "function": "approvalsVue"}]
 				} else if (button.innerHTML == "TERRITORY") {
 					this.displayDropdown = false
 					allPublishersVue.request = false
@@ -1055,7 +1146,7 @@ function processNavigation() {
 					navigationVue.buttons[groupCount].title = 'GROUPS'
 				}
 
-				if (allPublishersVue.transfer == true || scheduleVue.display == true) {
+				if (allPublishersVue.transfer == true || scheduleVue.display == true || fileVue.display == true) {
 					selectedTransferPublishers.length = 0
 					var i = 0
 					document.querySelectorAll('#publisherRequest select').forEach(elem=>{
@@ -1089,22 +1180,7 @@ function processNavigation() {
 				gotoView('configurationVue')
 			},
 			signOut() {
-				signOut()
-		  
-							  
-								   
-									
-										 
-									
-									
-									
-								 
-										 
-								   
-				  
-										 
-																																																																								
-							  
+				signOut()		  
 			},
 			clearFilter() {
 				
@@ -1248,7 +1324,7 @@ function processNavigation2() {
                 //console.log(button)
 				currentView = button.innerHTML
 				w3_close()
-				if (allPublishersVue.transfer == true || scheduleVue.display == true) {
+				if (allPublishersVue.transfer == true || scheduleVue.display == true || fileVue.display == true) {
 					selectedTransferPublishers.length = 0
 					var i = 0
 					document.querySelectorAll('#publisherRequest select').forEach(elem=>{
@@ -1356,6 +1432,27 @@ function processNavigation2() {
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
 					navigationVue.buttons = [{"title": "ASSIGNMENTS", "function": "allAssignmentsVue"}, {"title": "PARTICIPANTS", "function": "allParticipantsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}]
+				} else if (button.innerHTML == "FILE") {
+					navigationVue.displayDropdown = false
+					allPublishersVue.request = false
+					allPublishersVue.transfer = false
+					navigationVue.buttons = [{"title": "ENTRY", "function": "entryVue"}, {"title": "APPROVALS", "function": "approvalsVue"}, {"title": "ARCHIVE", "function": "archiveVue"}]
+					fillAccountSheet()
+				} else if (button.innerHTML == "ENTRY") {
+					navigationVue.displayDropdown = false
+					allPublishersVue.request = false
+					allPublishersVue.transfer = false
+					navigationVue.buttons = [{"title": "FILE", "function": "fileVue"}, {"title": "APPROVALS", "function": "approvalsVue"}, {"title": "ARCHIVE", "function": "archiveVue"}]
+				} else if (button.innerHTML == "APPROVALS") {
+					navigationVue.displayDropdown = false
+					allPublishersVue.request = false
+					allPublishersVue.transfer = false
+					navigationVue.buttons = [{"title": "ENTRY", "function": "entryVue"}, {"title": "FILE", "function": "fileVue"}, {"title": "ARCHIVE", "function": "archiveVue"}]
+				} else if (button.innerHTML == "ARCHIVE") {
+					navigationVue.displayDropdown = false
+					allPublishersVue.request = false
+					allPublishersVue.transfer = false
+					navigationVue.buttons = [{"title": "ENTRY", "function": "entryVue"}, {"title": "FILE", "function": "fileVue"}, {"title": "APPROVALS", "function": "approvalsVue"}]
 				} else if (button.innerHTML == "TERRITORY") {
 					navigationVue.displayDropdown = false
 					allPublishersVue.request = false
@@ -1416,7 +1513,7 @@ function processNavigation2() {
 					navigationVue.buttons[groupCount].title = 'GROUPS'
 				}
 
-				if (allPublishersVue.transfer == true || scheduleVue.display == true) {
+				if (allPublishersVue.transfer == true || scheduleVue.display == true || fileVue.display == true) {
 					selectedTransferPublishers.length = 0
 					var i = 0
 					document.querySelectorAll('#publisherRequest select').forEach(elem=>{
@@ -1451,22 +1548,7 @@ function processNavigation2() {
 			},
 			signOut() {
 				w3_close()
-				signOut()
-		  
-							  
-								   
-									
-										 
-									
-									
-									
-								 
-										 
-								   
-				  
-										 
-													  
-							  
+				signOut()			  
 			},
 			logged() {
                 return logged
@@ -2096,6 +2178,10 @@ async function gotoView(button) {
 	scheduleVue.display = false
 	contactInformationVue.display = false
 	branchReportVue.display = false
+	entryVue.display = false
+	fileVue.display = false
+	approvalsVue.display = false
+	archiveVue.display = false
 	if (button == "congregationVue" || button == "configurationVue") {
 		navigationVue.display = false
 	} else {
@@ -3648,6 +3734,371 @@ function processFieldServiceGroups() {
 			inactive() {
 				this.active = !this.active;
 			}
+        }
+    })
+}
+
+document.querySelector('#entry').innerHTML = `<template>
+	<div v-if="display == true">
+		<h2 class="w3-center">ENTRY</h2>
+		<h4 style="margin:5px;"><span :class="modeButton()" style="margin:5px" @click="newTransaction('W')">W</span><span :class="modeButton()" style="margin:5px" @click="newTransaction('C')">C</span><span :class="modeButton()" style="margin:5px" @click="newTransaction('CE')">CE</span><span :class="modeButton()" style="margin:5px" @click="newTransaction('D')">D</span><span :class="modeButton()" style="margin:5px" @click="newTransaction('E')">E</span><span :class="modeButton()" style="margin:5px" @click="newTransaction('I')">I</span><span :class="modeButton()" style="margin:5px" @click="newTransaction('S')">S</span></h4>
+		
+		<div :class="mode()" style="margin:5px; width: 280px; padding:10px 0">
+			<div class="w3-container main">
+				<input type="date" v-model="currentDate"><input v-model="transactionCode" style="margin:5px; width: 30px;">
+				<textarea type="text" style="width: 250px; margin-top:5px" placeholder="Transaction Description" v-model="transactionDescription"></textarea>
+				<select v-if="showAccount" v-model="account" class="w3-input" style="margin-buttom:10px;">
+					<option value="RECEIPTS">RECEIPTS</option>
+					<option value="PRIMARY ACCOUNT">PRIMARY ACCOUNT</option>
+					<option value="SECONDARY ACCOUNT">SECONDARY ACCOUNT</option>
+				</select>
+				<div style="margin-top:10px;display:flex">
+					<input type="number" min="1" style="width: 150px;margin-right:10px" placeholder="Amount" v-model="amount" class="w3-input">
+					<span @click="addTransaction($event.target)" class="w3-button w3-light-grey">ADD</span>
+				</div>
+			</div>
+		</div>
+				
+	</div>
+</template>`
+
+function processEntry() {
+
+    entryVue = new Vue({
+        el: document.querySelector('#entry'),
+        data: {
+            publishers: [],
+            display: false,
+            transactionCode: "",
+			transactionDescription: "",
+			amount: "",
+			account: "RECEIPTS",
+			showAccount: false,
+			allEntries: [],
+			currentDate: monthlyReportVue.cleanDate(new Date()),
+        },
+        computed: {/*
+            searchTerms() {
+                return navigationVue.searchTerms
+            },
+			allGroups() {
+                return allPublishersVue.allGroups
+            },
+			selectedGroup() {
+                return navigationVue.fieldServiceGroup
+            },*/
+        },
+        methods: {
+			mode() {
+				return mode.replace('w3-card ','')
+			},
+			modeButton() {
+				return mode.replace('w3-card ','w3-button ')
+			},
+			date() {
+                return monthlyReportVue.cleanDate(new Date())
+            },
+			newTransaction(code) {
+				//console.log(code)
+				this.transactionCode = code
+				this.showAccount = false
+				this.amount = ''
+				if (code == 'C') {
+					this.transactionDescription = 'Contribution - Local Congregation Expenses'
+					
+				} else if (code == 'D') {
+					this.transactionDescription = 'Deposite to Primary Account'
+					
+				} else if (code == 'E') {
+					this.transactionDescription = 'Local Congregation Expenses'
+					
+					this.showAccount = true
+				} else if (code == 'W') {
+					this.transactionDescription = 'Contribution - Worldwide Work'
+					
+				}
+			},
+            async addTransaction(element) {
+				if (this.transactionCode == '') {
+					alert('Please enter a Transaction Code')
+					return
+				} else if (this.transactionDescription == '') {
+					alert('Please enter a Transaction Description')
+					return
+				} else if (this.amount == '') {
+					alert('Please enter an Amount')
+					return
+				} else if (this.currentDate == '') {
+					alert('Please enter a Date')
+					return
+				}
+				element.parentNode.parentNode.querySelector('span').innerHTML = `<i class="fas fa-check"></i>`
+				//console.log(this.transactionCode)
+				//console.log(this.transactionDescription)
+				//console.log(this.amount)
+				//console.log(this.currentDate)
+				const account = this.account
+				this.account = "RECEIPTS"
+				DBWorker.postMessage({ storeName: 'account', action: "save", value: [{"name":`${this.currentDate}_${this.transactionCode}_${this.transactionDescription}`, "date": this.currentDate, "transactionCode": this.transactionCode, "transactionDescription": this.transactionDescription, "amount": Number(this.amount), "account": account}]});
+				await shortWait()
+				await shortWait()
+				//await shortWait()
+				element.parentNode.parentNode.querySelector('span').innerHTML = `ADD`
+				await shortWait()
+				await shortWait()
+				DBWorker.postMessage({ storeName: 'account', action: "readAll"});
+			},/*
+			inactive() {
+				this.active = !this.active;
+			}*/
+        }
+    })
+}
+
+document.querySelector('#file').innerHTML = `<template>
+	<div v-if="display == true">
+		<h2 class="w3-center">CURRENT FILE</h2>
+		
+		
+				
+	</div>
+</template>`
+
+function processFile() {
+
+    fileVue = new Vue({
+        el: document.querySelector('#file'),
+        data: {
+            publishers: [],
+            display: false,
+            transactionCode: "",
+			transactionDescription: "",
+			showAccount: false,
+        },
+        computed: {
+            allRecords() {
+                return entryVue.allEntries.map(obj => ({
+					...obj,
+					month: obj.date.split('-').slice(0, 2).join('-')
+				})
+				)
+            },/*
+			selectedGroup() {
+                return navigationVue.fieldServiceGroup
+            },*/
+        },
+        methods: {
+			mode() {
+				return mode.replace('w3-card ','')
+			},
+			modeButton() {
+				return mode.replace('w3-card ','w3-button ')
+			},
+			date() {
+                return monthlyReportVue.cleanDate(new Date())
+            },
+			monthlyRecords() {
+                return getUniqueElementsByProperty(this.allRecords, ['month']).map(obj => ({
+					...obj,
+					entries: this.allRecords.filter(elem=>elem.month == obj.month)
+				})
+				)
+            },/*
+			newTransaction(code) {
+				//console.log(code)
+				this.transactionCode = code
+				this.showAccount = false
+				if (code == 'C') {
+					this.transactionDescription = 'Contribution - Local Congregation Expenses'
+					
+				} else if (code == 'D') {
+					this.transactionDescription = 'Deposite to Primary Account'
+					
+				} else if (code == 'E') {
+					this.transactionDescription = 'Local Congregation Expenses'
+					
+					this.showAccount = true
+				} else if (code == 'W') {
+					this.transactionDescription = 'Contribution - Worldwide Work'
+					
+				}
+			},
+            updateRecord(publisher) {
+				updatePublisherRecord(publisher)
+			},
+			inactive() {
+				this.active = !this.active;
+			}*/
+        }
+    })
+}
+
+document.querySelector('#approvals').innerHTML = `<template>
+	<div v-if="display == true">
+		<h2 class="w3-center">TRANSACTIONS</h2>
+		<h4 style="margin:5px; width: 230px"><span :class="modeButton()" style="margin:5px" @click="newTransaction('C')">C</span><span :class="modeButton()" style="margin:5px" @click="newTransaction('D')">D</span><span :class="modeButton()" style="margin:5px" @click="newTransaction('E')">E</span><span :class="modeButton()" style="margin:5px" @click="newTransaction('W')">W</span></h4>
+		
+		<div :class="mode()" style="margin:5px; width: 280px; padding:10px 0">
+			<div class="w3-container main">
+				<input type="date" :value="date()"><input v-model="transactionCode" style="margin:5px; width: 25px;">
+				<textarea type="text" style="width: 250px; margin-top:5px" placeholder="Transaction Description" v-model="transactionDescription"></textarea>
+				<select v-if="showAccount" class="w3-input" style="margin-buttom:10px;">
+					<option>RECEIPTS</option>
+					<option>PRIMARY ACCOUNT</option>
+					<option>SECONDARY ACCOUNT</option>
+				</select>
+				<div style="margin-top:10px;display:flex">
+					<input type="number" min="1" style="width: 150px;margin-right:10px" placeholder="Amount" class="w3-input">
+					<span class="w3-button w3-light-grey">ADD</span>
+				</div>
+			</div>
+		</div>
+				
+	</div>
+</template>`
+
+function processApprovals() {
+
+    approvalsVue = new Vue({
+        el: document.querySelector('#approvals'),
+        data: {
+            publishers: [],
+            display: false,
+            transactionCode: "",
+			transactionDescription: "",
+			showAccount: false,
+        },
+        computed: {/*
+            searchTerms() {
+                return navigationVue.searchTerms
+            },
+			allGroups() {
+                return allPublishersVue.allGroups
+            },
+			selectedGroup() {
+                return navigationVue.fieldServiceGroup
+            },*/
+        },
+        methods: {
+			mode() {
+				return mode.replace('w3-card ','')
+			},
+			modeButton() {
+				return mode.replace('w3-card ','w3-button ')
+			},
+			date() {
+                return monthlyReportVue.cleanDate(new Date())
+            },/*
+			newTransaction(code) {
+				//console.log(code)
+				this.transactionCode = code
+				this.showAccount = false
+				if (code == 'C') {
+					this.transactionDescription = 'Contribution - Local Congregation Expenses'
+					
+				} else if (code == 'D') {
+					this.transactionDescription = 'Deposite to Primary Account'
+					
+				} else if (code == 'E') {
+					this.transactionDescription = 'Local Congregation Expenses'
+					
+					this.showAccount = true
+				} else if (code == 'W') {
+					this.transactionDescription = 'Contribution - Worldwide Work'
+					
+				}
+			},
+            updateRecord(publisher) {
+				updatePublisherRecord(publisher)
+			},
+			inactive() {
+				this.active = !this.active;
+			}*/
+        }
+    })
+}
+
+document.querySelector('#archive').innerHTML = `<template>
+	<div v-if="display == true">
+		<h2 class="w3-center">TRANSACTIONS</h2>
+		<h4 style="margin:5px; width: 230px"><span :class="modeButton()" style="margin:5px" @click="newTransaction('C')">C</span><span :class="modeButton()" style="margin:5px" @click="newTransaction('D')">D</span><span :class="modeButton()" style="margin:5px" @click="newTransaction('E')">E</span><span :class="modeButton()" style="margin:5px" @click="newTransaction('W')">W</span></h4>
+		
+		<div :class="mode()" style="margin:5px; width: 280px; padding:10px 0">
+			<div class="w3-container main">
+				<input type="date" :value="date()"><input v-model="transactionCode" style="margin:5px; width: 25px;">
+				<textarea type="text" style="width: 250px; margin-top:5px" placeholder="Transaction Description" v-model="transactionDescription"></textarea>
+				<select v-if="showAccount" class="w3-input" style="margin-buttom:10px;">
+					<option>RECEIPTS</option>
+					<option>PRIMARY ACCOUNT</option>
+					<option>OTHER</option>
+				</select>
+				<div style="margin-top:10px;display:flex">
+					<input type="number" min="1" style="width: 150px;margin-right:10px" placeholder="Amount" class="w3-input">
+					<span class="w3-button w3-light-grey">ADD</span>
+				</div>
+			</div>
+		</div>
+				
+	</div>
+</template>`
+
+function processArchive() {
+
+    archiveVue = new Vue({
+        el: document.querySelector('#archive'),
+        data: {
+            publishers: [],
+            display: false,
+            transactionCode: "",
+			transactionDescription: "",
+			showAccount: false,
+        },
+        computed: {/*
+            searchTerms() {
+                return navigationVue.searchTerms
+            },
+			allGroups() {
+                return allPublishersVue.allGroups
+            },
+			selectedGroup() {
+                return navigationVue.fieldServiceGroup
+            },*/
+        },
+        methods: {
+			mode() {
+				return mode.replace('w3-card ','')
+			},
+			modeButton() {
+				return mode.replace('w3-card ','w3-button ')
+			},
+			date() {
+                return monthlyReportVue.cleanDate(new Date())
+            },/*
+			newTransaction(code) {
+				//console.log(code)
+				this.transactionCode = code
+				this.showAccount = false
+				if (code == 'C') {
+					this.transactionDescription = 'Contribution - Local Congregation Expenses'
+					
+				} else if (code == 'D') {
+					this.transactionDescription = 'Deposite to Primary Account'
+					
+				} else if (code == 'E') {
+					this.transactionDescription = 'Local Congregation Expenses'
+					
+					this.showAccount = true
+				} else if (code == 'W') {
+					this.transactionDescription = 'Contribution - Worldwide Work'
+					
+				}
+			},
+            updateRecord(publisher) {
+				updatePublisherRecord(publisher)
+			},
+			inactive() {
+				this.active = !this.active;
+			}*/
         }
     })
 }
@@ -5399,6 +5850,12 @@ document.querySelector("#configuration").innerHTML = `<template>
 						
 						<p v-if="reportEntry == 'secretary' && reset !== true" style="margin-top:15px"><label>Congregation Name: </label></p>
 						<p v-if="reportEntry == 'secretary' && reset !== true"><input :class="inputMode('name w3-input')" type="text" :value="configuration.congregationName" @change="saveConfiguration()"></p>
+						<p v-if="reportEntry == 'acct' && reset !== true" style="margin-top:15px"><label>Congregation or circuit: </label></p>
+						<p v-if="reportEntry == 'acct' && reset !== true"><input :class="inputMode('name w3-input')" type="text" :value="configuration.congregationName" @change="saveConfiguration()"></p>
+						<p v-if="reportEntry == 'acct' && reset !== true" style="margin-top:15px"><label>City: </label></p>
+						<p v-if="reportEntry == 'acct' && reset !== true"><input :class="inputMode('city w3-input')" type="text" :value="configuration.city" @change="saveConfiguration()"></p>
+						<p v-if="reportEntry == 'acct' && reset !== true" style="margin-top:15px"><label>Province or state: </label></p>
+						<p v-if="reportEntry == 'acct' && reset !== true"><input :class="inputMode('province w3-input')" type="text" :value="configuration.province" @change="saveConfiguration()"></p>
 						<p v-if="reportEntry == 'secretary' && reset !== true"><label>Congregation Address: </label></p>
 						<p v-if="reportEntry == 'secretary' && reset !== true"><input :class="inputMode('address w3-input')" type="text" :value="configuration.address" @change="saveConfiguration()"></p>
 						<p v-if="reportEntry == 'secretary' && reset !== true"><label>Congregation Email: </label></p>
@@ -5488,10 +5945,10 @@ document.querySelector("#configuration").innerHTML = `<template>
 							<option :value="currentMode()">{{ currentMode() }}</option>
 							<option v-for="mode in ['System', 'Light', 'Dark'].filter(elem=>elem !== currentMode())" :value="mode">{{ mode }}</option>
 						</select></label>
-						<p v-if="reportEntry == 'secretary' || reportEntry == 'lmo'">
+						<p v-if="reportEntry == 'secretary' || reportEntry == 'lmo' || reportEntry == 'acct'">
 							<input type="file" id="pdfFile" accept=".pdf">
-							<p v-if="reportEntry == 'secretary' || reportEntry == 'lmo'"><input :class="inputMode('fileName w3-input')" type="text" placeholder="File Name" @click="fileName($event.target)"></p>
-							<button :class="buttonMode('w3-button w3-dark-grey')" @click="saveFile()" v-if="reportEntry == 'secretary' || reportEntry == 'lmo'"><i class="fas fa-save"> </i> Save File</button>
+							<p v-if="reportEntry == 'secretary' || reportEntry == 'lmo' || reportEntry == 'acct'"><input :class="inputMode('fileName w3-input')" type="text" placeholder="File Name" @click="fileName($event.target)"></p>
+							<button :class="buttonMode('w3-button w3-dark-grey')" @click="saveFile()" v-if="reportEntry == 'secretary' || reportEntry == 'lmo' || reportEntry == 'acct'"><i class="fas fa-save"> </i> Save File</button>
 						</p>
 						<div>
 							<div class="main">
@@ -5685,7 +6142,7 @@ function processConfiguration() {
 				}
 			},
 			profiles() {
-				return currentUser.accesses.map(elem=>elem.replace('secretary','Secretary').replace('sendReport','Secretary - Assistant').replace('lmo','Life and Ministry Overseer').replace('lma','Life and Ministry Assistant').replace('so','Service Overseer').replace('terServant','Territory Servant').replace('ter','Territory Map')).sort()
+				return currentUser.accesses.map(elem=>elem.replace('secretary','Secretary').replace('sendReport','Secretary - Assistant').replace('lmo','Life and Ministry Overseer').replace('lma','Life and Ministry Assistant').replace('so','Service Overseer').replace('terServant','Territory Servant').replace('ter','Territory Map').replace('acct','Accounts Servant')).sort()
 			},
 			elders() {
 				return allPublishersVue.publishers.filter(elem=>elem.privilege.includes('Elder')).map(elem=>elem.name)
@@ -6168,7 +6625,18 @@ Thanks a lot
 					detail.push(elem.value)
 				})*/
 
-				var currentConfiguration = { "name": "Congregation", "congregationName": document.querySelector('.name').value, "address": document.querySelector('.address').value, "email": document.querySelector('.email').value, "fieldServiceGroups": allGroups, "fieldServiceGroupDetails": this.fieldServiceGroupDetails, "cboe": document.querySelector('.cboe') ? document.querySelector('.cboe').value : '', "sec": document.querySelector('.sec') ? document.querySelector('.sec').value : '', "assistantSec": document.querySelector('.assistantSec') ? document.querySelector('.assistantSec').value : '', "so":  document.querySelector('.so') ? document.querySelector('.so').value : '', "currentProfile": currentUser.currentProfile }
+				var currentConfiguration = {}
+				
+				if (this.currentProfile() == 'Accounts Servant') {
+					currentConfiguration = this.configuration
+					currentConfiguration.name = "Congregation"
+					currentConfiguration.congregationName = document.querySelector('.name').value
+					currentConfiguration.city = document.querySelector('.city').value
+					currentConfiguration.province = document.querySelector('.province').value
+				} else {
+					currentConfiguration = { "name": "Congregation", "congregationName": document.querySelector('.name').value, "address": document.querySelector('.address').value, "email": document.querySelector('.email').value, "fieldServiceGroups": allGroups, "fieldServiceGroupDetails": this.fieldServiceGroupDetails, "cboe": document.querySelector('.cboe') ? document.querySelector('.cboe').value : '', "sec": document.querySelector('.sec') ? document.querySelector('.sec').value : '', "assistantSec": document.querySelector('.assistantSec') ? document.querySelector('.assistantSec').value : '', "so":  document.querySelector('.so') ? document.querySelector('.so').value : '', "currentProfile": currentUser.currentProfile }
+				}
+
                 DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [currentConfiguration]});
                 configured = true
             },
@@ -6371,6 +6839,10 @@ processSchedule()
 processAttendance()
 contactInformation()
 branchReportDetails()
+processEntry()
+processFile()
+processApprovals()
+processArchive()
 
 function signOut() {
 	// Open or create a database
@@ -7702,9 +8174,109 @@ return
     console.log(publisher)
 }
 
-// 900_1_Text_SanSerif
+async function fillAccountSheet(count) {
+	if (!count) { count = 0 }
+	//const publisher = data[0]
+	//const period = data[1]
+    // Get the form field by name
+	var allMonths = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+    s26.getForm().getTextField('900_1_Text_C').setText(configurationVue.configuration.congregationName)
+    s26.getForm().getTextField('900_2_Text_C').setText(configurationVue.configuration.city)
+    s26.getForm().getTextField('900_3_Text_C').setText(configurationVue.configuration.province)
+    s26.getForm().getTextField('900_4_Text_C').setText(allMonths[Number(fileVue.monthlyRecords()[count].month.split('-')[1]) - 1])
+    s26.getForm().getTextField('900_5_Text_C').setText(fileVue.monthlyRecords()[count].month.split('-')[0])
 
-var s21, s89;
+	var i = 0
+	var receiptIn = 0, receiptOut = 0, primaryIn = 0, primaryOut = 0
+	fileVue.monthlyRecords()[count].entries.forEach(elem=>{
+		s26.getForm().getTextField(`900_${i + 7}_Text_C`).setText(elem.date.split('-')[2])
+		s26.getForm().getTextField(`900_${i + 59}_Text`).setText(elem.transactionDescription)
+		s26.getForm().getTextField(`900_${i + 111}_Text_C`).setText(elem.transactionCode)
+		if (elem.transactionCode == 'C' || elem.transactionCode == 'W') {
+			s26.getForm().getTextField(`901_${i + 1}_S26Value`).setText(`${(elem.amount).toLocaleString().split('.')[0]}.${(elem.amount).toFixed(2).split('.')[1]}`)
+			receiptIn = receiptIn + elem.amount
+		}
+		if (elem.transactionCode == 'D' || (elem.transactionCode == 'E' && elem.account == 'RECEIPTS')) {
+			s26.getForm().getTextField(`901_${i + 54}_S26Value`).setText(`${(elem.amount).toLocaleString().split('.')[0]}.${(elem.amount).toFixed(2).split('.')[1]}`)
+			receiptOut = receiptOut + elem.amount
+		}
+		if (elem.transactionCode == 'D') {
+			s26.getForm().getTextField(`902_${i + 1}_S26Value`).setText(`${(elem.amount).toLocaleString().split('.')[0]}.${(elem.amount).toFixed(2).split('.')[1]}`)
+			primaryIn = primaryIn + elem.amount
+		}
+		if ((elem.transactionCode == 'E' && elem.account == 'PRIMARY ACCOUNT')) {
+			s26.getForm().getTextField(`902_${i + 54}_S26Value`).setText(`${(elem.amount).toLocaleString().split('.')[0]}.${(elem.amount).toFixed(2).split('.')[1]}`)
+			primaryOut = primaryOut + elem.amount
+		}
+		
+		i++
+	})
+/*
+	console.log(receiptIn)
+	console.log(receiptOut)
+	console.log(primaryIn)
+	console.log(primaryOut)*/
+	//await shortWait()
+
+	//console.log(`${(receiptOut.reduce((accumulator, currentValue) => accumulator + currentValue, 0)).toLocaleString().split('.')[0]}.${(receiptOut.reduce((accumulator, currentValue) => accumulator + currentValue, 0)).toFixed(2).split('.')[1]}`)
+
+	if (receiptIn !== 0) {
+		s26.getForm().getTextField(`901_53_S26TotalValue`).setText(`${(receiptIn).toLocaleString().split('.')[0]}.${(receiptIn).toFixed(2).split('.')[1]}`)
+		s26.getForm().getTextField(`904_30_S26TotalAmount`).setText(`${(receiptIn).toLocaleString().split('.')[0]}.${(receiptIn).toFixed(2).split('.')[1]}`)
+	}
+	if (receiptOut !== 0) {
+		s26.getForm().getTextField(`901_106_S26TotalValue`).setText(`${(receiptOut).toLocaleString().split('.')[0]}.${(receiptOut).toFixed(2).split('.')[1]}`)
+		s26.getForm().getTextField(`904_31_S26TotalAmount`).setText(`${(receiptOut).toLocaleString().split('.')[0]}.${(receiptOut).toFixed(2).split('.')[1]}`)
+	}
+	if (primaryIn !== 0) {
+		s26.getForm().getTextField(`902_53_S26TotalValue`).setText(`${(primaryIn).toLocaleString().split('.')[0]}.${(primaryIn).toFixed(2).split('.')[1]}`)
+		s26.getForm().getTextField(`904_34_S26TotalAmount`).setText(`${(primaryIn).toLocaleString().split('.')[0]}.${(primaryIn).toFixed(2).split('.')[1]}`)
+	}
+	if (primaryOut !== 0) {
+		s26.getForm().getTextField(`902_106_S26TotalValue`).setText(`${(primaryOut).toLocaleString().split('.')[0]}.${(primaryOut).toFixed(2).split('.')[1]}`)
+		s26.getForm().getTextField(`904_35_S26TotalAmount`).setText(`${(primaryOut).toLocaleString().split('.')[0]}.${(primaryOut).toFixed(2).split('.')[1]}`)
+	}
+	
+	var lastDay = new Date(`${allMonths[Number(fileVue.monthlyRecords()[count].month.split('-')[1]) - 1]} 1, ${fileVue.monthlyRecords()[count].month.split('-')[0]}`);
+
+	//lastDay ; //# => Fri Apr 01 2011 11:14:50 GMT+0200 (CEST)
+
+	lastDay.setDate(lastDay.getDate() - 1);
+	const options = { year: 'numeric', month: 'long', day: 'numeric' };
+	lastDay = new Date(lastDay).toLocaleDateString('en-US', options);
+
+	s26.getForm().getTextField(`904_1_Text_C`).setText(`${lastDay}`)
+	s26.getForm().getTextField(`904_28_Text_C`).setText(`${lastDay}`)
+
+    //name.setText(publisher.name)
+    //name.setText(publisher.name)
+    // Save the modified PDF
+    //const modifiedPdfBytes = await s21.save();
+	var newPdfholder = document.createElement('div')
+	var newPdfbutton = document.createElement('button')
+	var newPdfViewer = document.createElement('iframe')
+	newPdfViewer.height = '600px'
+	newPdfViewer.width = '100%'
+	newPdfViewer.src = URL.createObjectURL(new Blob([await s26.save()], { type: 'application/pdf' }));
+	newPdfbutton.innerHTML = `<a href="${newPdfViewer.src}" style="text-decoration:none" download="${"toTitleCase(period.replace('ServiceYear', ''))"} Record Card - ${'publisher.name'}"><i class="fas fa-download"></i></a>`
+	newPdfbutton.classList.value = "w3-button w3-black download-button"
+	newPdfholder.style.margin = "15px"
+	newPdfbutton.style.margin = "10px 0"
+	newPdfholder.appendChild(newPdfbutton)
+	newPdfholder.appendChild(newPdfViewer)
+	document.getElementById("pdfViewer").appendChild(newPdfholder)
+
+	downloadsArray.push([newPdfViewer.src, `${"toTitleCase(period.replace('ServiceYear', ''))"} Record Card - ${'publisher.name'}`])
+
+	count++
+	if (fileVue.monthlyRecords().length < count) {
+		fillAccountSheet(count)
+	}
+
+    //download(modifiedPdfBytes, publisher.name + ".pdf", "application/pdf");
+}
+
+var s21, s89, s26;
 
 async function getFieldByName(file, variable) {
     //const fileInput = document.getElementById('pdfFile');
@@ -7719,6 +8291,8 @@ async function getFieldByName(file, variable) {
             // Using pdf-lib to load the PDF document
 			if (variable == 'S-21') {
 				s21 = await PDFLib.PDFDocument.load(pdfData);
+			} else if (variable == 'S-26') {
+				s26 = await PDFLib.PDFDocument.load(pdfData);
 			} else if (variable == 'S-89') {
 				s89 = await PDFLib.PDFDocument.load(pdfData);
 				const font = await s89.embedFont("Helvetica", { subset: true, unicode: true });
