@@ -6050,6 +6050,10 @@ document.querySelector("#configuration").innerHTML = `<template>
 							<hr>
 							<input type="file" id="dataFile" accept=".txt">
 						</p>
+						<div>
+							<p style="padding: 5px">{{ currentUser.selectedQuestion }}</p>
+							<p style="padding: 5px">{{ currentUser.answer }}</p>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -6085,7 +6089,10 @@ function processConfiguration() {
             },
 			allGroups() {
                 return navigationVue.allGroups
-            }
+            },
+			currentUser() {
+				return currentUser
+			}
         },
         methods: {
 			setMeetingDay() {
