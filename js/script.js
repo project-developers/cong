@@ -3743,9 +3743,9 @@ document.querySelector('#entry').innerHTML = `<template>
 		<h2 class="w3-center">ENTRY</h2>
 		<h4 style="margin:5px;"><span :class="modeButton()" style="margin:5px" @click="newTransaction('W')">W</span><span :class="modeButton()" style="margin:5px" @click="newTransaction('C')">C</span><span :class="modeButton()" style="margin:5px" @click="newTransaction('CE')">CE</span><span :class="modeButton()" style="margin:5px" @click="newTransaction('D')">D</span><span :class="modeButton()" style="margin:5px" @click="newTransaction('E')">E</span><span :class="modeButton()" style="margin:5px" @click="newTransaction('I')">I</span><span :class="modeButton()" style="margin:5px" @click="newTransaction('S')">S</span></h4>
 		
-		<div :class="mode()" style="margin:5px; width: 280px; padding:10px 0">
+		<div :class="mode()" style="margin:5px; width: 100%; max-width: 300px; padding:10px 0">
 			<div class="w3-container main">
-				<input type="date" v-model="currentDate"><input v-model="transactionCode" style="margin:5px; width: 30px;">
+				<input type="date" v-model="currentDate"><input v-model="transactionCode" style="margin:5px; width: 60px;" placeholder="Code">
 				<textarea type="text" style="width: 250px; margin-top:5px" placeholder="Transaction Description" v-model="transactionDescription"></textarea>
 				<select v-if="showAccount" v-model="account" class="w3-input" style="margin-buttom:10px;">
 					<option value="RECEIPTS">RECEIPTS</option>
@@ -3753,9 +3753,59 @@ document.querySelector('#entry').innerHTML = `<template>
 					<option value="SECONDARY ACCOUNT">SECONDARY ACCOUNT</option>
 				</select>
 				<div style="margin-top:10px;display:flex">
-					<input type="number" min="1" style="width: 150px;margin-right:10px" placeholder="Amount" v-model="amount" class="w3-input">
+					<input type="number" min="0.01" style="width: 150px;margin-right:10px" placeholder="Amount" v-model="amount" class="w3-input">
 					<span @click="addTransaction($event.target)" class="w3-button w3-light-grey">ADD</span>
 				</div>
+			</div>
+		</div>
+
+		<h2 class="w3-center">TRANSACTIONS</h2>
+		<h4 style="margin:5px; width:250px">
+			<select v-model="currentMonth" class="w3-input" style="margin-buttom:10px;">
+				<option v-for="(entry, count) in monthlyRecords()" :value="entry.month">{{ cleanMonth(entry.month) }}</option>
+			</select>
+		</h4>
+
+		<div v-if="currentMonth !== ''" :class="mode()" style="margin:5px; width: 100%; padding:10px 0">
+			<div class="w3-container main">
+				<table style="margin-bottom:0;margin-top:0">
+					<tr>
+						<th style="text-align:center" rowspan="2">DATE</th>
+						<th style="text-align:center" rowspan="2">TRANSACTION DESCRIPTION</th>
+						<th style="text-align:center" rowspan="2">TC</th>
+						<th style="text-align:center" colspan="2">RECEIPTS</th>						
+						<th style="text-align:center" colspan="2">PRIMARY ACCOUNT</th>
+						<th style="text-align:center" colspan="2">SECONDARY ACCOUNT</th>
+					</tr>
+					<tr>
+						<th style="text-align:center">IN</th>
+						<th style="text-align:center">OUT</th>				
+						<th style="text-align:center">IN</th>
+						<th style="text-align:center">OUT</th>				
+						<th style="text-align:center">IN</th>
+						<th style="text-align:center">OUT</th>			
+					</tr>
+					<tr v-for="transaction in monthlyRecords().filter(elem=>elem.month == currentMonth)[0].entries" @dblclick="editTransaction(transaction)">
+						<td style="text-align:center">{{ transaction.date.split('-')[2] }}</td>
+						<td>{{ transaction.transactionDescription }}</td>				
+						<td style="text-align:center">{{ transaction.transactionCode }}</td>						
+						<td style="text-align:right">{{ transaction.transactionCode == 'C' || transaction.transactionCode == 'W' ? (transaction.amount).toLocaleString().split('.')[0] + '.' + (transaction.amount).toFixed(2).split('.')[1] : ''}}</td>						
+						<td style="text-align:right">{{ transaction.transactionCode == 'D' || (transaction.transactionCode == 'E' && transaction.account == 'RECEIPTS') ? (transaction.amount).toLocaleString().split('.')[0] + '.' + (transaction.amount).toFixed(2).split('.')[1] : ''}}</td>						
+						<td style="text-align:right">{{ transaction.transactionCode == 'D' ? (transaction.amount).toLocaleString().split('.')[0] + '.' + (transaction.amount).toFixed(2).split('.')[1] : ''}}</td>						
+						<td style="text-align:right">{{ transaction.transactionCode == 'E' && transaction.account == 'PRIMARY ACCOUNT' ? (transaction.amount).toLocaleString().split('.')[0] + '.' + (transaction.amount).toFixed(2).split('.')[1] : ''}}</td>						
+						<td style="text-align:right">{{ transaction.transactionCode !== 'E' && transaction.account == 'SECONDARY ACCOUNT' ? (transaction.amount).toLocaleString().split('.')[0] + '.' + (transaction.amount).toFixed(2).split('.')[1] : ''}}</td>						
+						<td style="text-align:right">{{ transaction.transactionCode == 'E' && transaction.account == 'SECONDARY ACCOUNT' ? (transaction.amount).toLocaleString().split('.')[0] + '.' + (transaction.amount).toFixed(2).split('.')[1] : ''}}</td>				
+					</tr>
+					<tr>
+						<th style="text-align:center" colspan="3">TOTALS OF ALL COLUMNS</th>
+						<th style="text-align:right">{{ columnTotal(monthlyRecords().filter(elem=>elem.month == currentMonth)[0].entries.filter(elem=>elem.transactionCode == 'C' || elem.transactionCode == 'W').map(elem=>elem.amount)) }}</th>				
+						<th style="text-align:right">{{ columnTotal(monthlyRecords().filter(elem=>elem.month == currentMonth)[0].entries.filter(elem=>elem.transactionCode == 'D' || (elem.transactionCode == 'E' && elem.account == 'RECEIPTS')).map(elem=>elem.amount)) }}</th>
+						<th style="text-align:right">{{ columnTotal(monthlyRecords().filter(elem=>elem.month == currentMonth)[0].entries.filter(elem=>elem.transactionCode == 'D').map(elem=>elem.amount)) }}</th>				
+						<th style="text-align:right">{{ columnTotal(monthlyRecords().filter(elem=>elem.month == currentMonth)[0].entries.filter(elem=>elem.transactionCode == 'E' && elem.account == 'PRIMARY ACCOUNT').map(elem=>elem.amount)) }}</th>
+						<th style="text-align:right">{{ columnTotal(monthlyRecords().filter(elem=>elem.month == currentMonth)[0].entries.filter(elem=>elem.transactionCode !== 'E' && elem.account == 'SECONDARY ACCOUNT').map(elem=>elem.amount)) }}</th>			
+						<th style="text-align:right">{{ columnTotal(monthlyRecords().filter(elem=>elem.month == currentMonth)[0].entries.filter(elem=>elem.transactionCode == 'E' && elem.account == 'SECONDARY ACCOUNT').map(elem=>elem.amount)) }}</th>			
+					</tr>
+				</table>
 			</div>
 		</div>
 				
@@ -3775,6 +3825,7 @@ function processEntry() {
 			account: "RECEIPTS",
 			showAccount: false,
 			allEntries: [],
+			currentMonth: "",
 			currentDate: monthlyReportVue.cleanDate(new Date()),
         },
         computed: {/*
@@ -3798,6 +3849,29 @@ function processEntry() {
 			date() {
                 return monthlyReportVue.cleanDate(new Date())
             },
+			cleanMonth(value) {
+				return `${allMonths[Number(value.split('-')[1]) - 1]} ${value.split('-')[0]}`
+			},
+			allRecords() {
+                return this.allEntries.map(obj => ({
+					...obj,
+					month: obj.date.split('-').slice(0, 2).join('-')
+				})
+				)
+            },
+			monthlyRecords() {
+                return getUniqueElementsByProperty(this.allRecords(), ['month']).map(obj => ({
+					...obj,
+					entries: this.allRecords().filter(elem=>elem.month == obj.month)
+				})
+				)
+            },
+			columnTotal(value) {
+				if (value.length == 0) {
+					return ''
+				}
+				return (value.reduce((accumulator, currentValue) => accumulator + currentValue, 0)).toLocaleString().split('.')[0] + '.' + (value.reduce((accumulator, currentValue) => accumulator + currentValue, 0)).toFixed(2).split('.')[1]
+			},
 			newTransaction(code) {
 				//console.log(code)
 				this.transactionCode = code
@@ -3817,6 +3891,9 @@ function processEntry() {
 					this.transactionDescription = 'Contribution - Worldwide Work'
 					
 				}
+			},
+			editTransaction(value) {
+				console.log(value)
 			},
             async addTransaction(element) {
 				if (this.transactionCode == '') {
@@ -6267,7 +6344,7 @@ Thanks a lot
 				const options = { year: 'numeric', month: 'long', day: 'numeric' };
 
 				if (getSelectedOption(document.getElementsByName("exportGroup")) == 'all') {
-					file = new Blob([JSON.stringify({"exportType":"all", "configuration":configurationVue.configuration, "data":allPublishersVue.publishers, "territory":territoryVue.savedPolygons, "lifeAndMinistryEnrolments":allParticipantsVue.enrolments, "lifeAndMinistryAssignments":allAssignmentsVue.allAssignments, "attendance": [attendanceVue.currentMonth, attendanceVue.meetingAttendanceRecord]})], {type: 'text/plain'});
+					file = new Blob([JSON.stringify({"exportType":"all", "configuration":configurationVue.configuration, "data":allPublishersVue.publishers, "territory":territoryVue.savedPolygons, "lifeAndMinistryEnrolments":allParticipantsVue.enrolments, "lifeAndMinistryAssignments":allAssignmentsVue.allAssignments, "attendance": [attendanceVue.currentMonth, attendanceVue.meetingAttendanceRecord], "account": entryVue.allEntries})], {type: 'text/plain'});
 					await shortWait()
 					await shortWait()
 				} else if (getSelectedOption(document.getElementsByName("exportGroup")) == 'reportEntry') {
@@ -6345,7 +6422,7 @@ Thanks a lot
 
 					file = new Blob([JSON.stringify({"exportType":"lifeAndMinistry", "configuration":currentConfiguration, "data":currentData, "lifeAndMinistryEnrolments":currentEnrolments, "lifeAndMinistryAssignments":currentAssignments})], {type: 'text/plain'});
 				} else {
-					file = new Blob([JSON.stringify({"exportType":"update", "configuration":configurationVue.configuration, "data":allPublishersVue.publishers, "lifeAndMinistryEnrolments":allParticipantsVue.enrolments, "lifeAndMinistryAssignments":allAssignmentsVue.allAssignments, "attendance": [attendanceVue.currentMonth, attendanceVue.meetingAttendanceRecord]})], {type: 'text/plain'});
+					file = new Blob([JSON.stringify({"exportType":"update", "configuration":configurationVue.configuration, "data":allPublishersVue.publishers, "lifeAndMinistryEnrolments":allParticipantsVue.enrolments, "lifeAndMinistryAssignments":allAssignmentsVue.allAssignments, "attendance": [attendanceVue.currentMonth, attendanceVue.meetingAttendanceRecord], "account": entryVue.allEntries})], {type: 'text/plain'});
 					await shortWait()
 					await shortWait()
 				}
@@ -6398,6 +6475,7 @@ Thanks a lot
 						allParticipantsVue.enrolments = result.lifeAndMinistryEnrolments
 						allAssignmentsVue.allAssignments = result.lifeAndMinistryAssignments
 						territoryVue.savedPolygons = result.territory
+						entryVue.allEntries = result.account
 	
 						await shortWait()
 						await shortWait()
@@ -6411,6 +6489,8 @@ Thanks a lot
 						DBWorker.postMessage({ storeName: 'lifeAndMinistryEnrolments', action: "save", value: result.lifeAndMinistryEnrolments});
 						DBWorker.postMessage({ storeName: 'lifeAndMinistryAssignments', action: "save", value: result.lifeAndMinistryAssignments});
 						DBWorker.postMessage({ storeName: 'territory', action: "save", value: [{"name": "FeatureCollection", "value": result.territory}]});
+						DBWorker.postMessage({ storeName: 'account', action: "save", value: result.account});
+
 	
 						await shortWait()
 						await shortWait()
@@ -6583,7 +6663,14 @@ Thanks a lot
 							await shortWait()
 							await shortWait()
 							DBWorker.postMessage({ storeName: 'lifeAndMinistryAssignments', action: "save", value: result.lifeAndMinistryAssignments});
-						}					
+						}
+						
+						if (result.account) {
+							entryVue.allEntries = result.account
+							await shortWait()
+							await shortWait()
+							DBWorker.postMessage({ storeName: 'account', action: "save", value: result.account});
+						}
 
 						await shortWait()
 						await shortWait()
@@ -6651,7 +6738,7 @@ Thanks a lot
 				var confirmReset = prompt('Are you sure you want to Reset records?\nType "Reset" to Reset')
                 if (confirmReset !== null && confirmReset.toLowerCase() == 'reset') {
 					this.reset = true
-					resetCount = 7
+					resetCount = 8
 					DBWorker.postMessage({ storeName: 'data', action: "readAll"});
                     DBWorker.postMessage({ storeName: 'configuration', action: "readAll"});
                     DBWorker.postMessage({ storeName: 'attendance', action: "readAll"});
@@ -6659,6 +6746,7 @@ Thanks a lot
                     DBWorker.postMessage({ storeName: 'lifeAndMinistryEnrolments', action: "readAll"});
                     DBWorker.postMessage({ storeName: 'lifeAndMinistryAssignments', action: "readAll"});
                     DBWorker.postMessage({ storeName: 'territory', action: "readAll"});
+                    DBWorker.postMessage({ storeName: 'account', action: "account"});
 
 					// Open a connection to the database
 					/*var request = indexedDB.open('congRec');
@@ -8181,13 +8269,14 @@ return
     console.log(publisher)
 }
 
+var allMonths = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+
 async function fillAccountSheet(count) {
 	if (!count) { count = 0 }
 	//const publisher = data[0]
 	//const period = data[1]
     // Get the form field by name
-	var allMonths = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
-    s26.getForm().getTextField('900_1_Text_C').setText(configurationVue.configuration.congregationName)
+	s26.getForm().getTextField('900_1_Text_C').setText(configurationVue.configuration.congregationName)
     s26.getForm().getTextField('900_2_Text_C').setText(configurationVue.configuration.city)
     s26.getForm().getTextField('900_3_Text_C').setText(configurationVue.configuration.province)
     s26.getForm().getTextField('900_4_Text_C').setText(allMonths[Number(fileVue.monthlyRecords()[count].month.split('-')[1]) - 1])
