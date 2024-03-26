@@ -3741,7 +3741,7 @@ function processFieldServiceGroups() {
 document.querySelector('#entry').innerHTML = `<template>
 	<div v-if="display == true">
 		<h2 class="w3-center">ENTRY</h2>
-		<h4 style="margin:5px;"><span :class="modeButton()" style="margin:5px" @click="newTransaction('W')">W</span><span :class="modeButton()" style="margin:5px" @click="newTransaction('C')">C</span><span :class="modeButton()" style="margin:5px" @click="newTransaction('CE')">CE</span><span :class="modeButton()" style="margin:5px" @click="newTransaction('D')">D</span><span :class="modeButton()" style="margin:5px" @click="newTransaction('E')">E</span><span :class="modeButton()" style="margin:5px" @click="newTransaction('I')">I</span><span :class="modeButton()" style="margin:5px" @click="newTransaction('S')">S</span></h4>
+		<h4 style="margin:5px;"><span :class="modeButton()" style="margin:5px" @click="newTransaction('W')">W</span><span :class="modeButton()" style="margin:5px" @click="newTransaction('C')">C</span><span :class="modeButton()" style="margin:5px" @click="newTransaction('CE')">CE</span><span :class="modeButton()" style="margin:5px" @click="newTransaction('D')">D</span><span :class="modeButton()" style="margin:5px" @click="newTransaction('E')">E</span><span :class="modeButton()" style="margin:5px" @click="newTransaction('I')">I</span><span :class="modeButton()" style="margin:5px" @click="newTransaction('S')">S</span><span :class="modeButton()" style="margin:5px" @click="newTransaction('BS')">Balance Shown</span><span :class="modeButton()" style="margin:5px" @click="newTransaction('BF')">Balance Forward</span></h4>
 		
 		<div :class="mode()" style="margin:5px; width: 100%; max-width: 300px; padding:10px 0">
 			<div class="w3-container main">
@@ -3753,7 +3753,7 @@ document.querySelector('#entry').innerHTML = `<template>
 					<option value="SECONDARY ACCOUNT">SECONDARY ACCOUNT</option>
 				</select>
 				<div style="margin-top:10px;display:flex">
-					<input type="number" min="0.01" style="width: 150px;margin-right:10px" placeholder="Amount" v-model="amount" class="w3-input">
+					<input type="number" min="0.00" style="width: 150px;margin-right:10px" placeholder="Amount" v-model="amount" class="w3-input">
 					<span @click="addTransaction($event.target)" class="w3-button w3-light-grey">ADD</span>
 				</div>
 			</div>
@@ -3785,7 +3785,7 @@ document.querySelector('#entry').innerHTML = `<template>
 						<th style="text-align:center">IN</th>
 						<th style="text-align:center">OUT</th>			
 					</tr>
-					<tr v-for="transaction in monthlyRecords().filter(elem=>elem.month == currentMonth)[0].entries" @dblclick="editTransaction(transaction)">
+					<tr v-for="transaction in monthlyRecords().filter(elem=>elem.month == currentMonth)[0].entries.filter(elem=>elem.transactionCode !== 'BF' && elem.transactionCode !== 'BS')" @dblclick="editTransaction(transaction)">
 						<td style="text-align:center">{{ transaction.date.split('-')[2] }}</td>
 						<td>{{ transaction.transactionDescription }}</td>				
 						<td style="text-align:center">{{ transaction.transactionCode }}</td>						
@@ -3806,6 +3806,172 @@ document.querySelector('#entry').innerHTML = `<template>
 						<th style="text-align:right">{{ columnTotal(monthlyRecords().filter(elem=>elem.month == currentMonth)[0].entries.filter(elem=>elem.transactionCode == 'E' && elem.account == 'SECONDARY ACCOUNT').map(elem=>elem.amount)) }}</th>			
 					</tr>
 				</table>
+			</div>
+		</div>
+		<div v-if="currentMonth !== ''" :class="mode()" style="margin:5px; width: 100%; padding:10px 0">
+			<div class="w3-container main">
+				<h4 style="text-align:center">PRIMARY ACCOUNT RECONCILIATION</h4>
+				<h5 style="text-align:center">Date Completed: {{ lastDay(currentMonth) }}</h5>
+				<div style="display:flex">
+					<div style="width: 45%">
+						<h5 style="text-align:center"><strong>Bank Account</strong></h5>
+						<p style="text-align:center">(Use ONLY if an account with a bank or similar<br>
+							institution is used as the primary account.)</p>
+						<table style="margin-bottom:0;margin-top:0">
+							<tr>
+								<td style="border:none">1.</td>
+								<td style="border:none" colspan="2">Ending balance shown on bank statement:</td>
+								<td style="border:none; border-bottom: 1px solid brown; text-align:right"></td>
+							</tr>
+							<tr>
+								<td style="border:none">2.</td>
+								<td style="border:none" colspan="2">All deposits recorded on Accounts Sheet but not <br>shown on statement:</td>
+								<td style="border:none; border-bottom: 1px solid brown; text-align:right"></td>
+							</tr>
+							<tr>
+								<td style="border:none">3.</td>
+								<td style="border:none" colspan="2">Any bank charges not recorded on Accounts Sheet:</td>
+								<td style="border:none; border-bottom: 1px solid brown; text-align:right"></td>
+							</tr>
+							<tr>
+								<td style="border:none">4.</td>
+								<td style="border:none" colspan="2">Total of lines 1 through 3:</td>
+								<td style="border:none; border-bottom: 1px solid brown; text-align:right"></td>
+							</tr>
+							<tr>
+								<td style="border:none">5.</td>
+								<td style="border:none" colspan="2">All checks/electronic transfers recorded on <br>Accounts Sheet not yet paid by bank:</td>
+								<td style="border:none; border-bottom: 1px solid brown; text-align:right"></td>
+							</tr>
+							<tr>
+								<td style="border:none">6.</td>
+								<td style="border:none" colspan="2">Total of checks/electronic transfers not yet paid by <br>bank [Sum of amounts entered for line 5]:</td>
+								<td style="border:none; border-bottom: 1px solid brown; text-align:right"></td>
+							</tr>
+							<tr>
+								<td style="border:none">7.</td>
+								<td style="border:none" colspan="2">Any bank interest not recorded on Accounts Sheet:</td>
+								<td style="border:none; border-bottom: 1px solid brown; text-align:right"></td>
+							</tr>
+							<tr>
+								<td style="border:none">8.</td>
+								<td style="border:none" colspan="2">All electronic contributions not recorded on <br>Accounts Sheet:</td>
+								<td style="border:none; border-bottom: 1px solid brown; text-align:right"></td>
+							</tr>
+							<tr>
+								<td style="border:none">9.</td>
+								<td style="border:none" colspan="2">Reconciled bank balance [Subtract lines 6 through 8 <br>from line 4]: </td>
+								<td style="border:none; border-bottom: 1px solid brown; text-align:right"></td>
+							</tr>
+						</table>
+						<p style="font-size:80%">(The amount on line 9 should equal the “Primary Account/Ending Balance”<br>figure in the “Accounts Sheet Summary” box.)<p>
+					</div>
+					<div style="width: 45%">
+						<h5 style="text-align:center"><strong>Cashbox</strong></h5>
+						<p style="text-align:center">(Use ONLY if a cashbox is used as<br>
+							the primary account.)</p>
+					</div>
+				</div>
+				<div style="display:flex">
+					<div style="width: 45%; border: 1px solid brown; margin:5px; padding:5px">
+						<h5 style="text-align:center"><strong>ACCOUNTS SHEET SUMMARY</strong></h5>
+						<p style="text-align:center">For Month Ending: {{ lastDay(currentMonth) }}</p>
+						<table style="margin-bottom:0;margin-top:0">
+							<tr>
+								<th style="border:none" colspan="6">RECEIPTS:</th>
+							</tr>
+							<tr>
+								<td style="border:none"></td>
+								<td style="border:none" colspan="2">Balance Forward</td>
+								<td style="border:none"></td>
+								<td style="border:none; border-bottom: 1px solid brown; text-align:right">{{ monthlyRecords().filter(elem=>elem.month == currentMonth)[0].entries.filter(elem=>elem.transactionCode == 'BF' && elem.account == "RECEIPTS")[0] ? monthlyRecords().filter(elem=>elem.month == currentMonth)[0].entries.filter(elem=>elem.transactionCode == 'BF' && elem.account == "RECEIPTS")[0].amount : '' }}</td>
+							</tr>
+							<tr>
+								<td style="border:none"></td>
+								<td style="border:none" colspan="2">IN</td>
+								<td style="border:none"></td>
+								<td style="border:none; border-bottom: 1px solid brown; text-align:right">{{ columnTotal(monthlyRecords().filter(elem=>elem.month == currentMonth)[0].entries.filter(elem=>elem.transactionCode == 'C' || elem.transactionCode == 'W').map(elem=>elem.amount)) }}</td>
+							</tr>
+							<tr>
+								<td style="border:none"></td>
+								<td style="border:none" colspan="2">OUT</td>
+								<td style="border:none"></td>
+								<td style="border:none; border-bottom: 1px solid brown; text-align:right">{{ columnTotal(monthlyRecords().filter(elem=>elem.month == currentMonth)[0].entries.filter(elem=>elem.transactionCode == 'D' || (elem.transactionCode == 'E' && elem.account == 'RECEIPTS')).map(elem=>elem.amount)) }}</td>
+							</tr>
+							<tr>
+								<td style="border:none"></td>
+								<td style="border:none" colspan="2">Ending Balance</td>
+								<td style="border:none"></td>
+								<td style="border:none"></td>
+								<td style="border:none; border-bottom: 1px solid brown; text-align:right">{{ endingBalance(monthlyRecords().filter(elem=>elem.month == currentMonth)[0].entries.filter(elem=>elem.transactionCode == 'BF' && elem.account == "RECEIPTS")[0] ? monthlyRecords().filter(elem=>elem.month == currentMonth)[0].entries.filter(elem=>elem.transactionCode == 'BF' && elem.account == "RECEIPTS")[0].amount : '', columnTotal(monthlyRecords().filter(elem=>elem.month == currentMonth)[0].entries.filter(elem=>elem.transactionCode == 'C' || elem.transactionCode == 'W').map(elem=>elem.amount)), columnTotal(monthlyRecords().filter(elem=>elem.month == currentMonth)[0].entries.filter(elem=>elem.transactionCode == 'D' || (elem.transactionCode == 'E' && elem.account == 'RECEIPTS')).map(elem=>elem.amount))) }}</td>
+							</tr>
+							<tr>
+								<th style="border:none" colspan="6">PRIMARY ACCOUNT:</th>
+							</tr>
+							<tr>
+								<td style="border:none"></td>
+								<td style="border:none" colspan="2">Balance Forward</td>
+								<td style="border:none"></td>
+								<td style="border:none; border-bottom: 1px solid brown; text-align:right">{{ monthlyRecords().filter(elem=>elem.month == currentMonth)[0].entries.filter(elem=>elem.transactionCode == 'BF' && elem.account == "PRIMARY ACCOUNT")[0] ? monthlyRecords().filter(elem=>elem.month == currentMonth)[0].entries.filter(elem=>elem.transactionCode == 'BF' && elem.account == "PRIMARY ACCOUNT")[0].amount : '' }}</td>
+							</tr>
+							<tr>
+								<td style="border:none"></td>
+								<td style="border:none" colspan="2">IN</td>
+								<td style="border:none"></td>
+								<td style="border:none; border-bottom: 1px solid brown; text-align:right">{{ columnTotal(monthlyRecords().filter(elem=>elem.month == currentMonth)[0].entries.filter(elem=>elem.transactionCode == 'D').map(elem=>elem.amount)) }}</td>
+							</tr>
+							<tr>
+								<td style="border:none"></td>
+								<td style="border:none" colspan="2">OUT</td>
+								<td style="border:none"></td>
+								<td style="border:none; border-bottom: 1px solid brown; text-align:right">{{ columnTotal(monthlyRecords().filter(elem=>elem.month == currentMonth)[0].entries.filter(elem=>elem.transactionCode == 'E' && elem.account == 'PRIMARY ACCOUNT').map(elem=>elem.amount)) }}</td>
+							</tr>
+							<tr>
+								<td style="border:none"></td>
+								<td style="border:none" colspan="2">Ending Balance</td>
+								<td style="border:none"></td>
+								<td style="border:none"></td>
+								<td style="border:none; border-bottom: 1px solid brown; text-align:right">{{ endingBalance(monthlyRecords().filter(elem=>elem.month == currentMonth)[0].entries.filter(elem=>elem.transactionCode == 'BF' && elem.account == "PRIMARY ACCOUNT")[0] ? monthlyRecords().filter(elem=>elem.month == currentMonth)[0].entries.filter(elem=>elem.transactionCode == 'BF' && elem.account == "PRIMARY ACCOUNT")[0].amount : '', columnTotal(monthlyRecords().filter(elem=>elem.month == currentMonth)[0].entries.filter(elem=>elem.transactionCode == 'D').map(elem=>elem.amount)), columnTotal(monthlyRecords().filter(elem=>elem.month == currentMonth)[0].entries.filter(elem=>elem.transactionCode == 'E' && elem.account == 'PRIMARY ACCOUNT').map(elem=>elem.amount))) }}</td>
+							</tr>
+							<tr>
+								<th style="border:none" colspan="6">SECONDARY ACCOUNT:</th>
+							</tr>
+							<tr>
+								<td style="border:none"></td>
+								<td style="border:none" colspan="2">Balance Forward</td>
+								<td style="border:none"></td>
+								<td style="border:none; border-bottom: 1px solid brown; text-align:right">{{ monthlyRecords().filter(elem=>elem.month == currentMonth)[0].entries.filter(elem=>elem.transactionCode == 'BF' && elem.account == "SECONDARY ACCOUNT")[0] ? monthlyRecords().filter(elem=>elem.month == currentMonth)[0].entries.filter(elem=>elem.transactionCode == 'BF' && elem.account == "SECONDARY ACCOUNT")[0].amount : '' }}</td>
+							</tr>
+							<tr>
+								<td style="border:none"></td>
+								<td style="border:none" colspan="2">IN</td>
+								<td style="border:none"></td>
+								<td style="border:none; border-bottom: 1px solid brown; text-align:right">{{ columnTotal(monthlyRecords().filter(elem=>elem.month == currentMonth)[0].entries.filter(elem=>elem.transactionCode !== 'E' && elem.account == 'SECONDARY ACCOUNT').map(elem=>elem.amount)) }}</td>
+							</tr>
+							<tr>
+								<td style="border:none"></td>
+								<td style="border:none" colspan="2">OUT</td>
+								<td style="border:none"></td>
+								<td style="border:none; border-bottom: 1px solid brown; text-align:right">{{ columnTotal(monthlyRecords().filter(elem=>elem.month == currentMonth)[0].entries.filter(elem=>elem.transactionCode == 'E' && elem.account == 'SECONDARY ACCOUNT').map(elem=>elem.amount)) }}</td>
+							</tr>
+							<tr>
+								<td style="border:none"></td>
+								<td style="border:none" colspan="2">Ending Balance</td>
+								<td style="border:none"></td>
+								<td style="border:none"></td>
+								<!--td style="border:none; border-bottom: 1px solid brown; text-align:right">{{ endingBalance(monthlyRecords().filter(elem=>elem.month == currentMonth)[0].entries.filter(elem=>elem.transactionCode == 'BF' && elem.account == "SECONDARY ACCOUNT")[0].amount, columnTotal(monthlyRecords().filter(elem=>elem.month == currentMonth)[0].entries.filter(elem=>elem.transactionCode == 'C' || elem.transactionCode == 'W').map(elem=>elem.amount)), columnTotal(monthlyRecords().filter(elem=>elem.month == currentMonth)[0].entries.filter(elem=>elem.transactionCode == 'D' || (elem.transactionCode == 'E' && elem.account == 'RECEIPTS')).map(elem=>elem.amount))) }}</td-->
+							</tr>
+							<tr>
+								<th style="border:none" colspan="5">TOTAL FUNDS ON HAND <br>AT END OF MONTH</th>
+								<!--td style="border:none; border-bottom: 1px solid brown; text-align:right">{{ endingBalance(endingBalance(monthlyRecords().filter(elem=>elem.month == currentMonth)[0].entries.filter(elem=>elem.transactionCode == 'BF' && elem.account == "RECEIPTS")[0].amount, columnTotal(monthlyRecords().filter(elem=>elem.month == currentMonth)[0].entries.filter(elem=>elem.transactionCode == 'C' || elem.transactionCode == 'W').map(elem=>elem.amount)), columnTotal(monthlyRecords().filter(elem=>elem.month == currentMonth)[0].entries.filter(elem=>elem.transactionCode == 'D' || (elem.transactionCode == 'E' && elem.account == 'RECEIPTS')).map(elem=>elem.amount))), endingBalance(monthlyRecords().filter(elem=>elem.month == currentMonth)[0].entries.filter(elem=>elem.transactionCode == 'BF' && elem.account == "PRIMARY ACCOUNT")[0].amount, columnTotal(monthlyRecords().filter(elem=>elem.month == currentMonth)[0].entries.filter(elem=>elem.transactionCode == 'C' || elem.transactionCode == 'W').map(elem=>elem.amount)), columnTotal(monthlyRecords().filter(elem=>elem.month == currentMonth)[0].entries.filter(elem=>elem.transactionCode == 'D' || (elem.transactionCode == 'E' && elem.account == 'RECEIPTS')).map(elem=>elem.amount))), endingBalance(monthlyRecords().filter(elem=>elem.month == currentMonth)[0].entries.filter(elem=>elem.transactionCode == 'BF' && elem.account == "SECONDARY ACCOUNT")[0].amount, columnTotal(monthlyRecords().filter(elem=>elem.month == currentMonth)[0].entries.filter(elem=>elem.transactionCode == 'C' || elem.transactionCode == 'W').map(elem=>elem.amount)), columnTotal(monthlyRecords().filter(elem=>elem.month == currentMonth)[0].entries.filter(elem=>elem.transactionCode == 'D' || (elem.transactionCode == 'E' && elem.account == 'RECEIPTS')).map(elem=>elem.amount))), true) }}</td-->
+							</tr>
+						</table>
+					</div>
+					<div style="width: 45%; border: 1px solid brown; margin:5px; padding:5px">
+						<h5 style="text-align:center"><strong>SECONDARY ACCOUNT RECONCILIATION</strong></h5>
+						<p style="text-align:center">Date Completed:</p>
+					</div>
+				</div>
 			</div>
 		</div>
 				
@@ -3849,6 +4015,38 @@ function processEntry() {
 			date() {
                 return monthlyReportVue.cleanDate(new Date())
             },
+			endingBalance(forwardAmount, inAmount, outAmount, balance) {
+				if (forwardAmount == '') {
+					forwardAmount = 0
+				}
+				if (inAmount == '') {
+					inAmount = 0
+				}
+				if (outAmount == '') {
+					outAmount = 0
+				}
+				var sum
+				if (!balance) {
+					sum = Number(forwardAmount.toString().replaceAll(',', '')) + Number(inAmount.toString().replaceAll(',', '')) - Number(outAmount.toString().replaceAll(',', ''))
+				} else {
+					sum = Number(forwardAmount.toString().replaceAll(',', '')) + Number(inAmount.toString().replaceAll(',', '')) + Number(outAmount.toString().replaceAll(',', ''))
+				}
+				if (sum == 0) {
+					return ''
+				} else if (sum < 0) {
+					return `(${sum.toFixed(2) * -1})`
+				} else {
+					return sum.toFixed(2)
+				}
+				
+			},
+			lastDay(value) {
+				var lastDay = new Date(`${Number(value.split('-')[1]) == 12 ? allMonths[0] : allMonths[Number(value.split('-')[1])]} 1, ${Number(value.split('-')[1]) == 12 ? Number(value.split('-')[0]) + 1 : value.split('-')[0]}`);
+
+				lastDay.setDate(lastDay.getDate() - 1);
+				const options = { year: 'numeric', month: 'long', day: 'numeric' };
+				return new Date(lastDay).toLocaleDateString('en-US', options);
+			},
 			cleanMonth(value) {
 				return `${allMonths[Number(value.split('-')[1]) - 1]} ${value.split('-')[0]}`
 			},
@@ -3882,14 +4080,17 @@ function processEntry() {
 					
 				} else if (code == 'D') {
 					this.transactionDescription = 'Deposite to Primary Account'
-					
 				} else if (code == 'E') {
 					this.transactionDescription = 'Local Congregation Expenses'
-					
 					this.showAccount = true
 				} else if (code == 'W') {
 					this.transactionDescription = 'Contribution - Worldwide Work'
 					
+				} else if (code == 'BF') {
+					this.transactionDescription = 'Balance Forward'
+					this.showAccount = true
+				} else if (code == 'BS') {
+					this.transactionDescription = 'Ending balance shown on bank statement'
 				}
 			},
 			editTransaction(value) {
@@ -3914,9 +4115,16 @@ function processEntry() {
 				//console.log(this.transactionDescription)
 				//console.log(this.amount)
 				//console.log(this.currentDate)
-				const account = this.account
+				var account = this.account
 				this.account = "RECEIPTS"
-				DBWorker.postMessage({ storeName: 'account', action: "save", value: [{"name":`${this.currentDate}_${this.transactionCode}_${this.transactionDescription}`, "date": this.currentDate, "transactionCode": this.transactionCode, "transactionDescription": this.transactionDescription, "amount": Number(this.amount), "account": account}]});
+				var transactionDate = this.currentDate
+				if (this.transactionCode == 'BF') {
+					transactionDate = this.currentDate.split('-').slice(0, 2).join('-')
+				} else if (this.transactionCode == 'BS') {
+					transactionDate = this.currentDate.split('-').slice(0, 2).join('-')
+					account = "Bank Account"
+				}
+				DBWorker.postMessage({ storeName: 'account', action: "save", value: [{"name":`${this.currentDate}_${this.transactionCode}_${this.transactionDescription}`, "date": transactionDate, "transactionCode": this.transactionCode, "transactionDescription": this.transactionDescription, "amount": Number(this.amount), "account": account}]});
 				await shortWait()
 				await shortWait()
 				//await shortWait()
@@ -6117,6 +6325,8 @@ document.querySelector("#configuration").innerHTML = `<template>
 							<div v-if="reportEntry == 'secretary' || reportEntry == 'lmo'" id="export">
 								<label><input type="radio" name="exportGroup" value="all" style="margin-right: 5px;" checked>All</label>
 								<br v-if="reportEntry !== 'lmo'">
+								<label v-if="reportEntry !== 'lmo'"><input type="radio" name="exportGroup" value="accounts" style="margin-right: 5px;">Accounts</label>
+								<br v-if="reportEntry !== 'lmo'">
 								<label v-if="reportEntry !== 'lmo'"><input type="radio" name="exportGroup" value="reportEntry" style="margin-right: 5px;">Report Entry</label>
 								<br>
 								<label><input type="radio" name="exportGroup" value="lifeAndMinistry" style="margin-right: 5px;">Life and Ministry</label>
@@ -6421,6 +6631,22 @@ Thanks a lot
 					await shortWait()
 
 					file = new Blob([JSON.stringify({"exportType":"lifeAndMinistry", "configuration":currentConfiguration, "data":currentData, "lifeAndMinistryEnrolments":currentEnrolments, "lifeAndMinistryAssignments":currentAssignments})], {type: 'text/plain'});
+				} else if (getSelectedOption(document.getElementsByName("exportGroup")) == 'accounts') {
+					var currentConfiguration = JSON.parse(JSON.stringify(configurationVue.configuration))
+					await shortWait()
+					await shortWait()
+
+					delete currentConfiguration.address
+					delete currentConfiguration.email
+					delete currentConfiguration.cboe
+					delete currentConfiguration.sec
+					delete currentConfiguration.assistantSec
+					delete currentConfiguration.so
+
+					await shortWait()
+					await shortWait()
+
+					file = new Blob([JSON.stringify({"exportType":"account", "configuration":currentConfiguration, "account": entryVue.allEntries})], {type: 'text/plain'});
 				} else {
 					file = new Blob([JSON.stringify({"exportType":"update", "configuration":configurationVue.configuration, "data":allPublishersVue.publishers, "lifeAndMinistryEnrolments":allParticipantsVue.enrolments, "lifeAndMinistryAssignments":allAssignmentsVue.allAssignments, "attendance": [attendanceVue.currentMonth, attendanceVue.meetingAttendanceRecord], "account": entryVue.allEntries})], {type: 'text/plain'});
 					await shortWait()
@@ -6622,6 +6848,21 @@ Thanks a lot
 						configured = true
 						
 						gotoView('territoryVue')
+
+					} else if (exportType == 'account') {
+
+						entryVue.allEntries = result.account
+						
+						await shortWait()
+						await shortWait()
+
+						DBWorker.postMessage({ storeName: 'account', action: "save", value: result.account});
+	
+						await shortWait()
+							
+						configured = true
+						
+						gotoView('entryVue')
 
 					} else if (exportType == 'update') {
 
@@ -8333,7 +8574,7 @@ async function fillAccountSheet(count) {
 		s26.getForm().getTextField(`904_35_S26TotalAmount`).setText(`${(primaryOut).toLocaleString().split('.')[0]}.${(primaryOut).toFixed(2).split('.')[1]}`)
 	}
 	
-	var lastDay = new Date(`${allMonths[Number(fileVue.monthlyRecords()[count].month.split('-')[1]) - 1]} 1, ${fileVue.monthlyRecords()[count].month.split('-')[0]}`);
+	var lastDay = new Date(`${allMonths[Number(fileVue.monthlyRecords()[count].month.split('-')[1])]} 1, ${fileVue.monthlyRecords()[count].month.split('-')[0]}`);
 
 	//lastDay ; //# => Fri Apr 01 2011 11:14:50 GMT+0200 (CEST)
 
