@@ -686,6 +686,18 @@ DBWorker.onmessage = async function (msg) {
 							await getFieldByName(msgData.value.filter(elem=>elem.name == 'S-26')[0].value, 'S-26')
 						}
 					}
+					if (msgData.value.filter(elem=>elem.name == 'S-30').length !== 0) {
+						//console.log(msgData.value.filter(elem=>elem.name == 'S-21_E.pdf')[0])
+						if (!s30) {
+							await getFieldByName(msgData.value.filter(elem=>elem.name == 'S-30')[0].value, 'S-30')
+						}
+					}
+					if (msgData.value.filter(elem=>elem.name == 'TO-62').length !== 0) {
+						//console.log(msgData.value.filter(elem=>elem.name == 'S-21_E.pdf')[0])
+						if (!to62) {
+							await getFieldByName(msgData.value.filter(elem=>elem.name == 'TO-62')[0].value, 'TO-62')
+						}
+					}
 					if (msgData.value.filter(elem=>elem.name == 'S-89').length !== 0) {
 						//console.log(msgData.value.filter(elem=>elem.name == 'S-21_E.pdf')[0])
 						if (!s89) {
@@ -1073,7 +1085,7 @@ function processNavigation() {
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
 					this.buttons = [{"title": "ENTRY", "function": "entryVue"}, {"title": "APPROVALS", "function": "approvalsVue"}, {"title": "ARCHIVE", "function": "archiveVue"}]
-					fillAccountSheet()
+					//fillAccountSheet()
 				} else if (button.innerHTML == "ENTRY") {
 					this.displayDropdown = false
 					allPublishersVue.request = false
@@ -1437,7 +1449,7 @@ function processNavigation2() {
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
 					navigationVue.buttons = [{"title": "ENTRY", "function": "entryVue"}, {"title": "APPROVALS", "function": "approvalsVue"}, {"title": "ARCHIVE", "function": "archiveVue"}]
-					fillAccountSheet()
+					//fillAccountSheet()
 				} else if (button.innerHTML == "ENTRY") {
 					navigationVue.displayDropdown = false
 					allPublishersVue.request = false
@@ -3745,9 +3757,10 @@ document.querySelector('#entry').innerHTML = `<template>
 			<div v-for="(action, count) in allActions" :class="modeButton()" style="margin:5px" @click="newTransaction(action.code, action.description)">{{ action.name }}</div>
 		</p>
 		
-		<div :class="mode()" style="margin:5px; width: 100%; max-width: 300px; padding:10px 0">
+		<div :class="mode()" style="margin:5px; width: 100%; max-width: 360px; padding:10px 0">
 			<div class="w3-container main">
 				<input type="date" v-model="currentDate"><input v-model="transactionCode" style="margin:5px; width: 60px;" placeholder="Code">
+				<span style="display:none" @click="deleteItem()" class="w3-button w3-light-grey" id="delete">DELETE</span>
 				<textarea type="text" style="width: 250px; margin-top:5px" placeholder="Transaction Description" v-model="transactionDescription"></textarea>
 				<select v-if="showAccount" v-model="account" class="w3-input" style="margin-buttom:10px;">
 					<option value="RECEIPTS">RECEIPTS</option>
@@ -3755,17 +3768,20 @@ document.querySelector('#entry').innerHTML = `<template>
 					<option value="SECONDARY ACCOUNT">SECONDARY ACCOUNT</option>
 				</select>
 				<div style="margin-top:10px;display:flex">
-					<input type="number" min="0.00" style="width: 150px;margin-right:10px" placeholder="Amount" v-model="amount" class="w3-input">
-					<span @click="addTransaction($event.target)" class="w3-button w3-light-grey">ADD</span>
+					<input type="number" style="width: 150px;margin-right:10px" placeholder="Amount" v-model="amount" class="w3-input">
+					<span @click="addTransaction($event.target)" class="w3-button w3-light-grey" id="add">ADD</span>
+					<span style="margin-right:5px;display:none" @click="saveEdit($event.target)" class="w3-button w3-light-grey" id="save">SAVE</span>
+					<span style="display:none" @click="cancelEdit()" class="w3-button w3-light-grey" id="cancel">CANCEL</span>
 				</div>
 			</div>
 		</div>
 
 		<h2 class="w3-center">DETAILS</h2>
-		<h4 style="margin:5px; width:250px">
-			<select v-model="currentMonth" class="w3-input" style="margin-buttom:10px;">
+		<h4 style="margin:15px; width:350px;display:flex">
+			<select v-model="currentMonth" class="w3-input" style="width:250px">
 				<option v-for="(entry, count) in monthlyRecords()" :value="entry.month">{{ cleanMonth(entry.month) }}</option>
 			</select>
+			<span style="margin-left:10px;" v-if="currentMonth !== ''" @click="fileRecord()" class="w3-button w3-light-grey" id="file">Shelf</span>
 		</h4>
 
 		<div v-if="currentMonth !== ''" :class="mode()" style="margin:5px; width: 100%; padding:10px 0">
@@ -3798,7 +3814,7 @@ document.querySelector('#entry').innerHTML = `<template>
 						<td style="text-align:right">{{ transaction.transactionCode !== 'E' && transaction.account == 'SECONDARY ACCOUNT' ? (transaction.amount).toLocaleString().split('.')[0] + '.' + (transaction.amount).toFixed(2).split('.')[1] : ''}}</td>						
 						<td style="text-align:right">{{ transaction.transactionCode == 'E' && transaction.account == 'SECONDARY ACCOUNT' ? (transaction.amount).toLocaleString().split('.')[0] + '.' + (transaction.amount).toFixed(2).split('.')[1] : ''}}</td>				
 					</tr>
-					<tr>
+					<tr @dblclick="editTransaction(monthlyRecords().filter(elem=>elem.month == currentMonth)[0].entries.filter(elem=>elem.transactionCode == 'TD')[0])">
 						<td style="text-align:center">{{ lastDay(currentMonth).split(' ')[1].replace(',','') }}</td>
 						<td>To Branch Office - ({{ singleAmount('TD') }})</td>				
 						<td style="text-align:center"></td>						
@@ -3853,49 +3869,60 @@ document.querySelector('#entry').innerHTML = `<template>
 						<p style="text-align:center">(Use ONLY if an account with a bank or similar<br>
 							institution is used as the primary account.)</p>
 						<table style="margin-bottom:0;margin-top:0">
-							<tr>
+							<tr @dblclick="editTransaction(monthlyRecords().filter(elem=>elem.month == currentMonth)[0].entries.filter(elem=>elem.transactionCode == 'BS')[0])">
 								<td style="border:none">1.</td>
-								<td style="border:none" colspan="2">Ending balance shown on bank statement:</td>
+								<td style="border:none" colspan="3">Ending balance shown on bank statement:</td>
 								<td style="border:none; border-bottom: 1px solid brown; text-align:right">{{ singleAmount('BS') }}</td>
 							</tr>
-							<tr>
+							<tr @dblclick="editTransaction(monthlyRecords().filter(elem=>elem.month == currentMonth)[0].entries.filter(elem=>elem.transactionCode == 'PD')[0])">
 								<td style="border:none">2.</td>
-								<td style="border:none" colspan="2">All deposits recorded on Accounts Sheet but not <br>shown on statement:</td>
+								<td style="border:none" colspan="3">All deposits recorded on Accounts Sheet but not <br>shown on statement:</td>
 								<td style="border:none; border-bottom: 1px solid brown; text-align:right">{{ singleAmount('PD') }}</td>
 							</tr>
-							<tr>
+							<tr @dblclick="editTransaction(monthlyRecords().filter(elem=>elem.month == currentMonth)[0].entries.filter(elem=>elem.transactionCode == 'PC')[0])">
 								<td style="border:none">3.</td>
-								<td style="border:none" colspan="2">Any bank charges not recorded on Accounts Sheet:</td>
+								<td style="border:none" colspan="3">Any bank charges not recorded on Accounts Sheet:</td>
 								<td style="border:none; border-bottom: 1px solid brown; text-align:right">{{ singleAmount('PC') }}</td>
 							</tr>
 							<tr>
 								<td style="border:none">4.</td>
-								<td style="border:none" colspan="2">Total of lines 1 through 3:</td>
+								<td style="border:none" colspan="3">Total of lines 1 through 3:</td>
 								<td style="border:none; border-bottom: 2px solid brown; text-align:right">{{ bankAccountSum() }}</td>
 							</tr>
 							<tr>
 								<td style="border:none">5.</td>
-								<td style="border:none" colspan="2">All checks/electronic transfers recorded on <br>Accounts Sheet not yet paid by bank:</td>
-								<td style="border:none; border-bottom: 1px solid brown; text-align:right"></td>
+								<td style="border:none" colspan="3">All checks/electronic transfers recorded on <br>Accounts Sheet not yet paid by bank:</td>
+							</tr>
+							<tr>
+								<td style="border:none"></td>
+								<td style="border:none; border-bottom: 1px solid brown;">Check/Confirmation No.</td>
+								<td style="border:none"></td>
+								<td style="border:none; border-bottom: 1px solid brown; text-align:center">Amount</td>
+							</tr>
+							<tr>
+								<td style="border:none"></td>
+								<td style="border:none; border-bottom: 1px solid brown;">To Branch Office - ({{ singleAmount('TD') }})</td>
+								<td style="border:none"></td>
+								<td style="border:none; border-bottom: 1px solid brown; text-align:center">{{ endingBalance(totalContributions('W'), singleAmount('RW'), 0, true) }}</td>
 							</tr>
 							<tr>
 								<td style="border:none">6.</td>
-								<td style="border:none" colspan="2">Total of checks/electronic transfers not yet paid by <br>bank [Sum of amounts entered for line 5]:</td>
-								<td style="border:none; border-bottom: 1px solid brown; text-align:right"></td>
+								<td style="border:none;" colspan="3">Total of checks/electronic transfers not yet paid by <br>bank [Sum of amounts entered for line 5]:</td>
+								<td style="border:none; border-bottom: 1px solid brown; text-align:right">{{ endingBalance(totalContributions('W'), singleAmount('RW'), 0, true) }}</td>
 							</tr>
 							<tr>
 								<td style="border:none">7.</td>
-								<td style="border:none" colspan="2">Any bank interest not recorded on Accounts Sheet:</td>
+								<td style="border:none" colspan="3">Any bank interest not recorded on Accounts Sheet:</td>
 								<td style="border:none; border-bottom: 1px solid brown; text-align:right"></td>
 							</tr>
 							<tr>
 								<td style="border:none">8.</td>
-								<td style="border:none" colspan="2">All electronic contributions not recorded on <br>Accounts Sheet:</td>
+								<td style="border:none" colspan="3">All electronic contributions not recorded on <br>Accounts Sheet:</td>
 								<td style="border:none; border-bottom: 1px solid brown; text-align:right"></td>
 							</tr>
 							<tr>
 								<td style="border:none">9.</td>
-								<td style="border:none" colspan="2">Reconciled bank balance [Subtract lines 6 through 8 <br>from line 4]: </td>
+								<td style="border:none" colspan="3">Reconciled bank balance [Subtract lines 6 through 8 <br>from line 4]: </td>
 								<td style="border:none; border-bottom: 2px solid brown; text-align:right">{{ bankAccountReconcile() }}</td>
 							</tr>
 						</table>
@@ -3915,7 +3942,7 @@ document.querySelector('#entry').innerHTML = `<template>
 							<tr>
 								<th style="border:none" colspan="6">RECEIPTS:</th>
 							</tr>
-							<tr>
+							<tr @dblclick="editTransaction(monthlyRecords().filter(elem=>elem.month == currentMonth)[0].entries.filter(elem=>elem.transactionCode == 'BF' && elem.account == 'RECEIPTS')[0])">
 								<td style="border:none"></td>
 								<td style="border:none" colspan="2">Balance Forward</td>
 								<td style="border:none"></td>
@@ -3946,7 +3973,7 @@ document.querySelector('#entry').innerHTML = `<template>
 							<tr>
 								<th style="border:none" colspan="6">PRIMARY ACCOUNT:</th>
 							</tr>
-							<tr>
+							<tr @dblclick="editTransaction(monthlyRecords().filter(elem=>elem.month == currentMonth)[0].entries.filter(elem=>elem.transactionCode == 'BF' && elem.account == 'PRIMARY ACCOUNT')[0])">
 								<td style="border:none"></td>
 								<td style="border:none" colspan="2">Balance Forward</td>
 								<td style="border:none"></td>
@@ -3977,7 +4004,7 @@ document.querySelector('#entry').innerHTML = `<template>
 							<tr>
 								<th style="border:none" colspan="6">SECONDARY ACCOUNT:</th>
 							</tr>
-							<tr>
+							<tr @dblclick="editTransaction(monthlyRecords().filter(elem=>elem.month == currentMonth)[0].entries.filter(elem=>elem.transactionCode == 'BF' && elem.account == 'SECONDARY ACCOUNT')[0])">
 								<td style="border:none"></td>
 								<td style="border:none" colspan="2">Balance Forward</td>
 								<td style="border:none"></td>
@@ -4025,7 +4052,7 @@ document.querySelector('#entry').innerHTML = `<template>
 				<p style="text-align:center">Month/Year: {{ cleanMonth(currentMonth) }}</p>
 				<div style="padding: 15px">
 					<table style="margin-bottom:0;margin-top:0;">
-						<tr>
+						<tr @dblclick="editTransaction(monthlyRecords().filter(elem=>elem.month == currentMonth)[0].entries.filter(elem=>elem.transactionCode == 'TF')[0])">
 							<td style="border:none" colspan="5">Total Funds at Beginning of Month (Bring forward from Figure [i] of preceding month’s report.)</td>
 							<td style="border:none; border-bottom: 1px solid brown; text-align:right">{{ singleAmount('TF') }}</td>
 						</tr>
@@ -4137,11 +4164,11 @@ document.querySelector('#entry').innerHTML = `<template>
 						</tr>
 						<tr>
 							<td style="border:none" colspan="5">Total Funds at End of Month [(a) + (h)] (Carry forward to Figure [a] of the next month’s report.)</td>
-							<td style="border:none; border-bottom: 1px solid brown; text-align:right">{{ endingBalance(singleAmount('TF'), endingBalance(0, endingBalance(totalContributions('C'), totalContributions('CE'), totalContributions('W'), true), endingBalance(endingBalance(totalContributions('E'), singleAmount('RW'), bankCharge(), true), totalContributions('W'), 0, true)), 0) }}</td>
+							<td style="border:none; border-bottom: 1px solid brown; text-align:right">{{ endOfMonth() }}</td>
 						</tr>
 						<tr>
 							<td style="border:none" colspan="5"><strong>AVAILABLE CONGREGATION FUNDS AT END OF MONTH</strong> [(i) – (j)] </td>
-							<td style="border:none; border-bottom: 1px solid brown; text-align:right">{{ endingBalance(singleAmount('TF'), endingBalance(0, endingBalance(totalContributions('C'), totalContributions('CE'), totalContributions('W'), true), endingBalance(endingBalance(totalContributions('E'), singleAmount('RW'), bankCharge(), true), totalContributions('W'), 0, true)), 0) }}</td>
+							<td style="border:none; border-bottom: 1px solid brown; text-align:right">{{ endOfMonth() }}</td>
 						</tr>
 					</table>
 				</div>
@@ -4153,7 +4180,7 @@ document.querySelector('#entry').innerHTML = `<template>
 				<p>A copy of the Monthly Congregation Accounts Report for the month of {{ cleanMonth(currentMonth) }} will 
 				be posted on the information board. In summary, the congregation received a total of {{ endingBalance(totalContributions('C'), totalContributions('CE'), 0, true) == '' ? '0,00' : endingBalance(totalContributions('C'), totalContributions('CE'), 0, true) }}.
 				Congregation expenditures for the month totaled {{ endingBalance(totalContributions('E'), singleAmount('RW'), bankCharge(), true) }}. The congregation had a month-end
-				balance of {{ endingBalance(singleAmount('TF'), endingBalance(0, endingBalance(totalContributions('C'), totalContributions('CE'), totalContributions('W'), true), endingBalance(endingBalance(totalContributions('E'), singleAmount('RW'), bankCharge(), true), totalContributions('W'), 0, true)), 0) }}. The congregation also forwarded donations from contribution boxes to the
+				balance of {{ endOfMonth2() }}. The congregation also forwarded donations from contribution boxes to the
 				branch oﬃce in the amount of {{ totalContributions('W') }} for the worldwide work.</p>
 			</div>
 		</div>
@@ -4203,9 +4230,11 @@ function processEntry() {
             display: false,
             transactionCode: "",
 			transactionDescription: "",
+			currentName: "",
 			amount: "",
 			account: "RECEIPTS",
 			showAccount: false,
+			editing: false,
 			allEntries: [],
 			allActions: [
 				{"name": "W", "code": "W", "description": "Contribution - Worldwide Work"},
@@ -4347,13 +4376,40 @@ function processEntry() {
 				return this.endingBalance(this.openingBalance('SECONDARY ACCOUNT'), this.secondaryInTotal(), this.secondaryOutTotal())
 			},
 			totalFundsOnHand() {
-				return this.endingBalance(this.receiptEndingBalance(), this.primaryEndingBalance(), this.secondaryEndingBalance(), true)
+				var receipt = this.receiptEndingBalance()
+				var primary = this.primaryEndingBalance()
+				var secondary = this.secondaryEndingBalance()
+				const value = this.endingBalance(receipt, primary, secondary, true)
+				const nextMonth = getNextMonthFromDate(new Date(this.currentMonth))
+				//console.log(getNextMonthFromDate(new Date(this.currentMonth)), value, receipt, primary, secondary)
+				if (receipt !== '') {
+					if (receipt.toString().startsWith('(')) {
+						receipt = `-${receipt.toString().replace('(','').replace(')','')}`
+					}
+					DBWorker.postMessage({ storeName: 'account', action: "save", value: [{"name":`${nextMonth}_${'BF'}_${'Balance Forward-RECEIPTS'}`, "date": nextMonth, "transactionCode": 'BF', "transactionDescription": "Balance Forward-RECEIPTS", "amount": Number(receipt.toString().replaceAll(',', '')), "account": 'RECEIPTS'}]});
+				}
+
+				if (primary !== '') {
+					if (primary.toString().startsWith('(')) {
+						primary = `-${primary.toString().replace('(','').replace(')','')}`
+					}
+					DBWorker.postMessage({ storeName: 'account', action: "save", value: [{"name":`${nextMonth}_${'BF'}_${'Balance Forward-PRIMARY ACCOUNT'}`, "date": nextMonth, "transactionCode": 'BF', "transactionDescription": "Balance Forward-PRIMARY ACCOUNT", "amount": Number(primary.toString().replaceAll(',', '')), "account": 'PRIMARY ACCOUNT'}]});
+				}
+
+				if (secondary !== '') {
+					if (secondary.toString().startsWith('(')) {
+						secondary = `-${secondary.toString().replace('(','').replace(')','')}`
+					}
+					DBWorker.postMessage({ storeName: 'account', action: "save", value: [{"name":`${nextMonth}_${'BF'}_${'Balance Forward-SECONDARY ACCOUNT'}`, "date": nextMonth, "transactionCode": 'BF', "transactionDescription": "Balance Forward-SECONDARY ACCOUNT", "amount": Number(secondary.toString().replaceAll(',', '')), "account": 'SECONDARY ACCOUNT'}]});
+				}
+				
+				return value
 			},
 			bankAccountSum() {
 				return this.endingBalance(this.singleAmount('BS'), this.singleAmount('PD'), this.singleAmount('PC'), true)
 			},
 			bankAccountReconcile() {
-				return this.endingBalance(0, this.bankAccountSum(), 0)
+				return this.endingBalance(0, this.bankAccountSum(), this.endingBalance(this.totalContributions('W'), this.singleAmount('RW'), 0, true))
 			},
 			totalContributions(code) {
 				if (code == 'E') {
@@ -4363,6 +4419,20 @@ function processEntry() {
 			},
 			bankCharge() {
 				return this.columnTotal(this.monthlyRecords().filter(elem=>elem.month == this.currentMonth)[0].entries.filter(elem=>elem.transactionDescription.includes('COT') || elem.transactionDescription.includes('Account Statement')).map(elem=>elem.amount))
+			},
+			endOfMonth() {
+				return this.endingBalance(this.singleAmount('TF'), this.endingBalance(0, this.endingBalance(this.totalContributions('C'), this.totalContributions('CE'), this.totalContributions('W'), true), this.endingBalance(this.endingBalance(this.totalContributions('E'), this.singleAmount('RW'), this.bankCharge(), true), this.totalContributions('W'), 0, true)), 0)
+			},
+			endOfMonth2() {
+				const value = this.endingBalance(this.singleAmount('TF'), this.endingBalance(0, this.endingBalance(this.totalContributions('C'), this.totalContributions('CE'), this.totalContributions('W'), true), this.endingBalance(this.endingBalance(this.totalContributions('E'), this.singleAmount('RW'), this.bankCharge(), true), this.totalContributions('W'), 0, true)), 0)
+				const nextMonth = getNextMonthFromDate(new Date(this.currentMonth))
+				if (value !== '') {
+					if (value.toString().startsWith('(')) {
+						value = `-${value.toString().replace('(','').replace(')','')}`
+					}
+					DBWorker.postMessage({ storeName: 'account', action: "save", value: [{"name":`${nextMonth}_${'TF'}_${'Total Funds at Beginning of Month'}`, "date": nextMonth, "transactionCode": 'TF', "transactionDescription": "Total Funds at Beginning of Month", "amount": Number(value.toString().replaceAll(',', '')), "account": 'RECEIPTS'}]});
+				}
+				return value
 			},
 			singleAmount(code) {
 				if (code == 'TD') {
@@ -4381,7 +4451,31 @@ function processEntry() {
 				}
 			},
 			editTransaction(value) {
-				console.log(value)
+				//console.log(value)
+				if (undefined == value) { return }
+				document.querySelector('span#add').style.display = 'none'
+				document.querySelector('span#save').style.display = ''
+				document.querySelector('span#cancel').style.display = ''
+				document.querySelector('span#delete').style.display = ''
+				document.documentElement.scrollTop = 0;
+				
+				this.transactionCode = value.transactionCode
+				this.transactionDescription = value.transactionDescription
+				if (value.transactionCode !== 'TD') {
+					this.amount = value.amount
+				}
+				this.currentName = value.name
+				if (value.date == value.month) {
+					this.currentDate = value.date + '-01'
+				} else {
+					this.currentDate = value.date
+				}
+				if (value.transactionCode == 'E' || value.transactionCode == 'BF') {
+					this.showAccount = true
+					this.account = value.account
+				} else {
+					this.showAccount = false
+				}
 			},
             async addTransaction(element) {
 				if (this.transactionCode == '') {
@@ -4397,11 +4491,7 @@ function processEntry() {
 					alert('Please enter a Date')
 					return
 				}
-				element.parentNode.parentNode.querySelector('span').innerHTML = `<i class="fas fa-check"></i>`
-				//console.log(this.transactionCode)
-				//console.log(this.transactionDescription)
-				//console.log(this.amount)
-				//console.log(this.currentDate)
+				element.parentNode.parentNode.querySelector('span#add').innerHTML = `<i class="fas fa-check"></i>`
 				var account = this.account
 				this.account = "RECEIPTS"
 				var transactionDate = this.currentDate
@@ -4423,16 +4513,105 @@ function processEntry() {
 				await shortWait()
 				await shortWait()
 				//await shortWait()
-				element.parentNode.parentNode.querySelector('span').innerHTML = `ADD`
+				element.parentNode.parentNode.querySelector('span#add').innerHTML = `ADD`
 				await shortWait()
 				await shortWait()
 				DBWorker.postMessage({ storeName: 'account', action: "readAll"});
-			},/*
-			inactive() {
-				this.active = !this.active;
-			}*/
+			},
+            async saveEdit(element) {
+				document.querySelector('span#add').style.display = ''
+				document.querySelector('span#save').style.display = 'none'
+				document.querySelector('span#cancel').style.display = 'none'
+				document.querySelector('span#delete').style.display = 'none'
+
+				if (this.transactionCode == '') {
+					alert('Please enter a Transaction Code')
+					return
+				} else if (this.transactionDescription == '') {
+					alert('Please enter a Transaction Description')
+					return
+				} else if (this.amount == '' && this.transactionCode !== 'TD') {
+					alert('Please enter an Amount')
+					return
+				} else if (this.currentDate == '') {
+					alert('Please enter a Date')
+					return
+				}
+				element.parentNode.parentNode.querySelector('span#add').innerHTML = `<i class="fas fa-check"></i>`
+				var account = this.account
+				this.account = "RECEIPTS"
+				var transactionDate = this.currentDate
+				var description = this.transactionDescription
+				if (this.transactionCode == 'BF' || this.transactionCode == 'RW' || this.transactionCode == 'TF' || this.transactionCode == 'TD') {
+					transactionDate = this.currentDate.split('-').slice(0, 2).join('-')
+				} else if (this.transactionCode == 'BS' || this.transactionCode == 'PD' || this.transactionCode == 'PC') {
+					transactionDate = this.currentDate.split('-').slice(0, 2).join('-')
+					account = "Bank Account"
+				}
+				var amount = Number(this.amount)
+				if (this.transactionCode == 'TD') {
+					amount = this.transactionDescription
+				}
+				if (this.transactionCode == 'BF') {
+					description = this.transactionDescription + '-' + account
+				}
+				if (entryVue.currentName !== `${transactionDate}_${this.transactionCode}_${description}`) {
+					DBWorker.postMessage({ storeName: 'account', action: "deleteItem", value: entryVue.currentName});
+					await shortWait()
+					await shortWait()
+				}
+				DBWorker.postMessage({ storeName: 'account', action: "save", value: [{"name":`${transactionDate}_${this.transactionCode}_${description}`, "date": transactionDate, "transactionCode": this.transactionCode, "transactionDescription": this.transactionDescription, "amount": amount, "account": account}]});
+				await shortWait()
+				await shortWait()
+				//await shortWait()
+				element.parentNode.parentNode.querySelector('span#add').innerHTML = `ADD`
+				await shortWait()
+				await shortWait()
+				DBWorker.postMessage({ storeName: 'account', action: "readAll"});
+				entryVue.currentName = ''
+			},
+            cancelEdit() {
+				document.querySelector('span#add').style.display = ''
+				document.querySelector('span#save').style.display = 'none'
+				document.querySelector('span#cancel').style.display = 'none'
+				document.querySelector('span#delete').style.display = 'none'
+				entryVue.currentName = ''
+			},
+			async deleteItem() {
+				DBWorker.postMessage({ storeName: 'account', action: "deleteItem", value: entryVue.currentName});
+				await shortWait()
+				await shortWait()
+				DBWorker.postMessage({ storeName: 'account', action: "readAll"});
+				this.cancelEdit()
+			},
+			async fileRecord() {
+				console.log('Shelf Record')
+				await fillAccountSheet()
+			}
         }
     })
+}
+
+// Function to get the next month from a given date
+function getNextMonthFromDate(date) {
+	// Get the month of the given date (0-indexed, so January is 0)
+	var currentMonth = date.getMonth();
+
+	// Increment the month by 1 to get the next month
+	var nextMonth = (currentMonth + 1) % 12; // Using modulo operator to handle December (12 % 12 = 0)
+
+	// Get the year of the given date
+	var currentYear = date.getFullYear();
+
+	// If next month is January, increment the year
+	if (nextMonth === 0) {
+		currentYear++;
+	}
+
+	// Create a new date object for the next month
+	var nextMonthDate = new Date(currentYear, nextMonth);
+	
+	return `${currentYear}-${(nextMonth + 1).toString().padStart(2, '0')}`;
 }
 
 document.querySelector('#file').innerHTML = `<template>
@@ -6430,12 +6609,12 @@ document.querySelector("#configuration").innerHTML = `<template>
 						
 						<p v-if="reportEntry == 'secretary' && reset !== true" style="margin-top:15px"><label>Congregation Name: </label></p>
 						<p v-if="reportEntry == 'secretary' && reset !== true"><input :class="inputMode('name w3-input')" type="text" :value="configuration.congregationName" @change="saveConfiguration()"></p>
-						<p v-if="reportEntry == 'acct' && reset !== true" style="margin-top:15px"><label>Congregation or circuit: </label></p>
-						<p v-if="reportEntry == 'acct' && reset !== true"><input :class="inputMode('name w3-input')" type="text" :value="configuration.congregationName" @change="saveConfiguration()"></p>
-						<p v-if="reportEntry == 'acct' && reset !== true" style="margin-top:15px"><label>City: </label></p>
-						<p v-if="reportEntry == 'acct' && reset !== true"><input :class="inputMode('city w3-input')" type="text" :value="configuration.city" @change="saveConfiguration()"></p>
-						<p v-if="reportEntry == 'acct' && reset !== true" style="margin-top:15px"><label>Province or state: </label></p>
-						<p v-if="reportEntry == 'acct' && reset !== true"><input :class="inputMode('province w3-input')" type="text" :value="configuration.province" @change="saveConfiguration()"></p>
+						<!--p v-if="reportEntry == 'acct' && reset !== true" style="margin-top:15px"><label>Congregation or circuit: </label></p>
+						<p v-if="reportEntry == 'acct' && reset !== true"><input :class="inputMode('name w3-input')" type="text" :value="configuration.congregationName" @change="saveConfiguration()"></p-->
+						<p v-if="reportEntry == 'secretary' && reset !== true" style="margin-top:15px"><label>City: </label></p>
+						<p v-if="reportEntry == 'secretary' && reset !== true"><input :class="inputMode('city w3-input')" type="text" :value="configuration.city" @change="saveConfiguration()"></p>
+						<p v-if="reportEntry == 'secretary' && reset !== true" style="margin-top:15px"><label>Province or state: </label></p>
+						<p v-if="reportEntry == 'secretary' && reset !== true"><input :class="inputMode('province w3-input')" type="text" :value="configuration.province" @change="saveConfiguration()"></p>
 						<p v-if="reportEntry == 'secretary' && reset !== true"><label>Congregation Address: </label></p>
 						<p v-if="reportEntry == 'secretary' && reset !== true"><input :class="inputMode('address w3-input')" type="text" :value="configuration.address" @change="saveConfiguration()"></p>
 						<p v-if="reportEntry == 'secretary' && reset !== true"><label>Congregation Email: </label></p>
@@ -6489,6 +6668,14 @@ document.querySelector("#configuration").innerHTML = `<template>
 								<option v-if="!appointed().includes(configuration.assistantSec)" value="">Select Assistant Secretary</option>
 								<option v-if="appointed().includes(configuration.assistantSec)" :value="configuration.assistantSec">{{ configuration.assistantSec }}</option>
 								<option v-for="elder in appointed().filter(elem=>elem !== configuration.assistantSec)" :value="elder">{{ elder }}</option>
+							</select>
+						</p>
+						<p v-if="reportEntry == 'secretary' && reset !== true"><label>Account Servant:</label></p>
+						<p v-if="reportEntry == 'secretary' && reset !== true && appointed().length !== 0">
+							<select @change="saveConfiguration()" :class="inputMode('acct w3-input')">
+								<option v-if="!appointed().includes(configuration.acct)" value="">Select Account Servant</option>
+								<option v-if="appointed().includes(configuration.acct)" :value="configuration.acct">{{ configuration.acct }}</option>
+								<option v-for="elder in appointed().filter(elem=>elem !== configuration.acct)" :value="elder">{{ elder }}</option>
 							</select>
 						</p>
 						<p v-if="reportEntry == 'secretary' && reset !== true"><label>Service Overseer:</label></p>
@@ -7259,16 +7446,16 @@ Thanks a lot
 				})*/
 
 				var currentConfiguration = {}
-				
+				/*
 				if (this.currentProfile() == 'Accounts Servant') {
 					currentConfiguration = this.configuration
 					currentConfiguration.name = "Congregation"
 					currentConfiguration.congregationName = document.querySelector('.name').value
 					currentConfiguration.city = document.querySelector('.city').value
 					currentConfiguration.province = document.querySelector('.province').value
-				} else {
-					currentConfiguration = { "name": "Congregation", "congregationName": document.querySelector('.name').value, "address": document.querySelector('.address').value, "email": document.querySelector('.email').value, "fieldServiceGroups": allGroups, "fieldServiceGroupDetails": this.fieldServiceGroupDetails, "cboe": document.querySelector('.cboe') ? document.querySelector('.cboe').value : '', "sec": document.querySelector('.sec') ? document.querySelector('.sec').value : '', "assistantSec": document.querySelector('.assistantSec') ? document.querySelector('.assistantSec').value : '', "so":  document.querySelector('.so') ? document.querySelector('.so').value : '', "currentProfile": currentUser.currentProfile }
-				}
+				} else {*/
+					currentConfiguration = { "name": "Congregation", "congregationName": document.querySelector('.name').value, "address": document.querySelector('.address').value, "city": document.querySelector('.city').value, "province": document.querySelector('.province').value, "email": document.querySelector('.email').value, "fieldServiceGroups": allGroups, "fieldServiceGroupDetails": this.fieldServiceGroupDetails, "cboe": document.querySelector('.cboe') ? document.querySelector('.cboe').value : '', "sec": document.querySelector('.sec') ? document.querySelector('.sec').value : '', "assistantSec": document.querySelector('.assistantSec') ? document.querySelector('.assistantSec').value : '', "so":  document.querySelector('.so') ? document.querySelector('.so').value : '', "acct":  document.querySelector('.acct') ? document.querySelector('.acct').value : '', "currentProfile": currentUser.currentProfile }
+				//}
 
                 DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [currentConfiguration]});
                 configured = true
@@ -7726,7 +7913,7 @@ navigator.geolocation.getCurrentPosition(function (position) {
 
 configurationVue.displayMode({"value": "System"})
 
-var defaultConfiguration = { "congregationName": "", "name": "Congregation", "address": "", "email": "", "fieldServiceGroups": ["Group 1"], "cboe": "", "sec": "", "assistantSec": "", "so": "" }
+var defaultConfiguration = { "congregationName": "", "name": "Congregation", "address": "", "city": "", "province": "", "email": "", "fieldServiceGroups": ["Group 1"], "cboe": "", "sec": "", "assistantSec": "", "so": "", "acct": "" }
 
 var currentMonthAttendance = {
 	"name": "Monthly",
@@ -8810,90 +8997,108 @@ return
 
 var allMonths = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 
-async function fillAccountSheet(count) {
-	if (!count) { count = 0 }
-	//const publisher = data[0]
-	//const period = data[1]
-    // Get the form field by name
+async function fillAccountSheet() {
+	
+	// Get the form field by name
 	s26.getForm().getTextField('900_1_Text_C').setText(configurationVue.configuration.congregationName)
     s26.getForm().getTextField('900_2_Text_C').setText(configurationVue.configuration.city)
     s26.getForm().getTextField('900_3_Text_C').setText(configurationVue.configuration.province)
-    s26.getForm().getTextField('900_4_Text_C').setText(allMonths[Number(fileVue.monthlyRecords()[count].month.split('-')[1]) - 1])
-    s26.getForm().getTextField('900_5_Text_C').setText(fileVue.monthlyRecords()[count].month.split('-')[0])
+    s26.getForm().getTextField('900_4_Text_C').setText(allMonths[Number(entryVue.currentMonth.split('-')[1]) - 1])
+    s26.getForm().getTextField('900_5_Text_C').setText(entryVue.currentMonth.split('-')[0])
 
 	var i = 0
 	var receiptIn = 0, receiptOut = 0, primaryIn = 0, primaryOut = 0
-	fileVue.monthlyRecords()[count].entries.forEach(elem=>{
+	entryVue.monthlyRecords().filter(elem=>elem.month == entryVue.currentMonth)[0].entries.filter(elem=>elem.transactionCode !== 'BF' && elem.transactionCode !== 'BS' && elem.transactionCode !== 'PD' && elem.transactionCode !== 'PC' && elem.transactionCode !== 'KH' && elem.transactionCode !== 'RW' && elem.transactionCode !== 'TF' && elem.transactionCode !== 'TD').forEach(elem=>{
 		s26.getForm().getTextField(`900_${i + 7}_Text_C`).setText(elem.date.split('-')[2])
 		s26.getForm().getTextField(`900_${i + 59}_Text`).setText(elem.transactionDescription)
 		s26.getForm().getTextField(`900_${i + 111}_Text_C`).setText(elem.transactionCode)
 		if (elem.transactionCode == 'C' || elem.transactionCode == 'W') {
 			s26.getForm().getTextField(`901_${i + 1}_S26Value`).setText(`${(elem.amount).toLocaleString().split('.')[0]}.${(elem.amount).toFixed(2).split('.')[1]}`)
-			receiptIn = receiptIn + elem.amount
 		}
 		if (elem.transactionCode == 'D' || (elem.transactionCode == 'E' && elem.account == 'RECEIPTS')) {
 			s26.getForm().getTextField(`901_${i + 54}_S26Value`).setText(`${(elem.amount).toLocaleString().split('.')[0]}.${(elem.amount).toFixed(2).split('.')[1]}`)
-			receiptOut = receiptOut + elem.amount
 		}
 		if (elem.transactionCode == 'D') {
 			s26.getForm().getTextField(`902_${i + 1}_S26Value`).setText(`${(elem.amount).toLocaleString().split('.')[0]}.${(elem.amount).toFixed(2).split('.')[1]}`)
-			primaryIn = primaryIn + elem.amount
 		}
 		if ((elem.transactionCode == 'E' && elem.account == 'PRIMARY ACCOUNT')) {
 			s26.getForm().getTextField(`902_${i + 54}_S26Value`).setText(`${(elem.amount).toLocaleString().split('.')[0]}.${(elem.amount).toFixed(2).split('.')[1]}`)
-			primaryOut = primaryOut + elem.amount
+		}
+		if ((elem.transactionCode !== 'E' && elem.account == 'SECONDARY ACCOUNT')) {
+			s26.getForm().getTextField(`903_${i + 1}_S26Value`).setText(`${(elem.amount).toLocaleString().split('.')[0]}.${(elem.amount).toFixed(2).split('.')[1]}`)
+		}
+		if ((elem.transactionCode == 'E' && elem.account == 'SECONDARY ACCOUNT')) {
+			s26.getForm().getTextField(`903_${i + 54}_S26Value`).setText(`${(elem.amount).toLocaleString().split('.')[0]}.${(elem.amount).toFixed(2).split('.')[1]}`)
 		}
 		
 		i++
 	})
-/*
-	console.log(receiptIn)
-	console.log(receiptOut)
-	console.log(primaryIn)
-	console.log(primaryOut)*/
-	//await shortWait()
 
-	//console.log(`${(receiptOut.reduce((accumulator, currentValue) => accumulator + currentValue, 0)).toLocaleString().split('.')[0]}.${(receiptOut.reduce((accumulator, currentValue) => accumulator + currentValue, 0)).toFixed(2).split('.')[1]}`)
+	s26.getForm().getTextField(`900_${i + 7}_Text_C`).setText(entryVue.lastDay(entryVue.currentMonth).split(' ')[1].replace(',',''))
+	s26.getForm().getTextField(`900_${i + 59}_Text`).setText(`To Branch Office - (${entryVue.singleAmount('TD')})`)
+	s26.getForm().getTextField(`902_${i + 54}_S26Value`).setText(`${entryVue.endingBalance(entryVue.totalContributions('W'), entryVue.singleAmount('RW'), 0, true)}`)
+	i++
 
-	if (receiptIn !== 0) {
-		s26.getForm().getTextField(`901_53_S26TotalValue`).setText(`${(receiptIn).toLocaleString().split('.')[0]}.${(receiptIn).toFixed(2).split('.')[1]}`)
-		s26.getForm().getTextField(`904_30_S26TotalAmount`).setText(`${(receiptIn).toLocaleString().split('.')[0]}.${(receiptIn).toFixed(2).split('.')[1]}`)
+	if (entryVue.totalContributions('W') !== '') {
+		s26.getForm().getTextField(`900_${i + 59}_Text`).setText(`WW (from box) [${ entryVue.totalContributions('W') }]`)
+		i++
 	}
-	if (receiptOut !== 0) {
-		s26.getForm().getTextField(`901_106_S26TotalValue`).setText(`${(receiptOut).toLocaleString().split('.')[0]}.${(receiptOut).toFixed(2).split('.')[1]}`)
-		s26.getForm().getTextField(`904_31_S26TotalAmount`).setText(`${(receiptOut).toLocaleString().split('.')[0]}.${(receiptOut).toFixed(2).split('.')[1]}`)
+	if (entryVue.monthlyRecords().filter(elem=>elem.month == entryVue.currentMonth)[0].entries.filter(elem=>elem.transactionCode == 'RW').length !== 0) {
+		s26.getForm().getTextField(`900_${i + 59}_Text`).setText(`WW (resolution) [${(entryVue.monthlyRecords().filter(elem=>elem.month == entryVue.currentMonth)[0].entries.filter(elem=>elem.transactionCode == 'RW')[0].amount).toLocaleString().split('.')[0] + '.' + (entryVue.monthlyRecords().filter(elem=>elem.month == entryVue.currentMonth)[0].entries.filter(elem=>elem.transactionCode == 'RW')[0].amount).toFixed(2).split('.')[1] }]`)
+		i++
 	}
-	if (primaryIn !== 0) {
-		s26.getForm().getTextField(`902_53_S26TotalValue`).setText(`${(primaryIn).toLocaleString().split('.')[0]}.${(primaryIn).toFixed(2).split('.')[1]}`)
-		s26.getForm().getTextField(`904_34_S26TotalAmount`).setText(`${(primaryIn).toLocaleString().split('.')[0]}.${(primaryIn).toFixed(2).split('.')[1]}`)
-	}
-	if (primaryOut !== 0) {
-		s26.getForm().getTextField(`902_106_S26TotalValue`).setText(`${(primaryOut).toLocaleString().split('.')[0]}.${(primaryOut).toFixed(2).split('.')[1]}`)
-		s26.getForm().getTextField(`904_35_S26TotalAmount`).setText(`${(primaryOut).toLocaleString().split('.')[0]}.${(primaryOut).toFixed(2).split('.')[1]}`)
-	}
+
+	s26.getForm().getTextField(`901_53_S26TotalValue`).setText(`${entryVue.receiptInTotal()}`)
+	s26.getForm().getTextField(`904_30_S26TotalAmount`).setText(`${entryVue.receiptInTotal()}`)
+
+	s26.getForm().getTextField(`901_106_S26TotalValue`).setText(`${entryVue.receiptOutTotal()}`)
+	s26.getForm().getTextField(`904_31_S26TotalAmount`).setText(`${entryVue.receiptOutTotal()}`)
+
+	s26.getForm().getTextField(`902_53_S26TotalValue`).setText(`${entryVue.primaryInTotal()}`)
+	s26.getForm().getTextField(`904_34_S26TotalAmount`).setText(`${entryVue.primaryInTotal()}`)
+
+	s26.getForm().getTextField(`902_106_S26TotalValue`).setText(`${entryVue.primaryOutTotal()}`)
+	s26.getForm().getTextField(`904_35_S26TotalAmount`).setText(`${entryVue.primaryOutTotal()}`)
+
+	s26.getForm().getTextField(`903_53_S26TotalValue`).setText(`${entryVue.secondaryInTotal()}`)
+	s26.getForm().getTextField(`904_39_S26TotalAmount`).setText(`${entryVue.secondaryInTotal()}`)
+
+	s26.getForm().getTextField(`903_106_S26TotalValue`).setText(`${entryVue.secondaryOutTotal()}`)
+	s26.getForm().getTextField(`904_40_S26TotalAmount`).setText(`${entryVue.secondaryOutTotal()}`)
+
+	s26.getForm().getTextField(`904_1_Text_C`).setText(`${entryVue.lastDay(entryVue.currentMonth)}`)
+	s26.getForm().getTextField(`904_2_S26Amount`).setText(`${entryVue.singleAmount('BS')}`)
+	s26.getForm().getTextField(`904_3_S26Amount`).setText(`${entryVue.singleAmount('PD')}`)
+	s26.getForm().getTextField(`904_4_S26Amount`).setText(`${entryVue.singleAmount('PC')}`)
+	s26.getForm().getTextField(`904_5_S26TotalAmount`).setText(`${entryVue.bankAccountSum()}`)
+	s26.getForm().getTextField(`904_6_Text`).setText(`To Branch Office - (${entryVue.singleAmount('TD')})`)
+	s26.getForm().getTextField(`904_7_S26Amount`).setText(`${entryVue.endingBalance(entryVue.totalContributions('W'), entryVue.singleAmount('RW'), 0, true)}`)
+	s26.getForm().getTextField(`904_20_S26TotalAmount`).setText(`${entryVue.endingBalance(entryVue.totalContributions('W'), entryVue.singleAmount('RW'), 0, true)}`)
+	s26.getForm().getTextField(`904_23_S26TotalAmount`).setText(`${entryVue.bankAccountReconcile()}`)
+	s26.getForm().getTextField(`904_28_Text_C`).setText(`${entryVue.lastDay(entryVue.currentMonth)}`)
 	
-	var lastDay = new Date(`${allMonths[Number(fileVue.monthlyRecords()[count].month.split('-')[1])]} 1, ${fileVue.monthlyRecords()[count].month.split('-')[0]}`);
+	s26.getForm().getTextField(`904_29_S26Amount`).setText(`${entryVue.openingBalance('RECEIPTS')}`)
+	s26.getForm().getTextField(`904_32_S26TotalAmount`).setText(`${entryVue.receiptEndingBalance()}`)
 
-	//lastDay ; //# => Fri Apr 01 2011 11:14:50 GMT+0200 (CEST)
+	s26.getForm().getTextField(`904_33_S26Amount`).setText(`${entryVue.openingBalance('PRIMARY ACCOUNT')}`)
+	s26.getForm().getTextField(`904_36_S26TotalAmount`).setText(`${entryVue.primaryEndingBalance()}`)
 
-	lastDay.setDate(lastDay.getDate() - 1);
-	const options = { year: 'numeric', month: 'long', day: 'numeric' };
-	lastDay = new Date(lastDay).toLocaleDateString('en-US', options);
+	s26.getForm().getTextField(`904_38_S26Amount`).setText(`${entryVue.openingBalance('SECONDARY ACCOUNT')}`)
+	s26.getForm().getTextField(`904_41_S26TotalAmount`).setText(`${entryVue.secondaryEndingBalance()}`)
 
-	s26.getForm().getTextField(`904_1_Text_C`).setText(`${lastDay}`)
-	s26.getForm().getTextField(`904_28_Text_C`).setText(`${lastDay}`)
+	s26.getForm().getTextField(`904_42_S26TotalAmount`).setText(`${entryVue.totalFundsOnHand()}`)
+	
 
-    //name.setText(publisher.name)
-    //name.setText(publisher.name)
-    // Save the modified PDF
-    //const modifiedPdfBytes = await s21.save();
+	const accountSheet = new Blob([await s26.save()], { type: 'application/pdf' })
+	DBWorker.postMessage({ storeName: 'files', action: "save", value: [{name: `Account Sheet - ${entryVue.currentMonth}`, value: accountSheet }]});
+
 	var newPdfholder = document.createElement('div')
 	var newPdfbutton = document.createElement('button')
 	var newPdfViewer = document.createElement('iframe')
 	newPdfViewer.height = '600px'
 	newPdfViewer.width = '100%'
-	newPdfViewer.src = URL.createObjectURL(new Blob([await s26.save()], { type: 'application/pdf' }));
-	newPdfbutton.innerHTML = `<a href="${newPdfViewer.src}" style="text-decoration:none" download="${"toTitleCase(period.replace('ServiceYear', ''))"} Record Card - ${'publisher.name'}"><i class="fas fa-download"></i></a>`
+	newPdfViewer.src = URL.createObjectURL(accountSheet);
+	newPdfbutton.innerHTML = `<a href="${newPdfViewer.src}" style="text-decoration:none" download="Account Sheet - ${entryVue.currentMonth}"><i class="fas fa-download"></i></a>`
 	newPdfbutton.classList.value = "w3-button w3-black download-button"
 	newPdfholder.style.margin = "15px"
 	newPdfbutton.style.margin = "10px 0"
@@ -8901,17 +9106,127 @@ async function fillAccountSheet(count) {
 	newPdfholder.appendChild(newPdfViewer)
 	document.getElementById("pdfViewer").appendChild(newPdfholder)
 
-	downloadsArray.push([newPdfViewer.src, `${"toTitleCase(period.replace('ServiceYear', ''))"} Record Card - ${'publisher.name'}`])
+	downloadsArray.push([newPdfViewer.src, `Account Sheet - ${entryVue.currentMonth}`])
 
-	count++
-	if (fileVue.monthlyRecords().length < count) {
-		fillAccountSheet(count)
-	}
-
-    //download(modifiedPdfBytes, publisher.name + ".pdf", "application/pdf");
+	await fillAccountsReport()
 }
 
-var s21, s89, s26;
+async function fillAccountsReport() {
+	
+	// Get the form field by name
+	s30.getForm().getTextField('900_1_Text').setText(configurationVue.configuration.congregationName)
+    s30.getForm().getTextField('900_2_Text').setText(`${entryVue.cleanMonth(entryVue.currentMonth)}`)
+	
+    s30.getForm().getTextField('901_1_S30_Value').setText(entryVue.singleAmount('TF'))
+    s30.getForm().getTextField('901_2_S30_Value').setText(entryVue.totalContributions('C'))
+    s30.getForm().getTextField('901_3_S30_Value').setText(entryVue.totalContributions('CE'))
+    s30.getForm().getTextField('901_6_S30_Total').setText(entryVue.endingBalance(entryVue.totalContributions('C'), entryVue.totalContributions('CE'), 0, true))
+    s30.getForm().getTextField('901_7_S30_Value').setText(entryVue.totalContributions('W'))
+    s30.getForm().getTextField('901_10_S30_Total').setText(entryVue.totalContributions('W'))
+    s30.getForm().getTextField('901_11_S30_Total').setText(entryVue.endingBalance(entryVue.totalContributions('C'), entryVue.totalContributions('CE'), entryVue.totalContributions('W'), true))
+    s30.getForm().getTextField('901_12_S30_Value').setText(entryVue.totalContributions('E'))
+    s30.getForm().getTextField('901_13_S30_Value').setText(entryVue.singleAmount('RW'))
+    s30.getForm().getTextField('900_7_Text').setText('Bank service charge')
+    s30.getForm().getTextField('901_14_S30_Value').setText(entryVue.bankCharge())
+    s30.getForm().getTextField('901_19_S30_Total').setText(entryVue.endingBalance(entryVue.totalContributions('E'), entryVue.singleAmount('RW'), entryVue.bankCharge(), true))
+    s30.getForm().getTextField('901_20_S30_Value').setText(entryVue.totalContributions('W'))
+    s30.getForm().getTextField('901_23_S30_Total').setText(entryVue.totalContributions('W'))
+    s30.getForm().getTextField('901_24_S30_Total').setText(entryVue.endingBalance(entryVue.endingBalance(entryVue.totalContributions('E'), entryVue.singleAmount('RW'), entryVue.bankCharge(), true), entryVue.totalContributions('W'), 0, true))
+    s30.getForm().getTextField('901_25_S30_Total').setText(entryVue.endingBalance(0, entryVue.endingBalance(entryVue.totalContributions('C'), entryVue.totalContributions('CE'), entryVue.totalContributions('W'), true), entryVue.endingBalance(entryVue.endingBalance(entryVue.totalContributions('E'), entryVue.singleAmount('RW'), entryVue.bankCharge(), true), entryVue.totalContributions('W'), 0, true)))
+    s30.getForm().getTextField('901_26_S30_Total').setText(entryVue.endOfMonth())
+    s30.getForm().getTextField('901_30_S30_Total').setText(entryVue.endOfMonth())
+
+	s30.getForm().getTextField('900_16_Text_C').setText(configurationVue.configuration.acct)
+
+    s30.getForm().getTextField('900_17_Text_C').setText(`${entryVue.cleanMonth(entryVue.currentMonth)}`)
+    s30.getForm().getTextField('901_31_S30_Total').setText(entryVue.endingBalance(entryVue.totalContributions('C'), entryVue.totalContributions('CE'), 0, true))
+    s30.getForm().getTextField('901_32_S30_Total').setText(entryVue.endingBalance(entryVue.totalContributions('E'), entryVue.singleAmount('RW'), entryVue.bankCharge(), true))
+    s30.getForm().getTextField('901_33_S30_Total').setText(entryVue.endOfMonth())
+    s30.getForm().getTextField('901_34_S30_Total').setText(entryVue.totalContributions('W'))
+
+	const accountReport = new Blob([await s30.save()], { type: 'application/pdf' })
+	DBWorker.postMessage({ storeName: 'files', action: "save", value: [{name: `Account Report - ${entryVue.currentMonth}`, value: accountReport }]});
+
+	var newPdfholder = document.createElement('div')
+	var newPdfbutton = document.createElement('button')
+	var newPdfViewer = document.createElement('iframe')
+	newPdfViewer.height = '600px'
+	newPdfViewer.width = '100%'
+	newPdfViewer.src = URL.createObjectURL(accountReport);
+	newPdfbutton.innerHTML = `<a href="${newPdfViewer.src}" style="text-decoration:none" download="Account Report - ${entryVue.currentMonth}"><i class="fas fa-download"></i></a>`
+	newPdfbutton.classList.value = "w3-button w3-black download-button"
+	newPdfholder.style.margin = "15px"
+	newPdfbutton.style.margin = "10px 0"
+	newPdfholder.appendChild(newPdfbutton)
+	newPdfholder.appendChild(newPdfViewer)
+	document.getElementById("pdfViewer").appendChild(newPdfholder)
+
+	downloadsArray.push([newPdfViewer.src, `Account Report - ${entryVue.currentMonth}`])
+
+	await fillFundTransfer()
+}
+
+async function fillFundTransfer() {
+	
+	// Get the form field by name
+    to62.getForm().getCheckBox('900_1_CheckBox').check()
+	to62.getForm().getTextField('900_3_Text').setText(configurationVue.configuration.congregationName)
+	to62.getForm().getCheckBox('900_5_CheckBox').check()
+
+	to62.getForm().getTextField('901_1_TO62Donate').setText(entryVue.totalContributions('W'))
+	to62.getForm().getTextField('901_2_TO62Donate').setText(entryVue.singleAmount('RW'))
+	to62.getForm().getTextField('901_9_TO62TotalDonate').setText(entryVue.endingBalance(entryVue.singleAmount('RW'), entryVue.totalContributions('W'), 0, true) )
+	to62.getForm().getTextField('901_11_TO62TotalFunds').setText(entryVue.endingBalance(entryVue.singleAmount('RW'), entryVue.totalContributions('W'), 0, true) )
+	to62.getForm().getTextField('900_13_Text').setText(entryVue.singleAmount('TD'))
+	to62.getForm().getTextField('900_16_Text_C').setText(configurationVue.configuration.acct)
+
+	
+	/*
+    to62.getForm().getTextField('901_1_S30_Value').setText(entryVue.singleAmount('TF'))
+    s30.getForm().getTextField('901_2_S30_Value').setText(entryVue.totalContributions('C'))
+    s30.getForm().getTextField('901_3_S30_Value').setText(entryVue.totalContributions('CE'))
+    s30.getForm().getTextField('901_6_S30_Total').setText(entryVue.endingBalance(entryVue.totalContributions('C'), entryVue.totalContributions('CE'), 0, true))
+    s30.getForm().getTextField('901_7_S30_Value').setText(entryVue.totalContributions('W'))
+    s30.getForm().getTextField('901_10_S30_Total').setText(entryVue.totalContributions('W'))
+    s30.getForm().getTextField('901_11_S30_Total').setText(entryVue.endingBalance(entryVue.totalContributions('C'), entryVue.totalContributions('CE'), entryVue.totalContributions('W'), true))
+    s30.getForm().getTextField('901_12_S30_Value').setText(entryVue.totalContributions('E'))
+    s30.getForm().getTextField('901_13_S30_Value').setText(entryVue.singleAmount('RW'))
+    s30.getForm().getTextField('900_7_Text').setText('Bank service charge')
+    s30.getForm().getTextField('901_14_S30_Value').setText(entryVue.bankCharge())
+    s30.getForm().getTextField('901_19_S30_Total').setText(entryVue.endingBalance(entryVue.totalContributions('E'), entryVue.singleAmount('RW'), entryVue.bankCharge(), true))
+    s30.getForm().getTextField('901_20_S30_Value').setText(entryVue.totalContributions('W'))
+    s30.getForm().getTextField('901_23_S30_Total').setText(entryVue.totalContributions('W'))
+    s30.getForm().getTextField('901_24_S30_Total').setText(entryVue.endingBalance(entryVue.endingBalance(entryVue.totalContributions('E'), entryVue.singleAmount('RW'), entryVue.bankCharge(), true), entryVue.totalContributions('W'), 0, true))
+    s30.getForm().getTextField('901_25_S30_Total').setText(entryVue.endingBalance(0, entryVue.endingBalance(entryVue.totalContributions('C'), entryVue.totalContributions('CE'), entryVue.totalContributions('W'), true), entryVue.endingBalance(entryVue.endingBalance(entryVue.totalContributions('E'), entryVue.singleAmount('RW'), entryVue.bankCharge(), true), entryVue.totalContributions('W'), 0, true)))
+    s30.getForm().getTextField('901_26_S30_Total').setText(entryVue.endOfMonth())
+    s30.getForm().getTextField('901_30_S30_Total').setText(entryVue.endOfMonth())
+    s30.getForm().getTextField('900_17_Text_C').setText(`${entryVue.cleanMonth(entryVue.currentMonth)}`)
+    s30.getForm().getTextField('901_31_S30_Total').setText(entryVue.endingBalance(entryVue.totalContributions('C'), entryVue.totalContributions('CE'), 0, true))
+    s30.getForm().getTextField('901_32_S30_Total').setText(entryVue.endingBalance(entryVue.totalContributions('E'), entryVue.singleAmount('RW'), entryVue.bankCharge(), true))
+    s30.getForm().getTextField('901_33_S30_Total').setText(entryVue.endOfMonth())
+    s30.getForm().getTextField('901_34_S30_Total').setText(entryVue.totalContributions('W'))
+*/
+	const fundTransfer = new Blob([await to62.save()], { type: 'application/pdf' })
+	DBWorker.postMessage({ storeName: 'files', action: "save", value: [{name: `Fund Transfer - ${entryVue.currentMonth}`, value: fundTransfer }]});
+
+	var newPdfholder = document.createElement('div')
+	var newPdfbutton = document.createElement('button')
+	var newPdfViewer = document.createElement('iframe')
+	newPdfViewer.height = '600px'
+	newPdfViewer.width = '100%'
+	newPdfViewer.src = URL.createObjectURL(fundTransfer);
+	newPdfbutton.innerHTML = `<a href="${newPdfViewer.src}" style="text-decoration:none" download="Fund Transfer - ${entryVue.currentMonth}"><i class="fas fa-download"></i></a>`
+	newPdfbutton.classList.value = "w3-button w3-black download-button"
+	newPdfholder.style.margin = "15px"
+	newPdfbutton.style.margin = "10px 0"
+	newPdfholder.appendChild(newPdfbutton)
+	newPdfholder.appendChild(newPdfViewer)
+	document.getElementById("pdfViewer").appendChild(newPdfholder)
+
+	downloadsArray.push([newPdfViewer.src, `Fund Transfer - ${entryVue.currentMonth}`])
+}
+
+var s21, s89, s26, s30, to62;
 
 async function getFieldByName(file, variable) {
     //const fileInput = document.getElementById('pdfFile');
@@ -8928,6 +9243,10 @@ async function getFieldByName(file, variable) {
 				s21 = await PDFLib.PDFDocument.load(pdfData);
 			} else if (variable == 'S-26') {
 				s26 = await PDFLib.PDFDocument.load(pdfData);
+			} else if (variable == 'S-30') {
+				s30 = await PDFLib.PDFDocument.load(pdfData);
+			} else if (variable == 'TO-62') {
+				to62 = await PDFLib.PDFDocument.load(pdfData);
 			} else if (variable == 'S-89') {
 				s89 = await PDFLib.PDFDocument.load(pdfData);
 				const font = await s89.embedFont("Helvetica", { subset: true, unicode: true });
