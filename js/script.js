@@ -3761,7 +3761,7 @@ document.querySelector('#entry').innerHTML = `<template>
 			</div>
 		</div>
 
-		<h2 class="w3-center">TRANSACTIONS</h2>
+		<h2 class="w3-center">DETAILS</h2>
 		<h4 style="margin:5px; width:250px">
 			<select v-model="currentMonth" class="w3-input" style="margin-buttom:10px;">
 				<option v-for="(entry, count) in monthlyRecords()" :value="entry.month">{{ cleanMonth(entry.month) }}</option>
