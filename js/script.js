@@ -3788,8 +3788,8 @@ function processFieldServiceGroups() {
 document.querySelector('#entry').innerHTML = `<template>
 	<div v-if="display == true">
 		<h2 class="w3-center">ENTRY</h2>
-		<p style="margin:5px;">
-			<div v-for="(action, count) in allActions" :class="modeButton()" style="margin:5px" @click="newTransaction(action.code, action.description)">{{ action.name }}</div>
+		<p style="margin:5px 2px;">
+			<div v-for="(action, count) in allActions" :class="modeButton()" style="margin:5px 2px" @click="newTransaction(action.code, action.description)">{{ action.name }}</div>
 		</p>
 		
 		<div :class="mode()" style="margin:5px; width: 100%; max-width: 360px; padding:10px 0">
@@ -3812,12 +3812,12 @@ document.querySelector('#entry').innerHTML = `<template>
 		</div>
 
 		<h2 class="w3-center">DETAILS</h2>
-		<h4 style="margin:15px; width:350px;display:flex">
-			<select v-model="currentMonth" class="w3-input" style="width:250px">
+		<p style="margin:15px; width:250px;display:flex">
+			<select v-model="currentMonth" class="w3-input" style="width:150px">
 				<option v-for="(entry, count) in monthlyRecords()" :value="entry.month">{{ cleanMonth(entry.month) }}</option>
 			</select>
 			<span style="margin-left:10px;" v-if="currentMonth !== ''" @click="fileRecord()" class="w3-button w3-light-grey" id="file">Store</span>
-		</h4>
+		</p>
 
 		<div v-if="currentMonth !== ''" :class="mode()" style="margin:5px; width: 100%; padding:10px 0">
 			<div class="w3-container main">
@@ -4652,19 +4652,19 @@ function getNextMonthFromDate(date) {
 document.querySelector('#file').innerHTML = `<template>
 	<div v-if="display == true">
 		<h2 class="w3-center">CURRENT FILE</h2>
-		<h4 style="margin:15px;display:flex">
-			<select v-model="currentMonth" class="w3-input" style="width:200px; margin-right:10px" @change="loadFile()">
+		<p style="margin:15px;display:flex;flex-wrap:wrap">
+			<select v-model="currentMonth" class="w3-input" style="width:150px; margin-right:10px; margin-bottom:10px" @change="loadFile()">
 				<option v-for="(entry, count) in months()" :value="cleanMonth(entry)">{{ entry }}</option>
 			</select>
-			<select v-model="currentFile" class="w3-input" style="width:250px" @change="loadFile()">
+			<select v-model="currentFile" class="w3-input" style="width:240px; margin-right:10px; margin-bottom:10px" @change="loadFile()">
 				<option v-for="(entry, count) in individualFiles()" :value="entry">{{ entry }}</option>
 			</select>
-			<button style="margin-left:10px;display:none" @click="uploadRecord()" class="w3-button w3-light-grey" id="upload">UPLOAD</button>
-			<button style="margin-left:10px;display:none" @click="updateRecord()" class="w3-button w3-light-grey" id="update">UPDATE</button>
+			<span style="display:none" @click="uploadRecord()" class="w3-button w3-light-grey" id="upload">UPLOAD</span>
+			<button style="display:none" @click="updateRecord()" class="w3-button w3-light-grey" id="update">UPDATE</button>
 			<button @click="downloadZip()" class="w3-button w3-black download-button" style="margin: 0 10px;display:none" id="download">
 				<i class="fas fa-paper-plane"></i>
 			</button>
-		</h4>
+		</p>
 		<div v-if="allFiles().filter(elem=>elem.name == currentFile + ' - ' + currentMonth).length !== 0" style="margin: 15px;">
 			<button class="w3-button w3-black download-button" style="margin: 10px 0;">
 				<a :href="currentPath" style="text-decoration:none" :download="currentFile + ' - ' + currentMonth">
@@ -4811,13 +4811,13 @@ function processFile() {
 document.querySelector('#approvals').innerHTML = `<template>
 	<div v-if="display == true">
 		<h2 class="w3-center">APPROVALS</h2>
-		<h4 style="margin:15px;display:flex">
+		<p style="margin:15px;display:flex">
 			<select v-model="currentFile" class="w3-input" style="width:250px" @change="loadFile()">
 				<option v-for="(entry, count) in individualFiles()" :value="entry">{{ entry }}</option>
 			</select>
 			<button style="margin-left:10px;display:none" @click="uploadRecord()" class="w3-button w3-light-grey" id="upload">UPLOAD</button>
 			<button style="margin-left:10px;display:none" @click="updateRecord()" class="w3-button w3-light-grey" id="update">UPDATE</button>
-		</h4>
+		</p>
 		<div v-if="allFiles().filter(elem=>elem.name == currentFile).length !== 0" style="margin: 15px;">
 			<button class="w3-button w3-black download-button" style="margin: 10px 0;">
 				<a :href="currentPath" style="text-decoration:none" :download="currentFile">
@@ -4920,7 +4920,7 @@ function processApprovals() {
 document.querySelector('#archive').innerHTML = `<template>
 	<div v-if="display == true">
 		<h2 class="w3-center">ARCHIVE</h2>
-		<h4 style="margin:15px;display:flex">
+		<p style="margin:15px;display:flex">
 			<select v-model="currentMonth" class="w3-input" style="width:200px; margin-right:10px" @change="loadFile()">
 				<option v-for="(entry, count) in months()" :value="cleanMonth(entry)">{{ entry }}</option>
 			</select>
@@ -4928,8 +4928,8 @@ document.querySelector('#archive').innerHTML = `<template>
 				<option v-for="(entry, count) in individualFiles()" :value="entry">{{ entry }}</option>
 			</select>
 			<button style="margin-left:10px;display:none" @click="updateRecord()" class="w3-button w3-light-grey" id="update">UPDATE</button>
-		</h4>
-		<h4 style="margin:15px;display:flex" id="upload">
+		</p>
+		<p style="margin:15px;display:flex" id="upload">
 			<select v-model="selectedMonth"class="w3-input" style="width:150px">
 				<option v-for="(month, count) in allMonths" :value="(count + 1).toString().padStart(2, '0')">{{ month }}</option>
 			</select>
@@ -4940,7 +4940,7 @@ document.querySelector('#archive').innerHTML = `<template>
 				<option v-for="(entry, count) in allFileTypes()" :value="entry">{{ entry }}</option>
 			</select>
 			<button style="margin-left:10px;" @click="uploadRecord()" class="w3-button w3-light-grey">UPLOAD</button>
-		</h4>
+		</p>
 		<div v-if="allFiles().filter(elem=>elem.name == currentFile + ' - ' + currentMonth).length !== 0" style="margin: 15px;">
 			<button class="w3-button w3-black download-button" style="margin: 10px 0;">
 				<a :href="currentPath" style="text-decoration:none" :download="currentFile + ' - ' + currentMonth">
