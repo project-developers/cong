@@ -3792,7 +3792,7 @@ document.querySelector('#entry').innerHTML = `<template>
 			<div v-for="(action, count) in allActions" :class="modeButton()" style="margin:5px 2px" @click="newTransaction(action.code, action.description)">{{ action.name }}</div>
 		</p>
 		
-		<div :class="mode()" style="margin:5px; width: 100%; max-width: 360px; padding:10px 0">
+		<div :class="mode()" style="margin:5px 0; width: 100%; max-width: 360px; padding:10px 0">
 			<div class="w3-container main">
 				<input type="date" v-model="currentDate"><input v-model="transactionCode" style="margin:5px; width: 60px;" placeholder="Code">
 				<span style="display:none" @click="deleteItem()" class="w3-button w3-light-grey" id="delete">DELETE</span>
@@ -3812,94 +3812,98 @@ document.querySelector('#entry').innerHTML = `<template>
 		</div>
 
 		<h2 class="w3-center">DETAILS</h2>
-		<p style="margin:15px; width:250px;display:flex">
+		<p style="margin:10px 0; width:250px;display:flex">
 			<select v-model="currentMonth" class="w3-input" style="width:150px">
 				<option v-for="(entry, count) in monthlyRecords()" :value="entry.month">{{ cleanMonth(entry.month) }}</option>
 			</select>
-			<span style="margin-left:10px;" v-if="currentMonth !== ''" @click="fileRecord()" class="w3-button w3-light-grey" id="file">Store</span>
 		</p>
+		<button v-if="currentMonth !== ''" class="w3-button w3-black" style="margin: 10px 0;" @click="fileRecord()" id="file">
+			<i class="fas fa-save"></i>
+		</button>
 
-		<div v-if="currentMonth !== ''" :class="mode()" style="margin:5px; width: 100%; padding:10px 0">
+		<div v-if="currentMonth !== ''" :class="mode()" style="margin:5px 0; width: 100%; padding:10px 0">
 			<div class="w3-container main">
-				<table style="margin-bottom:0;margin-top:0">
-					<tr>
-						<th style="text-align:center" rowspan="2">DATE</th>
-						<th style="text-align:center" rowspan="2">TRANSACTION DESCRIPTION</th>
-						<th style="text-align:center" rowspan="2">TC</th>
-						<th style="text-align:center" colspan="2">RECEIPTS</th>						
-						<th style="text-align:center" colspan="2">PRIMARY ACCOUNT</th>
-						<th style="text-align:center" colspan="2">SECONDARY ACCOUNT</th>
-					</tr>
-					<tr>
-						<th style="text-align:center">IN</th>
-						<th style="text-align:center">OUT</th>				
-						<th style="text-align:center">IN</th>
-						<th style="text-align:center">OUT</th>				
-						<th style="text-align:center">IN</th>
-						<th style="text-align:center">OUT</th>			
-					</tr>
-					<tr v-for="transaction in monthlyRecords().filter(elem=>elem.month == currentMonth)[0].entries.filter(elem=>elem.transactionCode !== 'BF' && elem.transactionCode !== 'BS' && elem.transactionCode !== 'PD' && elem.transactionCode !== 'PC' && elem.transactionCode !== 'KH' && elem.transactionCode !== 'RW' && elem.transactionCode !== 'TF' && elem.transactionCode !== 'TD')" @dblclick="editTransaction(transaction)">
-						<td style="text-align:center">{{ transaction.date.split('-')[2] }}</td>
-						<td>{{ transaction.transactionDescription }}</td>				
-						<td style="text-align:center">{{ transaction.transactionCode }}</td>						
-						<td style="text-align:right">{{ transaction.transactionCode == 'C' || transaction.transactionCode == 'W' ? (transaction.amount).toLocaleString().split('.')[0] + '.' + (transaction.amount).toFixed(2).split('.')[1] : ''}}</td>						
-						<td style="text-align:right">{{ transaction.transactionCode == 'D' || (transaction.transactionCode == 'E' && transaction.account == 'RECEIPTS') ? (transaction.amount).toLocaleString().split('.')[0] + '.' + (transaction.amount).toFixed(2).split('.')[1] : ''}}</td>						
-						<td style="text-align:right">{{ transaction.transactionCode == 'D' ? (transaction.amount).toLocaleString().split('.')[0] + '.' + (transaction.amount).toFixed(2).split('.')[1] : ''}}</td>						
-						<td style="text-align:right">{{ transaction.transactionCode == 'E' && transaction.account == 'PRIMARY ACCOUNT' ? (transaction.amount).toLocaleString().split('.')[0] + '.' + (transaction.amount).toFixed(2).split('.')[1] : ''}}</td>						
-						<td style="text-align:right">{{ transaction.transactionCode !== 'E' && transaction.account == 'SECONDARY ACCOUNT' ? (transaction.amount).toLocaleString().split('.')[0] + '.' + (transaction.amount).toFixed(2).split('.')[1] : ''}}</td>						
-						<td style="text-align:right">{{ transaction.transactionCode == 'E' && transaction.account == 'SECONDARY ACCOUNT' ? (transaction.amount).toLocaleString().split('.')[0] + '.' + (transaction.amount).toFixed(2).split('.')[1] : ''}}</td>				
-					</tr>
-					<tr @dblclick="editTransaction(monthlyRecords().filter(elem=>elem.month == currentMonth)[0].entries.filter(elem=>elem.transactionCode == 'TD')[0])">
-						<td style="text-align:center">{{ lastDay(currentMonth).split(' ')[1].replace(',','') }}</td>
-						<td>To Branch Office - ({{ singleAmount('TD') }})</td>				
-						<td style="text-align:center"></td>						
-						<td style="text-align:right"></td>						
-						<td style="text-align:right"></td>
-						<td style="text-align:right"></td>						
-						<td style="text-align:right">{{ endingBalance(totalContributions('W'), singleAmount('RW'), 0, true) }}</td>
-						<td style="text-align:right"></td>						
-						<td style="text-align:right"></td>
-					</tr>
-					<tr v-if="totalContributions('W') !== ''">
-						<td style="text-align:center"></td>
-						<td>WW (from box) [{{ totalContributions('W') }}]</td>				
-						<td style="text-align:center"></td>						
-						<td style="text-align:right"></td>						
-						<td style="text-align:right"></td>
-						<td style="text-align:right"></td>						
-						<td style="text-align:right"></td>
-						<td style="text-align:right"></td>						
-						<td style="text-align:right"></td>
-					</tr>
-					<tr v-for="transaction in monthlyRecords().filter(elem=>elem.month == currentMonth)[0].entries.filter(elem=>elem.transactionCode == 'RW')" @dblclick="editTransaction(transaction)">
-						<td style="text-align:center"></td>
-						<td>WW (resolution) [{{ (transaction.amount).toLocaleString().split('.')[0] + '.' + (transaction.amount).toFixed(2).split('.')[1] }}]</td>				
-						<td style="text-align:center"></td>
-						<td style="text-align:right"></td>
-						<td style="text-align:right"></td>
-						<td style="text-align:right"></td>						
-						<td style="text-align:right"></td>
-						<td style="text-align:right"></td>						
-						<td style="text-align:right"></td>
-					</tr>
-					<tr>
-						<th style="text-align:center" colspan="3">TOTALS OF ALL COLUMNS</th>
-						<th style="text-align:right">{{ receiptInTotal() }}</th>				
-						<th style="text-align:right">{{ receiptOutTotal() }}</th>
-						<th style="text-align:right">{{ primaryInTotal() }}</th>				
-						<th style="text-align:right">{{ primaryOutTotal() }}</th>
-						<th style="text-align:right">{{ secondaryInTotal() }}</th>			
-						<th style="text-align:right">{{ secondaryOutTotal() }}</th>			
-					</tr>
-				</table>
+				<div style="overflow-x: scroll;">
+					<table style="margin-bottom:0;margin-top:0">
+						<tr>
+							<th style="text-align:center" rowspan="2">DATE</th>
+							<th style="text-align:center" rowspan="2">TRANSACTION DESCRIPTION</th>
+							<th style="text-align:center" rowspan="2">TC</th>
+							<th style="text-align:center" colspan="2">RECEIPTS</th>						
+							<th style="text-align:center" colspan="2">PRIMARY ACCOUNT</th>
+							<th style="text-align:center" colspan="2">SECONDARY ACCOUNT</th>
+						</tr>
+						<tr>
+							<th style="text-align:center">IN</th>
+							<th style="text-align:center">OUT</th>				
+							<th style="text-align:center">IN</th>
+							<th style="text-align:center">OUT</th>				
+							<th style="text-align:center">IN</th>
+							<th style="text-align:center">OUT</th>			
+						</tr>
+						<tr v-for="transaction in monthlyRecords().filter(elem=>elem.month == currentMonth)[0].entries.filter(elem=>elem.transactionCode !== 'BF' && elem.transactionCode !== 'BS' && elem.transactionCode !== 'PD' && elem.transactionCode !== 'PC' && elem.transactionCode !== 'KH' && elem.transactionCode !== 'RW' && elem.transactionCode !== 'TF' && elem.transactionCode !== 'TD')" @dblclick="editTransaction(transaction)">
+							<td style="text-align:center">{{ transaction.date.split('-')[2] }}</td>
+							<td>{{ transaction.transactionDescription }}</td>				
+							<td style="text-align:center">{{ transaction.transactionCode }}</td>						
+							<td style="text-align:right">{{ transaction.transactionCode == 'C' || transaction.transactionCode == 'W' ? (transaction.amount).toLocaleString().split('.')[0] + '.' + (transaction.amount).toFixed(2).split('.')[1] : ''}}</td>						
+							<td style="text-align:right">{{ transaction.transactionCode == 'D' || (transaction.transactionCode == 'E' && transaction.account == 'RECEIPTS') ? (transaction.amount).toLocaleString().split('.')[0] + '.' + (transaction.amount).toFixed(2).split('.')[1] : ''}}</td>						
+							<td style="text-align:right">{{ transaction.transactionCode == 'D' ? (transaction.amount).toLocaleString().split('.')[0] + '.' + (transaction.amount).toFixed(2).split('.')[1] : ''}}</td>						
+							<td style="text-align:right">{{ transaction.transactionCode == 'E' && transaction.account == 'PRIMARY ACCOUNT' ? (transaction.amount).toLocaleString().split('.')[0] + '.' + (transaction.amount).toFixed(2).split('.')[1] : ''}}</td>						
+							<td style="text-align:right">{{ transaction.transactionCode !== 'E' && transaction.account == 'SECONDARY ACCOUNT' ? (transaction.amount).toLocaleString().split('.')[0] + '.' + (transaction.amount).toFixed(2).split('.')[1] : ''}}</td>						
+							<td style="text-align:right">{{ transaction.transactionCode == 'E' && transaction.account == 'SECONDARY ACCOUNT' ? (transaction.amount).toLocaleString().split('.')[0] + '.' + (transaction.amount).toFixed(2).split('.')[1] : ''}}</td>				
+						</tr>
+						<tr @dblclick="editTransaction(monthlyRecords().filter(elem=>elem.month == currentMonth)[0].entries.filter(elem=>elem.transactionCode == 'TD')[0])">
+							<td style="text-align:center">{{ lastDay(currentMonth).split(' ')[1].replace(',','') }}</td>
+							<td>To Branch Office - ({{ singleAmount('TD') }})</td>				
+							<td style="text-align:center"></td>						
+							<td style="text-align:right"></td>						
+							<td style="text-align:right"></td>
+							<td style="text-align:right"></td>						
+							<td style="text-align:right">{{ endingBalance(totalContributions('W'), singleAmount('RW'), 0, true) }}</td>
+							<td style="text-align:right"></td>						
+							<td style="text-align:right"></td>
+						</tr>
+						<tr v-if="totalContributions('W') !== ''">
+							<td style="text-align:center"></td>
+							<td>WW (from box) [{{ totalContributions('W') }}]</td>				
+							<td style="text-align:center"></td>						
+							<td style="text-align:right"></td>						
+							<td style="text-align:right"></td>
+							<td style="text-align:right"></td>						
+							<td style="text-align:right"></td>
+							<td style="text-align:right"></td>						
+							<td style="text-align:right"></td>
+						</tr>
+						<tr v-for="transaction in monthlyRecords().filter(elem=>elem.month == currentMonth)[0].entries.filter(elem=>elem.transactionCode == 'RW')" @dblclick="editTransaction(transaction)">
+							<td style="text-align:center"></td>
+							<td>WW (resolution) [{{ (transaction.amount).toLocaleString().split('.')[0] + '.' + (transaction.amount).toFixed(2).split('.')[1] }}]</td>				
+							<td style="text-align:center"></td>
+							<td style="text-align:right"></td>
+							<td style="text-align:right"></td>
+							<td style="text-align:right"></td>						
+							<td style="text-align:right"></td>
+							<td style="text-align:right"></td>						
+							<td style="text-align:right"></td>
+						</tr>
+						<tr>
+							<th style="text-align:center" colspan="3">TOTALS OF ALL COLUMNS</th>
+							<th style="text-align:right">{{ receiptInTotal() }}</th>				
+							<th style="text-align:right">{{ receiptOutTotal() }}</th>
+							<th style="text-align:right">{{ primaryInTotal() }}</th>				
+							<th style="text-align:right">{{ primaryOutTotal() }}</th>
+							<th style="text-align:right">{{ secondaryInTotal() }}</th>			
+							<th style="text-align:right">{{ secondaryOutTotal() }}</th>			
+						</tr>
+					</table>
+				</div>
 			</div>
 		</div>
-		<div v-if="currentMonth !== ''" :class="mode()" style="margin:5px; width: 100%; padding:10px 0">
+		<div v-if="currentMonth !== ''" :class="mode()" style="margin:5px 0; width: 100%; padding:10px 0">
 			<div class="w3-container main">
 				<h4 style="text-align:center">PRIMARY ACCOUNT RECONCILIATION</h4>
 				<h5 style="text-align:center">Date Completed: {{ lastDay(currentMonth) }}</h5>
-				<div style="display:flex">
-					<div style="width: 45%">
+				<div style="display:flex;flex-wrap:wrap">
+					<div style="min-width: 300px">
 						<h5 style="text-align:center"><strong>Bank Account</strong></h5>
 						<p style="text-align:center">(Use ONLY if an account with a bank or similar<br>
 							institution is used as the primary account.)</p>
@@ -3963,14 +3967,14 @@ document.querySelector('#entry').innerHTML = `<template>
 						</table>
 						<p style="font-size:80%">(The amount on line 9 should equal the “Primary Account/Ending Balance”<br>figure in the “Accounts Sheet Summary” box.)<p>
 					</div>
-					<div style="width: 45%">
+					<div style="min-width: 300px">
 						<h5 style="text-align:center"><strong>Cashbox</strong></h5>
 						<p style="text-align:center">(Use ONLY if a cashbox is used as<br>
 							the primary account.)</p>
 					</div>
 				</div>
-				<div style="display:flex">
-					<div style="width: 45%; border: 1px solid brown; margin:5px; padding:5px">
+				<div style="display:flex;flex-wrap:wrap">
+					<div style="min-width: 300px; border: 1px solid brown; margin:5px; padding:5px">
 						<h5 style="text-align:center"><strong>ACCOUNTS SHEET SUMMARY</strong></h5>
 						<p style="text-align:center">For Month Ending: {{ lastDay(currentMonth) }}</p>
 						<table style="margin-bottom:0;margin-top:0">
@@ -4073,7 +4077,7 @@ document.querySelector('#entry').innerHTML = `<template>
 							</tr>
 						</table>
 					</div>
-					<div style="width: 45%; border: 1px solid brown; margin:5px; padding:5px">
+					<div style="min-width: 300px; border: 1px solid brown; margin:5px; padding:5px">
 						<h5 style="text-align:center"><strong>SECONDARY ACCOUNT RECONCILIATION</strong></h5>
 						<p style="text-align:center">Date Completed:</p>
 					</div>
@@ -4081,11 +4085,11 @@ document.querySelector('#entry').innerHTML = `<template>
 			</div>
 		</div>
 
-		<div v-if="currentMonth !== ''" :class="mode()" style="margin:5px; width: 100%; padding:10px 0">
+		<div v-if="currentMonth !== ''" :class="mode()" style="margin:5px 0; width: 100%; padding:10px 0">
 			<div class="w3-container main">
 				<h5 style="text-align:center"><strong>ACCOUNTS REPORT</strong></h5>
 				<p style="text-align:center">Month/Year: {{ cleanMonth(currentMonth) }}</p>
-				<div style="padding: 15px">
+				<div>
 					<table style="margin-bottom:0;margin-top:0;">
 						<tr @dblclick="editTransaction(monthlyRecords().filter(elem=>elem.month == currentMonth)[0].entries.filter(elem=>elem.transactionCode == 'TF')[0])">
 							<td style="border:none" colspan="5">Total Funds at Beginning of Month (Bring forward from Figure [i] of preceding month’s report.)</td>
@@ -4209,7 +4213,7 @@ document.querySelector('#entry').innerHTML = `<template>
 				</div>
 			</div>
 		</div>
-		<div v-if="currentMonth !== ''" :class="mode()" style="margin:5px; width: 100%; padding:10px 0">
+		<div v-if="currentMonth !== ''" :class="mode()" style="margin:5px 0; width: 100%; padding:10px 0">
 			<div class="w3-container main">
 				<h5 style="text-align:center"><strong>ACCOUNTS ANNOUNCEMENT</strong></h5>
 				<p>A copy of the Monthly Congregation Accounts Report for the month of {{ cleanMonth(currentMonth) }} will 
@@ -4219,7 +4223,7 @@ document.querySelector('#entry').innerHTML = `<template>
 				branch oﬃce in the amount of {{ totalContributions('W') }} for the worldwide work.</p>
 			</div>
 		</div>
-		<div v-if="currentMonth !== ''" :class="mode()" style="margin:5px; width: 100%; padding:10px 0">
+		<div v-if="currentMonth !== ''" :class="mode()" style="margin:5px 0; width: 100%; padding:10px 0">
 			<div class="w3-container main">
 				<h5 style="text-align:center"><strong>FUNDS TRANSFER</strong></h5>
 				<table style="margin-bottom:0;margin-top:0;">
@@ -4274,22 +4278,22 @@ function processEntry() {
 			allActions: [
 				{"name": "W", "code": "W", "description": "Contribution - Worldwide Work"},
 				{"name": "C", "code": "C", "description": "Contribution - Congregation"},
+				{"name": "Drinking Water", "code": "E", "description": "Purchase of Drinking Water"},
 				{"name": "Internet", "code": "E", "description": "Purchase of Internet Data"},
+				{"name": "Tank Water", "code": "E", "description": "Purchase of Water for the Tank"},
 				{"name": "Electricity", "code": "E", "description": "Electricity Units"},
 				{"name": "Fuel", "code": "E", "description": "Purchase of Fuel for Generator"},
-				{"name": "Drinking Water", "code": "E", "description": "Purchase of Drinking Water"},
-				{"name": "Tank Water", "code": "E", "description": "Purchase of Water for the Tank"},
 				{"name": "D", "code": "D", "description": "Deposite to Primary Account"},
 				{"name": "Balance Forward", "code": "BF", "description": "Balance Forward"},
-				{"name": "CE", "code": "CE", "description": "Contribution - Congregation (Electronic)"},
 				{"name": "I", "code": "I", "description": "Interest from Bank Account"},
-				{"name": "E", "code": "E", "description": "Local Congregation Expences"},
 				{"name": "KH Expences", "code": "KH", "description": "Kingdom Hall operating expenses"},
+				{"name": "E", "code": "E", "description": "Local Congregation Expences"},
 				{"name": "W - Resolution", "code": "RW", "description": "Resolved monthly donation to worldwide work"},
 				{"name": "Transportation", "code": "E", "description": "Transportation to Sussex for Cleaning"},
+				{"name": "CE", "code": "CE", "description": "Contribution - Congregation (Electronic)"},
 				{"name": "Balance Shown", "code": "BS", "description": "Ending balance shown on bank statement"},
-				{"name": "Total Funds", "code": "TF", "description": "Total Funds at Beginning of Month"},
 				{"name": "Transfer Date", "code": "TD", "description": "Transfer Date"},
+				{"name": "Total Funds", "code": "TF", "description": "Total Funds at Beginning of Month"},
 				{"name": "S", "code": "S", "description": "Funds Reserved for Special Purpose"},
 				{"name": "Pending Deposits", "code": "PD", "description": "All deposits recorded on Accounts Sheet but not shown on statement"},
 				{"name": "Pending Charges", "code": "PC", "description": "Any bank charges not recorded on Accounts Sheet"}
