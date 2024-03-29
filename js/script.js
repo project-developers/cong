@@ -550,7 +550,7 @@ DBWorker.onmessage = async function (msg) {
 		switch (msgData.name) {
 			case "configuration":
 				{
-					console.log(msgData.value)
+					//console.log(msgData.value)
 					if (msgData.value.filter(elem=>elem.name == "Current Profile").length !== 0) {
 						currentUser.currentProfile = msgData.value.filter(elem=>elem.name == "Current Profile")[0].value
 						configurationVue.selectedProfile = msgData.value.filter(elem=>elem.name == "Current Profile")[0].value
@@ -671,9 +671,19 @@ DBWorker.onmessage = async function (msg) {
 			case "files":
 				{
 					//myFile = msgData.value
-					console.log(msgData.value)
+					//console.log(msgData.value)
 					//console.log(msgData.value[0])
 					myFiles = msgData.value
+					if (fileVue.display == true) {
+						if (fileVue.allFiles().filter(elem=>elem.name == fileVue.currentFile + ' - ' + fileVue.currentMonth).length !== 0) {
+							fileVue.loadFile()
+						}
+					}
+					if (approvalsVue.display == true) {
+						if (approvalsVue.allFiles().filter(elem=>elem.name == approvalsVue.currentFile).length !== 0) {
+							approvalsVue.loadFile()
+						}
+					}
 					if (msgData.value.filter(elem=>elem.name == 'S-21').length !== 0) {
 						//console.log(msgData.value.filter(elem=>elem.name == 'S-21_E.pdf')[0])
 						if (!s21) {
@@ -708,10 +718,10 @@ DBWorker.onmessage = async function (msg) {
 				break;
 			case "settings":
 				{
-					console.log(msgData.value)
+					//console.log(msgData.value)
 					//if (msgData.value.filter(elem=>elem.name == currentUser.username).length !== 0) {
 					allUsers = msgData.value//.filter(elem=>elem.name == currentUser.username)[0]
-					console.log(allUsers.filter(elem=>elem.loggedIn == true))
+					//console.log(allUsers.filter(elem=>elem.loggedIn == true))
 					const loggedInUser = allUsers.filter(elem=>elem.loggedIn == true)
 					if (loggedInUser.length !== 0) {
 						loginForm.username.value = loggedInUser[0].username
@@ -743,7 +753,7 @@ DBWorker.onmessage = async function (msg) {
 				break;
 			case "account":
 				{
-					console.log(msgData.value)
+					//console.log(msgData.value)
 					entryVue.allEntries = msgData.value
 					//allAssignmentsVue.allAssignments = msgData.value
 					
@@ -763,21 +773,21 @@ DBWorker.onmessage = async function (msg) {
 				break;
 			case "lifeAndMinistryAssignments":
 				{
-					console.log(msgData.value)					
+					//console.log(msgData.value)					
 					allAssignmentsVue.allAssignments = msgData.value
 					
 				}
 				break;
 			case "lifeAndMinistryEnrolments":
 				{
-					console.log(msgData.value)
+					//console.log(msgData.value)
 					allParticipantsVue.enrolments = msgData.value
 					
 				}
 				break;
 			case "territory":
 				{
-					console.log(msgData.value)
+					//console.log(msgData.value)
 					if (msgData.value.length !== 0) {
 						myTerritory = msgData.value
 						territoryVue.savedPolygons = msgData.value[0].value
@@ -1185,11 +1195,24 @@ function processNavigation() {
 				allPublishersVue.transfer = false
 				navigationVue.displayDropdown = false
 				
-				if (currentUser.currentProfile == 'Territory Map' || currentUser.currentProfile == 'Territory Servant') {
+				if (currentUser.currentProfile == 'Secretary') {
+					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+				} else if (currentUser.currentProfile == 'Secretary - Assistant') {
+					navigationVue.buttons = [{"title": "REPORTS", "function": "missingReportVue"}, {"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH", "function": "branchReportVue"}]
+				} else if (currentUser.currentProfile == 'Life and Ministry Overseer') {
+					navigationVue.buttons = [{"title": "ASSIGNMENTS", "function": "allAssignmentsVue"}, {"title": "SCHEDULE", "function": "scheduleVue"}, {"title": "PARTICIPANTS", "function": "allParticipantsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}]
+				} else if (currentUser.currentProfile == 'Life and Ministry Assistant') {
+					navigationVue.buttons = [{"title": "ASSIGNMENTS", "function": "allAssignmentsVue"}, {"title": "SCHEDULE", "function": "scheduleVue"}, {"title": "PARTICIPANTS", "function": "allParticipantsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}]
+				} else if (currentUser.currentProfile == 'Service Overseer') {
+					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "TERRITORY", "function": "territoryVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}]
+				} else if (currentUser.currentProfile == 'Territory Map' || currentUser.currentProfile == 'Territory Servant') {
 					navigationVue.buttons = [{"title": "TERRITORY", "function": "territoryVue"}]
+				} else if (currentUser.currentProfile == 'Accounts Servant') {
+					navigationVue.buttons = [{"title": "ENTRY", "function": "entryVue"}, {"title": "FILE", "function": "fileVue"}, {"title": "APPROVALS", "function": "approvalsVue"}, {"title": "ARCHIVE", "function": "archiveVue"}]
 				}
 
 				gotoView('configurationVue')
+				
 			},
 			signOut() {
 				signOut()		  
@@ -1552,8 +1575,20 @@ function processNavigation2() {
 				allPublishersVue.transfer = false
 				navigationVue.displayDropdown = false
 				
-				if (currentUser.currentProfile == 'Territory Map' || currentUser.currentProfile == 'Territory Servant') {
+				if (currentUser.currentProfile == 'Secretary') {
+					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+				} else if (currentUser.currentProfile == 'Secretary - Assistant') {
+					navigationVue.buttons = [{"title": "REPORTS", "function": "missingReportVue"}, {"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH", "function": "branchReportVue"}]
+				} else if (currentUser.currentProfile == 'Life and Ministry Overseer') {
+					navigationVue.buttons = [{"title": "ASSIGNMENTS", "function": "allAssignmentsVue"}, {"title": "SCHEDULE", "function": "scheduleVue"}, {"title": "PARTICIPANTS", "function": "allParticipantsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}]
+				} else if (currentUser.currentProfile == 'Life and Ministry Assistant') {
+					navigationVue.buttons = [{"title": "ASSIGNMENTS", "function": "allAssignmentsVue"}, {"title": "SCHEDULE", "function": "scheduleVue"}, {"title": "PARTICIPANTS", "function": "allParticipantsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}]
+				} else if (currentUser.currentProfile == 'Service Overseer') {
+					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "TERRITORY", "function": "territoryVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}]
+				} else if (currentUser.currentProfile == 'Territory Map' || currentUser.currentProfile == 'Territory Servant') {
 					navigationVue.buttons = [{"title": "TERRITORY", "function": "territoryVue"}]
+				} else if (currentUser.currentProfile == 'Accounts Servant') {
+					navigationVue.buttons = [{"title": "ENTRY", "function": "entryVue"}, {"title": "FILE", "function": "fileVue"}, {"title": "APPROVALS", "function": "approvalsVue"}, {"title": "ARCHIVE", "function": "archiveVue"}]
 				}
 
 				gotoView('configurationVue')
@@ -3781,7 +3816,7 @@ document.querySelector('#entry').innerHTML = `<template>
 			<select v-model="currentMonth" class="w3-input" style="width:250px">
 				<option v-for="(entry, count) in monthlyRecords()" :value="entry.month">{{ cleanMonth(entry.month) }}</option>
 			</select>
-			<span style="margin-left:10px;" v-if="currentMonth !== ''" @click="fileRecord()" class="w3-button w3-light-grey" id="file">Shelf</span>
+			<span style="margin-left:10px;" v-if="currentMonth !== ''" @click="fileRecord()" class="w3-button w3-light-grey" id="file">Store</span>
 		</h4>
 
 		<div v-if="currentMonth !== ''" :class="mode()" style="margin:5px; width: 100%; padding:10px 0">
@@ -4238,7 +4273,7 @@ function processEntry() {
 			allEntries: [],
 			allActions: [
 				{"name": "W", "code": "W", "description": "Contribution - Worldwide Work"},
-				{"name": "C", "code": "C", "description": "Contribution - Local Congregation Expenses"},
+				{"name": "C", "code": "C", "description": "Contribution - Congregation"},
 				{"name": "Internet", "code": "E", "description": "Purchase of Internet Data"},
 				{"name": "Electricity", "code": "E", "description": "Electricity Units"},
 				{"name": "Fuel", "code": "E", "description": "Purchase of Fuel for Generator"},
@@ -4246,7 +4281,7 @@ function processEntry() {
 				{"name": "Tank Water", "code": "E", "description": "Purchase of Water for the Tank"},
 				{"name": "D", "code": "D", "description": "Deposite to Primary Account"},
 				{"name": "Balance Forward", "code": "BF", "description": "Balance Forward"},
-				{"name": "CE", "code": "CE", "description": "Contribution - Local Congregation Expenses (Electronic)"},
+				{"name": "CE", "code": "CE", "description": "Contribution - Congregation (Electronic)"},
 				{"name": "I", "code": "I", "description": "Interest from Bank Account"},
 				{"name": "E", "code": "E", "description": "Local Congregation Expences"},
 				{"name": "KH Expences", "code": "KH", "description": "Kingdom Hall operating expenses"},
@@ -4617,9 +4652,29 @@ function getNextMonthFromDate(date) {
 document.querySelector('#file').innerHTML = `<template>
 	<div v-if="display == true">
 		<h2 class="w3-center">CURRENT FILE</h2>
-		
-		
-				
+		<h4 style="margin:15px;display:flex">
+			<select v-model="currentMonth" class="w3-input" style="width:200px; margin-right:10px" @change="loadFile()">
+				<option v-for="(entry, count) in months()" :value="cleanMonth(entry)">{{ entry }}</option>
+			</select>
+			<select v-model="currentFile" class="w3-input" style="width:250px" @change="loadFile()">
+				<option v-for="(entry, count) in individualFiles()" :value="entry">{{ entry }}</option>
+			</select>
+			<button style="margin-left:10px;display:none" @click="uploadRecord()" class="w3-button w3-light-grey" id="upload">UPLOAD</button>
+			<button style="margin-left:10px;display:none" @click="updateRecord()" class="w3-button w3-light-grey" id="update">UPDATE</button>
+			<button @click="downloadZip()" class="w3-button w3-black download-button" style="margin: 0 10px;display:none" id="download">
+				<i class="fas fa-paper-plane"></i>
+			</button>
+		</h4>
+		<div v-if="allFiles().filter(elem=>elem.name == currentFile + ' - ' + currentMonth).length !== 0" style="margin: 15px;">
+			<button class="w3-button w3-black download-button" style="margin: 10px 0;">
+				<a :href="currentPath" style="text-decoration:none" :download="currentFile + ' - ' + currentMonth">
+					<i class="fas fa-download"></i>
+				</a>
+			</button>
+			<iframe v-if="allFiles().filter(elem=>elem.name == currentFile + ' - ' + currentMonth)[0].value.type.toLowerCase().endsWith('/pdf')" height="600px" width="100%" :src="currentPath" class="fileViewer"></iframe>
+			<img v-if="!allFiles().filter(elem=>elem.name == currentFile + ' - ' + currentMonth)[0].value.type.toLowerCase().endsWith('/pdf')" width="100%" :src="currentPath" class="fileViewer">
+		</div>
+		<input @change="saveFile()" type="file" id="pdfFile" accept=".pdf,.jpg,.jpeg,.png" style="display:none">		
 	</div>
 </template>`
 
@@ -4631,20 +4686,19 @@ function processFile() {
             publishers: [],
             display: false,
             transactionCode: "",
+			period: "",
+			currentMonth: "",
+			currentFile: "",
+			currentPath: "",
 			transactionDescription: "",
+			downloadName: "",
+			downloadPath: "",
 			showAccount: false,
         },
         computed: {
-            allRecords() {
-                return entryVue.allEntries.map(obj => ({
-					...obj,
-					month: obj.date.split('-').slice(0, 2).join('-')
-				})
-				)
-            },/*
-			selectedGroup() {
-                return navigationVue.fieldServiceGroup
-            },*/
+            allMonths() {
+                return allMonths
+            },
         },
         methods: {
 			mode() {
@@ -4656,63 +4710,124 @@ function processFile() {
 			date() {
                 return monthlyReportVue.cleanDate(new Date())
             },
-			monthlyRecords() {
-                return getUniqueElementsByProperty(this.allRecords, ['month']).map(obj => ({
+			individualFiles() {
+				var files = ['Accounts Sheet', 'Funds Transfer', 'Remittance', 'Donation Acknowledgments', 'Accounts Report']
+				if (Number(this.currentMonth.split('-')[1]) - 1 == 1 || 
+					Number(this.currentMonth.split('-')[1]) - 1 == 4 || 
+					Number(this.currentMonth.split('-')[1]) - 1 == 7 || 
+					Number(this.currentMonth.split('-')[1]) - 1 == 10) {
+						files.push('Audit Report')
+					}
+                return files
+            },
+			allFiles() {
+				return myFiles.filter(elem=>elem.name.split(' - ').length > 1).map(obj => ({
 					...obj,
-					entries: this.allRecords.filter(elem=>elem.month == obj.month)
+					file: obj.name.split(' - ')[0],
+					month: obj.name.split(' - ')[1]
 				})
 				)
-            },/*
-			newTransaction(code) {
-				//console.log(code)
-				this.transactionCode = code
-				this.showAccount = false
-				if (code == 'C') {
-					this.transactionDescription = 'Contribution - Local Congregation Expenses'
-					
-				} else if (code == 'D') {
-					this.transactionDescription = 'Deposite to Primary Account'
-					
-				} else if (code == 'E') {
-					this.transactionDescription = 'Local Congregation Expenses'
-					
-					this.showAccount = true
-				} else if (code == 'W') {
-					this.transactionDescription = 'Contribution - Worldwide Work'
-					
+			},
+			cleanMonth(value) {
+				return `${value.split(' ')[1]}-${(Number(allMonths.indexOf(value.split(' ')[0])) + 1).toString().padStart(2, '0')}`
+			},
+			loadFile() {
+				const currentFile = this.allFiles().filter(elem=>elem.name == `${this.currentFile} - ${this.currentMonth}`)
+				if (currentFile.length !== 0) {
+					this.currentPath = URL.createObjectURL(currentFile[0].value);
+					document.querySelector('#update').style.display = ''
+					document.querySelector('#upload').style.display = 'none'
+				} else {
+					document.querySelector('#update').style.display = 'none'
+					if (this.currentFile == 'Audit Report' &&
+						Number(this.currentMonth.split('-')[1]) - 1 !== 1 && 
+						Number(this.currentMonth.split('-')[1]) - 1 !== 4 && 
+						Number(this.currentMonth.split('-')[1]) - 1 !== 7 && 
+						Number(this.currentMonth.split('-')[1]) - 1 !== 10) {
+						document.querySelector('#upload').style.display = 'none'
+					} else if (this.currentFile == '' || this.currentMonth == '') {
+						document.querySelector('#upload').style.display = 'none'
+					} else {
+						document.querySelector('#upload').style.display = ''
+					}
+				}
+				if (Number(this.currentMonth.split('-')[1]) - 1 == 1 || 
+					Number(this.currentMonth.split('-')[1]) - 1 == 4 || 
+					Number(this.currentMonth.split('-')[1]) - 1 == 7 || 
+					Number(this.currentMonth.split('-')[1]) - 1 == 10) {
+						document.querySelector('#download').style.display = ''
+				} else {
+					document.querySelector('#download').style.display = 'none'
+				}
+				
+			},
+			months() {
+				var months = allMonths.map(elem=>`${elem} ${new Date().getFullYear() - 1}`).concat(allMonths.slice(0, new Date().getMonth()).map(elem=>`${elem} ${new Date().getFullYear()}`), `${allMonths[new Date().getMonth()]} ${new Date().getFullYear()}`).slice(-6)
+				while (allMonths.indexOf(months[0].split(' ')[0]) !== 2 && 
+					allMonths.indexOf(months[0].split(' ')[0]) !== 5 && 
+					allMonths.indexOf(months[0].split(' ')[0]) !== 8 && 
+					allMonths.indexOf(months[0].split(' ')[0]) != 11) {
+						months.shift()
+				}
+				return months
+			},
+			uploadRecord() {
+				document.querySelector('#pdfFile').click()
+			},
+			updateRecord() {
+				document.querySelector('#pdfFile').click()
+			},
+			async saveFile() {
+				if (document.getElementById('pdfFile').files[0]) {
+					DBWorker.postMessage({ storeName: 'files', action: "save", value: [{name: `${this.currentFile} - ${this.currentMonth}`, value: document.getElementById('pdfFile').files[0]}]});
+					await shortWait()
+					await shortWait()
+					DBWorker.postMessage({ storeName: 'files', action: "readAll"});
 				}
 			},
-            updateRecord(publisher) {
-				updatePublisherRecord(publisher)
-			},
-			inactive() {
-				this.active = !this.active;
-			}*/
+			downloadZip() {
+				//console.log('Download')
+				// Create a new instance of JSZip
+				var zip = new JSZip();
+
+				const auditFiles = this.allFiles().filter((elem) => {
+					return this.months().slice(0, 3).findIndex(ele=>elem.name.endsWith(this.cleanMonth(ele))) !== -1
+				});
+
+				auditFiles.forEach(elem=>{
+					// Add Blobs to the zip folder
+					zip.file(`${entryVue.cleanMonth(elem.month)}/${elem.name}.${elem.value.name ? elem.value.name.split('.')[1] : 'pdf'}`, elem.value);
+				})
+
+				// Generate the zip file asynchronously
+				zip.generateAsync({ type: "blob" }).then(function (content) {
+					downloadPreparedFiles([URL.createObjectURL(content), `Audit Files ${fileVue.months().slice(0, 3)[0]} - ${fileVue.months().slice(0, 3)[2]}`])
+				});
+			}
         }
     })
 }
 
 document.querySelector('#approvals').innerHTML = `<template>
 	<div v-if="display == true">
-		<h2 class="w3-center">TRANSACTIONS</h2>
-		<h4 style="margin:5px; width: 230px"><span :class="modeButton()" style="margin:5px" @click="newTransaction('C')">C</span><span :class="modeButton()" style="margin:5px" @click="newTransaction('D')">D</span><span :class="modeButton()" style="margin:5px" @click="newTransaction('E')">E</span><span :class="modeButton()" style="margin:5px" @click="newTransaction('W')">W</span></h4>
-		
-		<div :class="mode()" style="margin:5px; width: 280px; padding:10px 0">
-			<div class="w3-container main">
-				<input type="date" :value="date()"><input v-model="transactionCode" style="margin:5px; width: 25px;">
-				<textarea type="text" style="width: 250px; margin-top:5px" placeholder="Transaction Description" v-model="transactionDescription"></textarea>
-				<select v-if="showAccount" class="w3-input" style="margin-buttom:10px;">
-					<option>RECEIPTS</option>
-					<option>PRIMARY ACCOUNT</option>
-					<option>SECONDARY ACCOUNT</option>
-				</select>
-				<div style="margin-top:10px;display:flex">
-					<input type="number" min="1" style="width: 150px;margin-right:10px" placeholder="Amount" class="w3-input">
-					<span class="w3-button w3-light-grey">ADD</span>
-				</div>
-			</div>
+		<h2 class="w3-center">APPROVALS</h2>
+		<h4 style="margin:15px;display:flex">
+			<select v-model="currentFile" class="w3-input" style="width:250px" @change="loadFile()">
+				<option v-for="(entry, count) in individualFiles()" :value="entry">{{ entry }}</option>
+			</select>
+			<button style="margin-left:10px;display:none" @click="uploadRecord()" class="w3-button w3-light-grey" id="upload">UPLOAD</button>
+			<button style="margin-left:10px;display:none" @click="updateRecord()" class="w3-button w3-light-grey" id="update">UPDATE</button>
+		</h4>
+		<div v-if="allFiles().filter(elem=>elem.name == currentFile).length !== 0" style="margin: 15px;">
+			<button class="w3-button w3-black download-button" style="margin: 10px 0;">
+				<a :href="currentPath" style="text-decoration:none" :download="currentFile">
+					<i class="fas fa-download"></i>
+				</a>
+			</button>
+			<iframe v-if="allFiles().filter(elem=>elem.name == currentFile)[0].value.type.toLowerCase().endsWith('/pdf')" height="600px" width="100%" :src="currentPath" class="fileViewer"></iframe>
+			<img v-if="!allFiles().filter(elem=>elem.name == currentFile)[0].value.type.toLowerCase().endsWith('/pdf')" width="100%" :src="currentPath" class="fileViewer">
 		</div>
-				
+		<input @change="saveFile()" type="file" id="pdfFile" accept=".pdf,.jpg,.jpeg,.png" style="display:none">		
 	</div>
 </template>`
 
@@ -4724,19 +4839,19 @@ function processApprovals() {
             publishers: [],
             display: false,
             transactionCode: "",
+			period: "",
+			currentMonth: "",
+			currentFile: "",
+			currentPath: "",
 			transactionDescription: "",
+			downloadName: "",
+			downloadPath: "",
 			showAccount: false,
         },
-        computed: {/*
-            searchTerms() {
-                return navigationVue.searchTerms
+        computed: {
+            allMonths() {
+                return allMonths
             },
-			allGroups() {
-                return allPublishersVue.allGroups
-            },
-			selectedGroup() {
-                return navigationVue.fieldServiceGroup
-            },*/
         },
         methods: {
 			mode() {
@@ -4747,57 +4862,95 @@ function processApprovals() {
 			},
 			date() {
                 return monthlyReportVue.cleanDate(new Date())
-            },/*
-			newTransaction(code) {
-				//console.log(code)
-				this.transactionCode = code
-				this.showAccount = false
-				if (code == 'C') {
-					this.transactionDescription = 'Contribution - Local Congregation Expenses'
-					
-				} else if (code == 'D') {
-					this.transactionDescription = 'Deposite to Primary Account'
-					
-				} else if (code == 'E') {
-					this.transactionDescription = 'Local Congregation Expenses'
-					
-					this.showAccount = true
-				} else if (code == 'W') {
-					this.transactionDescription = 'Contribution - Worldwide Work'
-					
+            },
+			individualFiles() {
+				var files = ['Payments', 'Balance', 'Approval', 'Resolution']
+				
+                return files
+            },
+			allFiles() {
+				return myFiles.filter(elem=>['Payments', 'Balance', 'Approval', 'Resolution'].includes(elem.name))
+			},
+			cleanMonth(value) {
+				return `${value.split(' ')[1]}-${(Number(allMonths.indexOf(value.split(' ')[0])) + 1).toString().padStart(2, '0')}`
+			},
+			loadFile() {
+				const currentFile = this.allFiles().filter(elem=>elem.name == `${this.currentFile}`)
+				if (currentFile.length !== 0) {
+					this.currentPath = URL.createObjectURL(currentFile[0].value);
+					document.querySelector('#update').style.display = ''
+					document.querySelector('#upload').style.display = 'none'
+				} else {
+					document.querySelector('#update').style.display = 'none'
+					if (this.currentFile == '') {
+						document.querySelector('#upload').style.display = 'none'
+					} else {
+						document.querySelector('#upload').style.display = ''
+					}
+				}				
+			},
+			months() {
+				var months = allMonths.map(elem=>`${elem} ${new Date().getFullYear() - 1}`).concat(allMonths.slice(0, new Date().getMonth()).map(elem=>`${elem} ${new Date().getFullYear()}`), `${allMonths[new Date().getMonth()]} ${new Date().getFullYear()}`).slice(-6)
+				while (allMonths.indexOf(months[0].split(' ')[0]) !== 2 && 
+					allMonths.indexOf(months[0].split(' ')[0]) !== 5 && 
+					allMonths.indexOf(months[0].split(' ')[0]) !== 8 && 
+					allMonths.indexOf(months[0].split(' ')[0]) != 11) {
+						months.shift()
+				}
+				return months
+			},
+			uploadRecord() {
+				document.querySelector('#pdfFile').click()
+			},
+			updateRecord() {
+				document.querySelector('#pdfFile').click()
+			},
+			async saveFile() {
+				if (document.getElementById('pdfFile').files[0]) {
+					DBWorker.postMessage({ storeName: 'files', action: "save", value: [{name: `${this.currentFile}`, value: document.getElementById('pdfFile').files[0]}]});
+					await shortWait()
+					await shortWait()
+					DBWorker.postMessage({ storeName: 'files', action: "readAll"});
 				}
 			},
-            updateRecord(publisher) {
-				updatePublisherRecord(publisher)
-			},
-			inactive() {
-				this.active = !this.active;
-			}*/
         }
     })
 }
 
 document.querySelector('#archive').innerHTML = `<template>
 	<div v-if="display == true">
-		<h2 class="w3-center">TRANSACTIONS</h2>
-		<h4 style="margin:5px; width: 230px"><span :class="modeButton()" style="margin:5px" @click="newTransaction('C')">C</span><span :class="modeButton()" style="margin:5px" @click="newTransaction('D')">D</span><span :class="modeButton()" style="margin:5px" @click="newTransaction('E')">E</span><span :class="modeButton()" style="margin:5px" @click="newTransaction('W')">W</span></h4>
-		
-		<div :class="mode()" style="margin:5px; width: 280px; padding:10px 0">
-			<div class="w3-container main">
-				<input type="date" :value="date()"><input v-model="transactionCode" style="margin:5px; width: 25px;">
-				<textarea type="text" style="width: 250px; margin-top:5px" placeholder="Transaction Description" v-model="transactionDescription"></textarea>
-				<select v-if="showAccount" class="w3-input" style="margin-buttom:10px;">
-					<option>RECEIPTS</option>
-					<option>PRIMARY ACCOUNT</option>
-					<option>OTHER</option>
-				</select>
-				<div style="margin-top:10px;display:flex">
-					<input type="number" min="1" style="width: 150px;margin-right:10px" placeholder="Amount" class="w3-input">
-					<span class="w3-button w3-light-grey">ADD</span>
-				</div>
-			</div>
+		<h2 class="w3-center">ARCHIVE</h2>
+		<h4 style="margin:15px;display:flex">
+			<select v-model="currentMonth" class="w3-input" style="width:200px; margin-right:10px" @change="loadFile()">
+				<option v-for="(entry, count) in months()" :value="cleanMonth(entry)">{{ entry }}</option>
+			</select>
+			<select v-model="currentFile" class="w3-input" style="width:300px" @change="loadFile()">
+				<option v-for="(entry, count) in individualFiles()" :value="entry">{{ entry }}</option>
+			</select>
+			<button style="margin-left:10px;display:none" @click="updateRecord()" class="w3-button w3-light-grey" id="update">UPDATE</button>
+		</h4>
+		<h4 style="margin:15px;display:flex" id="upload">
+			<select v-model="selectedMonth"class="w3-input" style="width:150px">
+				<option v-for="(month, count) in allMonths" :value="(count + 1).toString().padStart(2, '0')">{{ month }}</option>
+			</select>
+			<select v-model="selectedYear" style="margin-left:10px;width:90px" class="w3-input">
+				<option v-for="(year, count) in currentYears" :value="year">{{ year }}</option>
+			</select>
+			<select v-model="selectedFile" style="margin-left:10px;width:300px" class="w3-input" style="width:250px" @change="loadFile()">
+				<option v-for="(entry, count) in allFileTypes()" :value="entry">{{ entry }}</option>
+			</select>
+			<button style="margin-left:10px;" @click="uploadRecord()" class="w3-button w3-light-grey">UPLOAD</button>
+		</h4>
+		<div v-if="allFiles().filter(elem=>elem.name == currentFile + ' - ' + currentMonth).length !== 0" style="margin: 15px;">
+			<button class="w3-button w3-black download-button" style="margin: 10px 0;">
+				<a :href="currentPath" style="text-decoration:none" :download="currentFile + ' - ' + currentMonth">
+					<i class="fas fa-download"></i>
+				</a>
+			</button>
+			<iframe v-if="allFiles().filter(elem=>elem.name == currentFile + ' - ' + currentMonth)[0].value.type.toLowerCase().endsWith('/pdf')" height="600px" width="100%" :src="currentPath" class="fileViewer"></iframe>
+			<img v-if="!allFiles().filter(elem=>elem.name == currentFile + ' - ' + currentMonth)[0].value.type.toLowerCase().endsWith('/pdf')" width="100%" :src="currentPath" class="fileViewer">
 		</div>
-				
+		<input @change="saveFile()" type="file" id="pdfFile" accept=".pdf,.jpg,.jpeg,.png" style="display:none">
 	</div>
 </template>`
 
@@ -4809,19 +4962,36 @@ function processArchive() {
             publishers: [],
             display: false,
             transactionCode: "",
+			period: "",
+			currentDate: "",
+			currentMonth: "",
+			selectedMonth: "",
+			selectedYear: "",
+			selectedFile: "",
+			currentFile: "",
+			currentPath: "",
 			transactionDescription: "",
+			downloadName: "",
+			downloadPath: "",
 			showAccount: false,
         },
-        computed: {/*
-            searchTerms() {
-                return navigationVue.searchTerms
+        computed: {
+            allMonths() {
+				return allMonths
             },
-			allGroups() {
-                return allPublishersVue.allGroups
+			currentYears() {
+				var thisYear = new Date().getFullYear()
+				this.selectedYear = thisYear
+				this.selectedMonth = (Number(new Date().getMonth()) + 1).toString().padStart(2, '0')
+				var theseYears = []
+				var i = 0
+				while (i < 5) {
+					theseYears.push(thisYear)
+					thisYear--
+					i++
+				}
+				return theseYears
             },
-			selectedGroup() {
-                return navigationVue.fieldServiceGroup
-            },*/
         },
         methods: {
 			mode() {
@@ -4832,32 +5002,113 @@ function processArchive() {
 			},
 			date() {
                 return monthlyReportVue.cleanDate(new Date())
-            },/*
-			newTransaction(code) {
-				//console.log(code)
-				this.transactionCode = code
-				this.showAccount = false
-				if (code == 'C') {
-					this.transactionDescription = 'Contribution - Local Congregation Expenses'
-					
-				} else if (code == 'D') {
-					this.transactionDescription = 'Deposite to Primary Account'
-					
-				} else if (code == 'E') {
-					this.transactionDescription = 'Local Congregation Expenses'
-					
-					this.showAccount = true
-				} else if (code == 'W') {
-					this.transactionDescription = 'Contribution - Worldwide Work'
-					
+            },
+			individualFiles() {
+				return getUniqueElementsByProperty(this.allFiles(), ['name']).map(elem=>elem.file)
+            },
+			allFiles() {
+				const combinedFiles = myFiles.filter(elem=>elem.name.split(' - ').length > 1).map(obj => ({
+					...obj,
+					file: obj.name.split(' - ')[0],
+					month: obj.name.split(' - ')[1]
+				})
+				)
+				return combinedFiles.filter((elem) => {
+					return fileVue.months().findIndex(ele=>elem.name.endsWith(archiveVue.cleanMonth(ele))) == -1
+				});
+			},
+			allFileTypes() {
+				if (Number(fileVue.months()[0].split(' ')[1] + (allMonths.indexOf(fileVue.months()[0].split(' ')[0]) + 1).toString().padStart(2, '0')) <= Number(archiveVue.selectedYear + archiveVue.selectedMonth)) {
+					return ['Payments', 'Balance', 'Approval', 'Resolution']
+				} else {
+					return ['Accounts Sheet', 'Funds Transfer', 'Remittance', 'Donation Acknowledgments', 'Accounts Report', 'Payments', 'Balance', 'Approval', 'Resolution']
 				}
 			},
-            updateRecord(publisher) {
-				updatePublisherRecord(publisher)
+			cleanMonth(value) {
+				return `${value.split(' ')[1]}-${(Number(allMonths.indexOf(value.split(' ')[0])) + 1).toString().padStart(2, '0')}`
 			},
-			inactive() {
-				this.active = !this.active;
-			}*/
+			loadFile() {
+				const currentFile = this.allFiles().filter(elem=>elem.name == `${this.currentFile} - ${this.currentMonth}`)
+				if (currentFile.length !== 0) {
+					this.currentPath = URL.createObjectURL(currentFile[0].value);
+					document.querySelector('#update').style.display = ''
+					//document.querySelector('#upload').style.display = 'none'
+				} else {
+					document.querySelector('#update').style.display = 'none'
+					//document.querySelector('#upload').style.display = ''
+				}				
+			},
+			months() {
+				//this.populateMonthYearDropdowns()
+				return getUniqueElementsByProperty(this.allFiles(), ['month']).map(elem=>entryVue.cleanMonth(elem.month))
+			},
+			uploadRecord() {
+				if (this.selectedFile == '') {
+					alert('Please select a file type')
+				} 
+				if (this.selectedYear == '') {
+					alert('Please select a year')
+				}
+				if (this.selectedMonth == '') {
+					alert('Please select a month')
+				}
+				document.querySelector('#pdfFile').click()
+			},
+			updateRecord() {
+				document.querySelector('#pdfFile').click()
+			},
+			async saveFile() {
+				if (document.getElementById('pdfFile').files[0]) {
+					DBWorker.postMessage({ storeName: 'files', action: "save", value: [{name: `${this.selectedFile} - ${this.selectedYear}-${this.selectedMonth}`, value: document.getElementById('pdfFile').files[0]}]});
+					await shortWait()
+					await shortWait()
+					DBWorker.postMessage({ storeName: 'files', action: "readAll"});
+				}
+			},
+			downloadZip() {
+				//console.log('Download')
+				// Create a new instance of JSZip
+				var zip = new JSZip();
+
+				const auditFiles = this.allFiles().filter((elem) => {
+					return this.months().slice(0, 3).findIndex(ele=>elem.name.endsWith(this.cleanMonth(ele))) !== -1
+				});
+
+				auditFiles.forEach(elem=>{
+					// Add Blobs to the zip folder
+					zip.file(`${entryVue.cleanMonth(elem.month)}/${elem.name}.${elem.value.name ? elem.value.name.split('.')[1] : 'pdf'}`, elem.value);
+				})
+
+				// Generate the zip file asynchronously
+				zip.generateAsync({ type: "blob" }).then(function (content) {
+					downloadPreparedFiles([URL.createObjectURL(content), `Audit Files ${fileVue.months().slice(0, 3)[0]} - ${fileVue.months().slice(0, 3)[2]}`])
+				});
+			},
+			populateMonthYearDropdowns() {
+				var monthDropdown = document.getElementById("month");
+				var yearDropdown = document.getElementById("year");
+	
+				// Populate months
+				var months = [
+					"January", "February", "March", "April", "May", "June", 
+					"July", "August", "September", "October", "November", "December"
+				];
+				months.forEach(function(month, index) {
+					var option = document.createElement("option");
+					option.value = index + 1;
+					option.text = month;
+					monthDropdown.add(option);
+				});
+	
+				// Populate years (adjust range as needed)
+				var currentYear = new Date().getFullYear();
+				for (var year = currentYear - 10; year <= currentYear + 10; year++) {
+					var option = document.createElement("option");
+					option.value = year;
+					option.text = year;
+					yearDropdown.add(option);
+				}
+			}
         }
     })
 }
@@ -6713,7 +6964,7 @@ document.querySelector("#configuration").innerHTML = `<template>
 							<option v-for="mode in ['System', 'Light', 'Dark'].filter(elem=>elem !== currentMode())" :value="mode">{{ mode }}</option>
 						</select></label>
 						<p v-if="reportEntry == 'secretary' || reportEntry == 'lmo' || reportEntry == 'acct'">
-							<input type="file" id="pdfFile" accept=".pdf">
+							<input type="file" id="pdfFile" accept=".pdf,.jpg,.jpeg">
 							<p v-if="reportEntry == 'secretary' || reportEntry == 'lmo' || reportEntry == 'acct'"><input :class="inputMode('fileName w3-input')" type="text" placeholder="File Name" @click="fileName($event.target)"></p>
 							<button :class="buttonMode('w3-button w3-dark-grey')" @click="saveFile()" v-if="reportEntry == 'secretary' || reportEntry == 'lmo' || reportEntry == 'acct'"><i class="fas fa-save"> </i> Save File</button>
 						</p>
@@ -6817,7 +7068,7 @@ document.querySelector("#configuration").innerHTML = `<template>
 							<button :class="buttonMode('w3-button w3-dark-grey')" @click="importData()">Import</button>
 							<button :class="buttonMode('w3-button w3-dark-grey')" @click="reloadPage()"><i class="fas fa-sync"></i> Reload</button>
 							<hr>
-							<input type="file" id="dataFile" accept=".txt">
+							<input type="file" id="dataFile" accept=".txt, .zip">
 						</p>
 						<!--div>
 							<p style="padding: 5px">{{ currentUser.selectedQuestion }}</p>
@@ -6885,7 +7136,7 @@ function processConfiguration() {
 			},
 			fileName(event) {
 				if (document.querySelector('#pdfFile') && document.querySelector('#pdfFile').files[0]) {
-					event.value = document.querySelector('#pdfFile').files[0].name
+					event.value = document.querySelector('#pdfFile').files[0].name.split('.')[0]
 				} else {
 					event.value = ''
 				}
@@ -7136,280 +7387,377 @@ Thanks a lot
 					file = new Blob([JSON.stringify({"exportType":"update", "configuration":configurationVue.configuration, "data":allPublishersVue.publishers, "lifeAndMinistryEnrolments":allParticipantsVue.enrolments, "lifeAndMinistryAssignments":allAssignmentsVue.allAssignments, "attendance": [attendanceVue.currentMonth, attendanceVue.meetingAttendanceRecord], "account": entryVue.allEntries})], {type: 'text/plain'});
 					await shortWait()
 					await shortWait()
+					//this.downloadZip(file, 'congData-' + new Date().toLocaleDateString('en-US', options) + '.txt')
+					//return
 				}
 
+				this.downloadZip(file, 'congData-' + new Date().toLocaleDateString('en-US', options) + '.txt')
+/*
 				await shortWait()
 				await shortWait()
 
 				a.href = URL.createObjectURL(file);
 				
 				a.download = 'congData-' + new Date().toLocaleDateString('en-US', options) + '.txt';
-				a.click();
+				a.click();*/
 				//window.indexedDB.deleteDatabase('congRec');
             },
-            async importData() {
+			downloadZip(file, name) {
+				//console.log('Download')
+				// Create a new instance of JSZip
+				var zip = new JSZip();
+
+				if (currentUser.accesses.includes('acct')) {
+					const currentFiles = fileVue.allFiles().filter((elem) => {
+						return fileVue.months().findIndex(ele=>elem.name.endsWith(fileVue.cleanMonth(ele))) !== -1
+					});
+	
+					currentFiles.forEach(elem=>{
+						// Add Blobs to the zip folder
+						zip.file(`Current/${elem.month.split('-')[0]}/${entryVue.cleanMonth(elem.month)}/${elem.name}.${elem.value.name ? elem.value.name.split('.')[1] : 'pdf'}`, elem.value);
+					})
+	
+					approvalsVue.allFiles().forEach(elem=>{
+						// Add Blobs to the zip folder
+						zip.file(`Standing Approvals/${elem.name}.${elem.value.name ? elem.value.name.split('.')[1] : 'pdf'}`, elem.value);
+					})
+
+					const archiveFiles = fileVue.allFiles().filter((elem) => {
+						return fileVue.months().findIndex(ele=>elem.name.endsWith(fileVue.cleanMonth(ele))) == -1
+					});
+	
+					archiveFiles.forEach(elem=>{
+						// Add Blobs to the zip folder
+						zip.file(`Archive/${elem.month.split('-')[0]}/${entryVue.cleanMonth(elem.month)}/${elem.name}.${elem.value.name ? elem.value.name.split('.')[1] : 'pdf'}`, elem.value);
+					})
+				}
+/*
+				if (currentUser.accesses.includes('sendReport')) {
+					fileVue.allFiles().forEach(elem=>{
+						// Add Blobs to the zip folder
+						zip.file(`${entryVue.cleanMonth(elem.month)}/${elem.name}.${elem.value.name ? elem.value.name.split('.')[1] : 'pdf'}`, elem.value);
+					})
+				}*/
+
+				zip.file(`${name}`, file);
+
+				// Generate the zip file asynchronously
+				zip.generateAsync({ type: "blob" }).then(function (content) {
+					downloadPreparedFiles([URL.createObjectURL(content), `${name.replace('.txt', '.zip')}`])
+				});
+			},
+			importData() {
 				if (!document.querySelector('#dataFile').files[0]) {
 					alert('Please select file to import')
 					return
 				}
-                var reader = new FileReader();
-
-				// When the FileReader has loaded the file...
-				reader.onload = async function() {
-					var result = JSON.parse(this.result)
-
-					var exportType = result.exportType
-					console.log(exportType, result)
-
-					if (exportType == 'all') {
-						var cleanupPublishersDataBase = allPublishersVue.publishers.filter((elem) => {
-							return result.data.findIndex(ele=>ele.name === elem.name) == -1
-						});
-
-						var cleanupEnrolmentsDataBase = allParticipantsVue.enrolments.filter((elem) => {
-							return result.lifeAndMinistryEnrolments.findIndex(ele=>ele.name === elem.name) == -1
-						});
-
-						var cleanupAssignmentsDataBase = allAssignmentsVue.allAssignments.filter((elem) => {
-							return result.lifeAndMinistryAssignments.findIndex(ele=>ele.week === elem.week) == -1
-						});
-	
-						await shortWait()
-						await shortWait()
-	
-						configurationVue.configuration = result.configuration
-						configurationVue.fieldServiceGroupDetails = result.configuration.fieldServiceGroupDetails
-						configurationVue.midweekMeetingDay = result.configuration.midweekMeetingDay
-						configurationVue.midweekMeetingTime = result.configuration.midweekMeetingTime
-						navigationVue.allGroups = result.configuration.fieldServiceGroups
-						allPublishersVue.publishers = result.data
-						allParticipantsVue.enrolments = result.lifeAndMinistryEnrolments
-						allAssignmentsVue.allAssignments = result.lifeAndMinistryAssignments
-						territoryVue.savedPolygons = result.territory
-						entryVue.allEntries = result.account
-	
-						await shortWait()
-						await shortWait()
-	
-						attendanceVue.currentMonth = result.attendance[0]
-						attendanceVue.meetingAttendanceRecord = result.attendance[1]
-	
-						DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [result.configuration]});
-						DBWorker.postMessage({ storeName: 'data', action: "save", value: result.data});
-						DBWorker.postMessage({ storeName: 'attendance', action: "save", value: result.attendance});
-						DBWorker.postMessage({ storeName: 'lifeAndMinistryEnrolments', action: "save", value: result.lifeAndMinistryEnrolments});
-						DBWorker.postMessage({ storeName: 'lifeAndMinistryAssignments', action: "save", value: result.lifeAndMinistryAssignments});
-						DBWorker.postMessage({ storeName: 'territory', action: "save", value: [{"name": "FeatureCollection", "value": result.territory}]});
-						DBWorker.postMessage({ storeName: 'account', action: "save", value: result.account});
-
-	
-						await shortWait()
-						await shortWait()
-						await shortWait()
-						await shortWait()
-	
-	
-						cleanupPublishersDataBase.forEach(item=>{
-							DBWorker.postMessage({ storeName: 'data', action: "deleteItem", value: item.name});
-						})
-
-						cleanupEnrolmentsDataBase.forEach(item=>{
-							DBWorker.postMessage({ storeName: 'lifeAndMinistryEnrolments', action: "deleteItem", value: item.name});
-						})
-
-						cleanupAssignmentsDataBase.forEach(item=>{
-							DBWorker.postMessage({ storeName: 'lifeAndMinistryAssignments', action: "deleteItem", value: item.name});
-						})
-	
-						configured = true
-						gotoView('congregationVue')
-
-					} else if (exportType == 'reportEntry') {
-
-						var cleanupPublishersDataBase = allPublishersVue.publishers.filter((elem) => {
-							return result.data.findIndex(ele=>ele.name === elem.name) == -1
-						});
-	
-						await shortWait()
-						await shortWait()
-	
-						configurationVue.configuration = result.configuration
-						configurationVue.fieldServiceGroupDetails = result.configuration.fieldServiceGroupDetails
-						navigationVue.allGroups = result.configuration.fieldServiceGroups
-						allPublishersVue.publishers = result.data
-						
-						await shortWait()
-						await shortWait()
-	
-						await shortWait()
-						await shortWait()
-	
-						attendanceVue.currentMonth = result.attendance[0]
-						attendanceVue.meetingAttendanceRecord = result.attendance[1]
-	
-						DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [result.configuration]});
-						DBWorker.postMessage({ storeName: 'data', action: "save", value: result.data});
-						DBWorker.postMessage({ storeName: 'attendance', action: "save", value: result.attendance});
-	
-						await shortWait()
-						await shortWait()
-						await shortWait()
-						await shortWait()
-	
-	
-						cleanupPublishersDataBase.forEach(item=>{
-							DBWorker.postMessage({ storeName: 'data', action: "deleteItem", value: item.name});
-						})
-	
-						configured = true
-						
-						gotoView('missingReportVue')
-
-					} else if (exportType == 'lifeAndMinistry') {
-						var cleanupPublishersDataBase = allPublishersVue.publishers.filter((elem) => {
-							return result.data.findIndex(ele=>ele.name === elem.name) == -1
-						});
-
-						var cleanupEnrolmentsDataBase = allParticipantsVue.enrolments.filter((elem) => {
-							return result.lifeAndMinistryEnrolments.findIndex(ele=>ele.name === elem.name) == -1
-						});
-
-						var cleanupAssignmentsDataBase = allAssignmentsVue.allAssignments.filter((elem) => {
-							return result.lifeAndMinistryAssignments.findIndex(ele=>ele.week === elem.week) == -1
-						});
-	
-						await shortWait()
-						await shortWait()
-	
-						configurationVue.configuration = result.configuration
-						configurationVue.midweekMeetingDay = result.configuration.midweekMeetingDay
-						configurationVue.midweekMeetingTime = result.configuration.midweekMeetingTime
-						navigationVue.allGroups = result.configuration.fieldServiceGroups
-						allPublishersVue.publishers = result.data
-						allParticipantsVue.enrolments = result.lifeAndMinistryEnrolments
-						allAssignmentsVue.allAssignments = result.lifeAndMinistryAssignments
-	
-						await shortWait()
-						await shortWait()
-	
-						DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [result.configuration]});
-						DBWorker.postMessage({ storeName: 'data', action: "save", value: result.data});
-						DBWorker.postMessage({ storeName: 'lifeAndMinistryEnrolments', action: "save", value: result.lifeAndMinistryEnrolments});
-						DBWorker.postMessage({ storeName: 'lifeAndMinistryAssignments', action: "save", value: result.lifeAndMinistryAssignments});
-	
-						await shortWait()
-						await shortWait()
-						await shortWait()
-						await shortWait()
-	
-	
-						cleanupPublishersDataBase.forEach(item=>{
-							DBWorker.postMessage({ storeName: 'data', action: "deleteItem", value: item.name});
-						})
-
-						cleanupEnrolmentsDataBase.forEach(item=>{
-							DBWorker.postMessage({ storeName: 'lifeAndMinistryEnrolments', action: "deleteItem", value: item.name});
-						})
-
-						cleanupAssignmentsDataBase.forEach(item=>{
-							DBWorker.postMessage({ storeName: 'lifeAndMinistryAssignments', action: "deleteItem", value: item.name});
-						})
-	
-						configured = true
-						gotoView('allAssignmentsVue')
-					} else if (exportType == 'territoryMap') {
-
-						territoryVue.savedPolygons = result.territory
-						console.log(result.territory)
-						
-						await shortWait()
-						await shortWait()
-
-						DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [{"name":"Congregation","congregationName":"","address":""}]});						
-						DBWorker.postMessage({ storeName: 'territory', action: "save", value: [{"name": "FeatureCollection", "value": territoryVue.savedPolygons}]});
-	
-						await shortWait()
-							
-						configured = true
-						
-						gotoView('territoryVue')
-
-					} else if (exportType == 'account') {
-
-						entryVue.allEntries = result.account
-						
-						await shortWait()
-						await shortWait()
-
-						DBWorker.postMessage({ storeName: 'account', action: "save", value: result.account});
-	
-						await shortWait()
-							
-						configured = true
-						
-						gotoView('entryVue')
-
-					} else if (exportType == 'update') {
-
-						if (result.attendance) {
-							if (result.attendance[0]) {
-								attendanceVue.currentMonth = result.attendance[0]
-							}
-							if (result.attendance[1]) {
-								attendanceVue.meetingAttendanceRecord = result.attendance[1]
-							}
-							await shortWait()
-							await shortWait()
-							DBWorker.postMessage({ storeName: 'attendance', action: "save", value: [attendanceVue.currentMonth, attendanceVue.meetingAttendanceRecord]});	
-						}
-						
-						if (result.data) {
-							allPublishersVue.publishers.forEach(elem=>{
-								const currentReport = result.data.filter(ele=>ele.name === elem.name)
-								if (currentReport.length !== 0) {
-									elem.report = currentReport[0].report
-								}
-							})
-							await shortWait()
-							await shortWait()
-							await shortWait()
-							await shortWait()
-							DBWorker.postMessage({ storeName: 'data', action: "save", value: allPublishersVue.publishers});
-						}
-
-						if (result.lifeAndMinistryEnrolments) {
-							allParticipantsVue.enrolments = result.lifeAndMinistryEnrolments
-							await shortWait()
-							await shortWait()
-							DBWorker.postMessage({ storeName: 'lifeAndMinistryEnrolments', action: "save", value: result.lifeAndMinistryEnrolments});
-						}
-
-						if (result.lifeAndMinistryAssignments) {
-							allAssignmentsVue.allAssignments = result.lifeAndMinistryAssignments
-							await shortWait()
-							await shortWait()
-							DBWorker.postMessage({ storeName: 'lifeAndMinistryAssignments', action: "save", value: result.lifeAndMinistryAssignments});
-						}
-						
-						if (result.account) {
-							entryVue.allEntries = result.account
-							await shortWait()
-							await shortWait()
-							DBWorker.postMessage({ storeName: 'account', action: "save", value: result.account});
-						}
-
-						await shortWait()
-						await shortWait()
+				var file = document.querySelector('#dataFile').files[0];
 		
-						configured = true
-						gotoView(navigationVue.buttons[0].function)
+				// Check if file is a zip file
+				if (file && file.name.endsWith('.zip')) {
+					var zip = new JSZip();
+		
+					// Read the zip file asynchronously
+					zip.loadAsync(file).then(function (contents) {
+						// Iterate over each file in the zip folder
+						contents.forEach(function (relativePath, file) {
+							// Read the file content as ArrayBuffer
+							if (file.name.endsWith('.txt')) {
+								file.async("text").then(function (content) {
+									//console.log("File name: " + file.name);
+									//console.log("File content: " + content);
+									var result = JSON.parse(content)
+
+									var exportType = result.exportType
+									configurationVue.handleDataInput(exportType, result)
+								});
+							} else if (file.name.includes('.')) {
+								file.async("arraybuffer").then(async function (content) {
+									var extension = file.name.split('.').pop().toLowerCase();
+							
+									// Map file extensions to MIME types
+									var mimeTypes = {
+										'txt': 'text/plain',
+										'html': 'text/html',
+										'css': 'text/css',
+										'js': 'application/javascript',
+										'json': 'application/json',
+										'jpg': 'image/jpeg',
+										'jpeg': 'image/jpeg',
+										'png': 'image/png',
+										'gif': 'image/gif',
+										'pdf': 'application/pdf',
+										// Add more mappings as needed
+									};
+									// Create a Blob object from the file content
+									var blob = new Blob([content], { type: mimeTypes[extension] || 'application/octet-stream' });
+									
+									// Do something with the Blob object
+									// For example, you can upload it, display it, or save it
+									console.log("File name: " + file.name.split('/').pop());
+									console.log("Blob object:", blob);
+									DBWorker.postMessage({ storeName: 'files', action: "save", value: [{name: file.name.split('/').pop().split('.')[0], value: blob}]});
+									//await shortWait()
+									//await shortWait()
+									//DBWorker.postMessage({ storeName: 'files', action: "readAll"});
+								});
+							}
+								
+						});
+					});
+				} else {
+					console.error("Please select a valid zip file.");
+				}
+			},
+			async handleDataInput(exportType, result) {
+				
+				console.log(exportType, result)
+
+				if (exportType == 'all') {
+					var cleanupPublishersDataBase = allPublishersVue.publishers.filter((elem) => {
+						return result.data.findIndex(ele=>ele.name === elem.name) == -1
+					});
+
+					var cleanupEnrolmentsDataBase = allParticipantsVue.enrolments.filter((elem) => {
+						return result.lifeAndMinistryEnrolments.findIndex(ele=>ele.name === elem.name) == -1
+					});
+
+					var cleanupAssignmentsDataBase = allAssignmentsVue.allAssignments.filter((elem) => {
+						return result.lifeAndMinistryAssignments.findIndex(ele=>ele.week === elem.week) == -1
+					});
+
+					await shortWait()
+					await shortWait()
+
+					configurationVue.configuration = result.configuration
+					configurationVue.fieldServiceGroupDetails = result.configuration.fieldServiceGroupDetails
+					configurationVue.midweekMeetingDay = result.configuration.midweekMeetingDay
+					configurationVue.midweekMeetingTime = result.configuration.midweekMeetingTime
+					navigationVue.allGroups = result.configuration.fieldServiceGroups
+					allPublishersVue.publishers = result.data
+					allParticipantsVue.enrolments = result.lifeAndMinistryEnrolments
+					allAssignmentsVue.allAssignments = result.lifeAndMinistryAssignments
+					territoryVue.savedPolygons = result.territory
+					entryVue.allEntries = result.account
+
+					await shortWait()
+					await shortWait()
+
+					attendanceVue.currentMonth = result.attendance[0]
+					attendanceVue.meetingAttendanceRecord = result.attendance[1]
+
+					DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [result.configuration]});
+					DBWorker.postMessage({ storeName: 'data', action: "save", value: result.data});
+					DBWorker.postMessage({ storeName: 'attendance', action: "save", value: result.attendance});
+					DBWorker.postMessage({ storeName: 'lifeAndMinistryEnrolments', action: "save", value: result.lifeAndMinistryEnrolments});
+					DBWorker.postMessage({ storeName: 'lifeAndMinistryAssignments', action: "save", value: result.lifeAndMinistryAssignments});
+					DBWorker.postMessage({ storeName: 'territory', action: "save", value: [{"name": "FeatureCollection", "value": result.territory}]});
+					DBWorker.postMessage({ storeName: 'account', action: "save", value: result.account});
+
+
+					await shortWait()
+					await shortWait()
+					await shortWait()
+					await shortWait()
+
+
+					cleanupPublishersDataBase.forEach(item=>{
+						DBWorker.postMessage({ storeName: 'data', action: "deleteItem", value: item.name});
+					})
+
+					cleanupEnrolmentsDataBase.forEach(item=>{
+						DBWorker.postMessage({ storeName: 'lifeAndMinistryEnrolments', action: "deleteItem", value: item.name});
+					})
+
+					cleanupAssignmentsDataBase.forEach(item=>{
+						DBWorker.postMessage({ storeName: 'lifeAndMinistryAssignments', action: "deleteItem", value: item.name});
+					})
+
+					configured = true
+					gotoView('congregationVue')
+
+				} else if (exportType == 'reportEntry') {
+
+					var cleanupPublishersDataBase = allPublishersVue.publishers.filter((elem) => {
+						return result.data.findIndex(ele=>ele.name === elem.name) == -1
+					});
+
+					await shortWait()
+					await shortWait()
+
+					configurationVue.configuration = result.configuration
+					configurationVue.fieldServiceGroupDetails = result.configuration.fieldServiceGroupDetails
+					navigationVue.allGroups = result.configuration.fieldServiceGroups
+					allPublishersVue.publishers = result.data
+					
+					await shortWait()
+					await shortWait()
+
+					await shortWait()
+					await shortWait()
+
+					attendanceVue.currentMonth = result.attendance[0]
+					attendanceVue.meetingAttendanceRecord = result.attendance[1]
+
+					DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [result.configuration]});
+					DBWorker.postMessage({ storeName: 'data', action: "save", value: result.data});
+					DBWorker.postMessage({ storeName: 'attendance', action: "save", value: result.attendance});
+
+					await shortWait()
+					await shortWait()
+					await shortWait()
+					await shortWait()
+
+
+					cleanupPublishersDataBase.forEach(item=>{
+						DBWorker.postMessage({ storeName: 'data', action: "deleteItem", value: item.name});
+					})
+
+					configured = true
+					
+					gotoView('missingReportVue')
+
+				} else if (exportType == 'lifeAndMinistry') {
+					var cleanupPublishersDataBase = allPublishersVue.publishers.filter((elem) => {
+						return result.data.findIndex(ele=>ele.name === elem.name) == -1
+					});
+
+					var cleanupEnrolmentsDataBase = allParticipantsVue.enrolments.filter((elem) => {
+						return result.lifeAndMinistryEnrolments.findIndex(ele=>ele.name === elem.name) == -1
+					});
+
+					var cleanupAssignmentsDataBase = allAssignmentsVue.allAssignments.filter((elem) => {
+						return result.lifeAndMinistryAssignments.findIndex(ele=>ele.week === elem.week) == -1
+					});
+
+					await shortWait()
+					await shortWait()
+
+					configurationVue.configuration = result.configuration
+					configurationVue.midweekMeetingDay = result.configuration.midweekMeetingDay
+					configurationVue.midweekMeetingTime = result.configuration.midweekMeetingTime
+					navigationVue.allGroups = result.configuration.fieldServiceGroups
+					allPublishersVue.publishers = result.data
+					allParticipantsVue.enrolments = result.lifeAndMinistryEnrolments
+					allAssignmentsVue.allAssignments = result.lifeAndMinistryAssignments
+
+					await shortWait()
+					await shortWait()
+
+					DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [result.configuration]});
+					DBWorker.postMessage({ storeName: 'data', action: "save", value: result.data});
+					DBWorker.postMessage({ storeName: 'lifeAndMinistryEnrolments', action: "save", value: result.lifeAndMinistryEnrolments});
+					DBWorker.postMessage({ storeName: 'lifeAndMinistryAssignments', action: "save", value: result.lifeAndMinistryAssignments});
+
+					await shortWait()
+					await shortWait()
+					await shortWait()
+					await shortWait()
+
+
+					cleanupPublishersDataBase.forEach(item=>{
+						DBWorker.postMessage({ storeName: 'data', action: "deleteItem", value: item.name});
+					})
+
+					cleanupEnrolmentsDataBase.forEach(item=>{
+						DBWorker.postMessage({ storeName: 'lifeAndMinistryEnrolments', action: "deleteItem", value: item.name});
+					})
+
+					cleanupAssignmentsDataBase.forEach(item=>{
+						DBWorker.postMessage({ storeName: 'lifeAndMinistryAssignments', action: "deleteItem", value: item.name});
+					})
+
+					configured = true
+					gotoView('allAssignmentsVue')
+				} else if (exportType == 'territoryMap') {
+
+					territoryVue.savedPolygons = result.territory
+					console.log(result.territory)
+					
+					await shortWait()
+					await shortWait()
+
+					DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [{"name":"Congregation","congregationName":"","address":""}]});						
+					DBWorker.postMessage({ storeName: 'territory', action: "save", value: [{"name": "FeatureCollection", "value": territoryVue.savedPolygons}]});
+
+					await shortWait()
 						
+					configured = true
+					
+					gotoView('territoryVue')
+
+				} else if (exportType == 'account') {
+
+					entryVue.allEntries = result.account
+					
+					await shortWait()
+					await shortWait()
+
+					DBWorker.postMessage({ storeName: 'account', action: "save", value: result.account});
+
+					await shortWait()
+						
+					configured = true
+					
+					gotoView('entryVue')
+
+				} else if (exportType == 'update') {
+
+					if (result.attendance) {
+						if (result.attendance[0]) {
+							attendanceVue.currentMonth = result.attendance[0]
+						}
+						if (result.attendance[1]) {
+							attendanceVue.meetingAttendanceRecord = result.attendance[1]
+						}
+						await shortWait()
+						await shortWait()
+						DBWorker.postMessage({ storeName: 'attendance', action: "save", value: [attendanceVue.currentMonth, attendanceVue.meetingAttendanceRecord]});	
 					}
+					
+					if (result.data) {
+						allPublishersVue.publishers.forEach(elem=>{
+							const currentReport = result.data.filter(ele=>ele.name === elem.name)
+							if (currentReport.length !== 0) {
+								elem.report = currentReport[0].report
+							}
+						})
+						await shortWait()
+						await shortWait()
+						await shortWait()
+						await shortWait()
+						DBWorker.postMessage({ storeName: 'data', action: "save", value: allPublishersVue.publishers});
+					}
+
+					if (result.lifeAndMinistryEnrolments) {
+						allParticipantsVue.enrolments = result.lifeAndMinistryEnrolments
+						await shortWait()
+						await shortWait()
+						DBWorker.postMessage({ storeName: 'lifeAndMinistryEnrolments', action: "save", value: result.lifeAndMinistryEnrolments});
+					}
+
+					if (result.lifeAndMinistryAssignments) {
+						allAssignmentsVue.allAssignments = result.lifeAndMinistryAssignments
+						await shortWait()
+						await shortWait()
+						DBWorker.postMessage({ storeName: 'lifeAndMinistryAssignments', action: "save", value: result.lifeAndMinistryAssignments});
+					}
+					
+					if (result.account) {
+						entryVue.allEntries = result.account
+						await shortWait()
+						await shortWait()
+						DBWorker.postMessage({ storeName: 'account', action: "save", value: result.account});
+					}
+
+					await shortWait()
+					await shortWait()
+	
+					configured = true
+					gotoView(navigationVue.buttons[0].function)
 					
 				}
 				
-				// Read the file content as a single string
-				reader.readAsText(document.querySelector('#dataFile').files[0]);
             },
 			saveConfiguration() {
                 /*if (configured = true) {
@@ -7637,10 +7985,12 @@ Thanks a lot
 					this.cancel(item)
                 }
 			},
-			saveFile() {
+			async saveFile() {
 				if (document.getElementById('pdfFile').files[0]) {
 					DBWorker.postMessage({ storeName: 'files', action: "save", value: [{name: document.querySelector('.fileName').value, value: document.getElementById('pdfFile').files[0]}]});
-					getFieldByName(document.getElementById('pdfFile').files[0], document.querySelector('.fileName').value)
+					await shortWait()
+					await shortWait()
+					DBWorker.postMessage({ storeName: 'files', action: "readAll"});
 				}
 			}
         }
@@ -9090,23 +9440,7 @@ async function fillAccountSheet() {
 	
 
 	const accountSheet = new Blob([await s26.save()], { type: 'application/pdf' })
-	DBWorker.postMessage({ storeName: 'files', action: "save", value: [{name: `Account Sheet - ${entryVue.currentMonth}`, value: accountSheet }]});
-
-	var newPdfholder = document.createElement('div')
-	var newPdfbutton = document.createElement('button')
-	var newPdfViewer = document.createElement('iframe')
-	newPdfViewer.height = '600px'
-	newPdfViewer.width = '100%'
-	newPdfViewer.src = URL.createObjectURL(accountSheet);
-	newPdfbutton.innerHTML = `<a href="${newPdfViewer.src}" style="text-decoration:none" download="Account Sheet - ${entryVue.currentMonth}"><i class="fas fa-download"></i></a>`
-	newPdfbutton.classList.value = "w3-button w3-black download-button"
-	newPdfholder.style.margin = "15px"
-	newPdfbutton.style.margin = "10px 0"
-	newPdfholder.appendChild(newPdfbutton)
-	newPdfholder.appendChild(newPdfViewer)
-	document.getElementById("pdfViewer").appendChild(newPdfholder)
-
-	downloadsArray.push([newPdfViewer.src, `Account Sheet - ${entryVue.currentMonth}`])
+	DBWorker.postMessage({ storeName: 'files', action: "save", value: [{name: `Accounts Sheet - ${entryVue.currentMonth}`, value: accountSheet }]});
 
 	await fillAccountsReport()
 }
@@ -9145,23 +9479,7 @@ async function fillAccountsReport() {
     s30.getForm().getTextField('901_34_S30_Total').setText(entryVue.totalContributions('W'))
 
 	const accountReport = new Blob([await s30.save()], { type: 'application/pdf' })
-	DBWorker.postMessage({ storeName: 'files', action: "save", value: [{name: `Account Report - ${entryVue.currentMonth}`, value: accountReport }]});
-
-	var newPdfholder = document.createElement('div')
-	var newPdfbutton = document.createElement('button')
-	var newPdfViewer = document.createElement('iframe')
-	newPdfViewer.height = '600px'
-	newPdfViewer.width = '100%'
-	newPdfViewer.src = URL.createObjectURL(accountReport);
-	newPdfbutton.innerHTML = `<a href="${newPdfViewer.src}" style="text-decoration:none" download="Account Report - ${entryVue.currentMonth}"><i class="fas fa-download"></i></a>`
-	newPdfbutton.classList.value = "w3-button w3-black download-button"
-	newPdfholder.style.margin = "15px"
-	newPdfbutton.style.margin = "10px 0"
-	newPdfholder.appendChild(newPdfbutton)
-	newPdfholder.appendChild(newPdfViewer)
-	document.getElementById("pdfViewer").appendChild(newPdfholder)
-
-	downloadsArray.push([newPdfViewer.src, `Account Report - ${entryVue.currentMonth}`])
+	DBWorker.postMessage({ storeName: 'files', action: "save", value: [{name: `Accounts Report - ${entryVue.currentMonth}`, value: accountReport }]});
 
 	await fillFundTransfer()
 }
@@ -9180,50 +9498,11 @@ async function fillFundTransfer() {
 	to62.getForm().getTextField('900_13_Text').setText(entryVue.singleAmount('TD'))
 	to62.getForm().getTextField('900_16_Text_C').setText(configurationVue.configuration.acct)
 
-	
-	/*
-    to62.getForm().getTextField('901_1_S30_Value').setText(entryVue.singleAmount('TF'))
-    s30.getForm().getTextField('901_2_S30_Value').setText(entryVue.totalContributions('C'))
-    s30.getForm().getTextField('901_3_S30_Value').setText(entryVue.totalContributions('CE'))
-    s30.getForm().getTextField('901_6_S30_Total').setText(entryVue.endingBalance(entryVue.totalContributions('C'), entryVue.totalContributions('CE'), 0, true))
-    s30.getForm().getTextField('901_7_S30_Value').setText(entryVue.totalContributions('W'))
-    s30.getForm().getTextField('901_10_S30_Total').setText(entryVue.totalContributions('W'))
-    s30.getForm().getTextField('901_11_S30_Total').setText(entryVue.endingBalance(entryVue.totalContributions('C'), entryVue.totalContributions('CE'), entryVue.totalContributions('W'), true))
-    s30.getForm().getTextField('901_12_S30_Value').setText(entryVue.totalContributions('E'))
-    s30.getForm().getTextField('901_13_S30_Value').setText(entryVue.singleAmount('RW'))
-    s30.getForm().getTextField('900_7_Text').setText('Bank service charge')
-    s30.getForm().getTextField('901_14_S30_Value').setText(entryVue.bankCharge())
-    s30.getForm().getTextField('901_19_S30_Total').setText(entryVue.endingBalance(entryVue.totalContributions('E'), entryVue.singleAmount('RW'), entryVue.bankCharge(), true))
-    s30.getForm().getTextField('901_20_S30_Value').setText(entryVue.totalContributions('W'))
-    s30.getForm().getTextField('901_23_S30_Total').setText(entryVue.totalContributions('W'))
-    s30.getForm().getTextField('901_24_S30_Total').setText(entryVue.endingBalance(entryVue.endingBalance(entryVue.totalContributions('E'), entryVue.singleAmount('RW'), entryVue.bankCharge(), true), entryVue.totalContributions('W'), 0, true))
-    s30.getForm().getTextField('901_25_S30_Total').setText(entryVue.endingBalance(0, entryVue.endingBalance(entryVue.totalContributions('C'), entryVue.totalContributions('CE'), entryVue.totalContributions('W'), true), entryVue.endingBalance(entryVue.endingBalance(entryVue.totalContributions('E'), entryVue.singleAmount('RW'), entryVue.bankCharge(), true), entryVue.totalContributions('W'), 0, true)))
-    s30.getForm().getTextField('901_26_S30_Total').setText(entryVue.endOfMonth())
-    s30.getForm().getTextField('901_30_S30_Total').setText(entryVue.endOfMonth())
-    s30.getForm().getTextField('900_17_Text_C').setText(`${entryVue.cleanMonth(entryVue.currentMonth)}`)
-    s30.getForm().getTextField('901_31_S30_Total').setText(entryVue.endingBalance(entryVue.totalContributions('C'), entryVue.totalContributions('CE'), 0, true))
-    s30.getForm().getTextField('901_32_S30_Total').setText(entryVue.endingBalance(entryVue.totalContributions('E'), entryVue.singleAmount('RW'), entryVue.bankCharge(), true))
-    s30.getForm().getTextField('901_33_S30_Total').setText(entryVue.endOfMonth())
-    s30.getForm().getTextField('901_34_S30_Total').setText(entryVue.totalContributions('W'))
-*/
 	const fundTransfer = new Blob([await to62.save()], { type: 'application/pdf' })
-	DBWorker.postMessage({ storeName: 'files', action: "save", value: [{name: `Fund Transfer - ${entryVue.currentMonth}`, value: fundTransfer }]});
-
-	var newPdfholder = document.createElement('div')
-	var newPdfbutton = document.createElement('button')
-	var newPdfViewer = document.createElement('iframe')
-	newPdfViewer.height = '600px'
-	newPdfViewer.width = '100%'
-	newPdfViewer.src = URL.createObjectURL(fundTransfer);
-	newPdfbutton.innerHTML = `<a href="${newPdfViewer.src}" style="text-decoration:none" download="Fund Transfer - ${entryVue.currentMonth}"><i class="fas fa-download"></i></a>`
-	newPdfbutton.classList.value = "w3-button w3-black download-button"
-	newPdfholder.style.margin = "15px"
-	newPdfbutton.style.margin = "10px 0"
-	newPdfholder.appendChild(newPdfbutton)
-	newPdfholder.appendChild(newPdfViewer)
-	document.getElementById("pdfViewer").appendChild(newPdfholder)
-
-	downloadsArray.push([newPdfViewer.src, `Fund Transfer - ${entryVue.currentMonth}`])
+	DBWorker.postMessage({ storeName: 'files', action: "save", value: [{name: `Funds Transfer - ${entryVue.currentMonth}`, value: fundTransfer }]});
+	await shortWait()
+	await shortWait()
+	DBWorker.postMessage({ storeName: 'files', action: "readAll"});
 }
 
 var s21, s89, s26, s30, to62;
