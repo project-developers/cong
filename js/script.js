@@ -4664,7 +4664,7 @@ document.querySelector('#file').innerHTML = `<template>
 				<option v-for="(entry, count) in individualFiles()" :value="entry">{{ entry }}</option>
 			</select>			
 		</p>
-		<div style="margin: 5px;">
+		<div style="margin:0 5px 10px;">
 			<button v-if="allFiles().filter(elem=>elem.name == currentFile + ' - ' + currentMonth).length !== 0" class="w3-button w3-black download-button" style="margin: 10px 2px;">
 				<a :href="currentPath" style="text-decoration:none" :download="currentFile + ' - ' + currentMonth">
 					<i class="fas fa-download"></i>
@@ -4801,21 +4801,26 @@ function processFile() {
 document.querySelector('#approvals').innerHTML = `<template>
 	<div v-if="display == true">
 		<h2 class="w3-center">APPROVALS</h2>
-		<p style="margin:15px;display:flex">
-			<select v-model="currentFile" class="w3-input" style="width:250px" @change="loadFile()">
+
+		<p style="margin:5px;display:flex;flex-wrap:wrap">
+			<select v-model="currentFile" class="w3-input" style="width:250px; margin-right:10px; margin-bottom:10px" @change="loadFile()">
 				<option v-for="(entry, count) in individualFiles()" :value="entry">{{ entry }}</option>
-			</select>
-			<button style="margin-left:10px;display:none" @click="uploadRecord()" class="w3-button w3-light-grey" id="upload">UPLOAD</button>
-			<button style="margin-left:10px;display:none" @click="updateRecord()" class="w3-button w3-light-grey" id="update">UPDATE</button>
+			</select>			
 		</p>
-		<div v-if="allFiles().filter(elem=>elem.name == currentFile).length !== 0" style="margin: 15px;">
-			<button class="w3-button w3-black download-button" style="margin: 10px 0;">
+		<div style="margin: 5px;">
+			<button v-if="allFiles().filter(elem=>elem.name == currentFile).length !== 0" class="w3-button w3-black download-button" style="margin: 10px 2px;">
 				<a :href="currentPath" style="text-decoration:none" :download="currentFile">
 					<i class="fas fa-download"></i>
 				</a>
 			</button>
-			<iframe v-if="allFiles().filter(elem=>elem.name == currentFile)[0].value.type.toLowerCase().endsWith('/pdf')" height="600px" width="100%" :src="currentPath" class="fileViewer"></iframe>
-			<img v-if="!allFiles().filter(elem=>elem.name == currentFile)[0].value.type.toLowerCase().endsWith('/pdf')" width="100%" :src="currentPath" class="fileViewer">
+			<button v-if="currentFile !== '' && allFiles().filter(elem=>elem.name == currentFile).length == 0" @click="uploadRecord()" class="w3-button w3-black download-button" style="margin:10px 2px;transform: rotate(180deg)" id="upload">
+				<i class="fas fa-download"></i>
+			</button>
+			<button v-if="currentFile !== '' && allFiles().filter(elem=>elem.name == currentFile).length !== 0" @click="uploadRecord()" class="w3-button w3-black download-button" style="margin:10px 2px;" id="update">
+				<i class="fas fa-sync"></i>
+			</button>
+			<iframe v-if="allFiles().filter(elem=>elem.name == currentFile).length !== 0 && allFiles().filter(elem=>elem.name == currentFile)[0].value.type.toLowerCase().endsWith('/pdf')" height="600px" width="100%" :src="currentPath" class="fileViewer"></iframe>
+			<img v-if="allFiles().filter(elem=>elem.name == currentFile).length !== 0 && !allFiles().filter(elem=>elem.name == currentFile)[0].value.type.toLowerCase().endsWith('/pdf')" width="100%" :src="currentPath" class="fileViewer">
 		</div>
 		<input @change="saveFile()" type="file" id="pdfFile" accept=".pdf,.jpg,.jpeg,.png" style="display:none">		
 	</div>
@@ -4868,15 +4873,6 @@ function processApprovals() {
 				const currentFile = this.allFiles().filter(elem=>elem.name == `${this.currentFile}`)
 				if (currentFile.length !== 0) {
 					this.currentPath = URL.createObjectURL(currentFile[0].value);
-					document.querySelector('#update').style.display = ''
-					document.querySelector('#upload').style.display = 'none'
-				} else {
-					document.querySelector('#update').style.display = 'none'
-					if (this.currentFile == '') {
-						document.querySelector('#upload').style.display = 'none'
-					} else {
-						document.querySelector('#upload').style.display = ''
-					}
 				}				
 			},
 			months() {
