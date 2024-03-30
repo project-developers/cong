@@ -467,7 +467,8 @@ var allButtons = [
 	{"title": "CONG", "function": "congregationVue"}, 
 	{"title": "RECORDS", "function": "allPublishersVue"}, 
 	{"title": "REQUEST", "function": "allPublishersVue"}, 
-	{"title": "TRANSFER", "function": "allPublishersVue"}, 
+	{"title": "TRANSFER", "function": "allPublishersVue"},
+	{"title": "MAIL", "function": "allPublishersVue"},
 	{"title": "GROUPS", "function": "fieldServiceGroupsVue"}, 
 	{"title": "ACTIVE", "function": "fieldServiceGroupsVue"}, 
 	{"title": "ALL", "function": "fieldServiceGroupsVue"}, 
@@ -982,7 +983,7 @@ function processNavigation() {
 
 				currentView = button.innerHTML                
 				
-				if (allPublishersVue.transfer == true || scheduleVue.display == true || fileVue.display == true) {
+				if (allPublishersVue.transfer == true || allPublishersVue.correspondence == true || scheduleVue.display == true || fileVue.display == true) {
 					selectedTransferPublishers.length = 0
 					var i = 0
 					document.querySelectorAll('#publisherRequest select').forEach(elem=>{
@@ -1011,26 +1012,31 @@ function processNavigation() {
 					this.displayDropdown = true
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
+					allPublishersVue.correspondence = false
 					this.buttons = [{"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH", "function": "branchReportVue"}, {"title": "CONG", "function": "congregationVue"}]
 				} else if (button.innerHTML == "CURRENT") {
 					this.displayDropdown = true
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
+					allPublishersVue.correspondence = false
 					this.buttons = [{"title": "REPORTS", "function": "missingReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH", "function": "branchReportVue"}, {"title": "CONG", "function": "congregationVue"}]
 				} else if (button.innerHTML == "ATTENDANCE") {
 					this.displayDropdown = false
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
+					allPublishersVue.correspondence = false
 					this.buttons = [{"title": "REPORTS", "function": "missingReportVue"}, {"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "BRANCH", "function": "branchReportVue"}, {"title": "CONG", "function": "congregationVue"}]
 				} else if (button.innerHTML == "BRANCH") {
 					this.displayDropdown = false
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
+					allPublishersVue.correspondence = false
 					this.buttons = [{"title": "REPORTS", "function": "missingReportVue"}, {"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "CONG", "function": "congregationVue"}]
 				} else if (button.innerHTML == "CONG") {
 					this.displayDropdown = false
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
+					allPublishersVue.correspondence = false
 					if (currentUser.currentProfile == 'Service Overseer') {
 						this.buttons = [{"title": "TERRITORY", "function": "territoryVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}]
 					} else {
@@ -1040,6 +1046,7 @@ function processNavigation() {
 					this.displayDropdown = true
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
+					allPublishersVue.correspondence = false
 					if (currentUser.currentProfile == 'Life and Ministry Overseer' || currentUser.currentProfile == 'Life and Ministry Assistant') {
 						this.buttons = [{"title": "ASSIGNMENTS", "function": "allAssignmentsVue"}, {"title": "SCHEDULE", "function": "scheduleVue"}, {"title": "PARTICIPANTS", "function": "allParticipantsVue"}]
 					} else {
@@ -1049,72 +1056,92 @@ function processNavigation() {
 					this.displayDropdown = true
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
-					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "REQUEST", "function": "allPublishersVue"}, {"title": "TRANSFER", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+					allPublishersVue.correspondence = false
+					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "REQUEST", "function": "allPublishersVue"}, {"title": "TRANSFER", "function": "allPublishersVue"}, {"title": "MAIL", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
 				} else if (button.innerHTML == "REQUEST") {
 					this.displayDropdown = false
 					allPublishersVue.request = true
 					allPublishersVue.transfer = false
-					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "TRANSFER", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+					allPublishersVue.correspondence = false
+					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "TRANSFER", "function": "allPublishersVue"}, {"title": "MAIL", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
 				} else if (button.innerHTML == "TRANSFER") {
 					this.displayDropdown = false
 					allPublishersVue.request = false
 					allPublishersVue.transfer = true
-					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "REQUEST", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+					allPublishersVue.correspondence = false
+					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "REQUEST", "function": "allPublishersVue"}, {"title": "MAIL", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+				} else if (button.innerHTML == "MAIL") {
+					this.displayDropdown = false
+					allPublishersVue.request = false
+					allPublishersVue.transfer = false
+					allPublishersVue.correspondence = true
+					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "REQUEST", "function": "allPublishersVue"}, {"title": "TRANSFER", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
 				} else if (button.innerHTML == "GROUPS") {
 					this.displayDropdown = true
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
+					allPublishersVue.correspondence = false
 					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "ACTIVE", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
 				} else if (button.innerHTML == "ACTIVE") {
 					this.displayDropdown = true
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
+					allPublishersVue.correspondence = false
 					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "ALL", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
 				} else if (button.innerHTML == "ALL") {
 					this.displayDropdown = true
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
+					allPublishersVue.correspondence = false
 					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "ACTIVE", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
 				} else if (button.innerHTML == "PARTICIPANTS") {
 					this.displayDropdown = true
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
+					allPublishersVue.correspondence = false
 					this.buttons = [{"title": "ASSIGNMENTS", "function": "allAssignmentsVue"}, {"title": "SCHEDULE", "function": "scheduleVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}]
 				} else if (button.innerHTML == "ASSIGNMENTS") {
 					this.displayDropdown = false
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
+					allPublishersVue.correspondence = false
 					this.buttons = [{"title": "SCHEDULE", "function": "scheduleVue"}, {"title": "PARTICIPANTS", "function": "allParticipantsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}]
 				} else if (button.innerHTML == "SCHEDULE") {
 					this.displayDropdown = false
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
+					allPublishersVue.correspondence = false
 					this.buttons = [{"title": "ASSIGNMENTS", "function": "allAssignmentsVue"}, {"title": "PARTICIPANTS", "function": "allParticipantsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}]
 				} else if (button.innerHTML == "FILE") {
 					this.displayDropdown = false
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
+					allPublishersVue.correspondence = false
 					this.buttons = [{"title": "ENTRY", "function": "entryVue"}, {"title": "APPROVALS", "function": "approvalsVue"}, {"title": "ARCHIVE", "function": "archiveVue"}]
 					//fillAccountSheet()
 				} else if (button.innerHTML == "ENTRY") {
 					this.displayDropdown = false
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
+					allPublishersVue.correspondence = false
 					this.buttons = [{"title": "FILE", "function": "fileVue"}, {"title": "APPROVALS", "function": "approvalsVue"}, {"title": "ARCHIVE", "function": "archiveVue"}]
 				} else if (button.innerHTML == "APPROVALS") {
 					this.displayDropdown = false
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
+					allPublishersVue.correspondence = false
 					this.buttons = [{"title": "ENTRY", "function": "entryVue"}, {"title": "FILE", "function": "fileVue"}, {"title": "ARCHIVE", "function": "archiveVue"}]
 				} else if (button.innerHTML == "ARCHIVE") {
 					this.displayDropdown = false
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
+					allPublishersVue.correspondence = false
 					this.buttons = [{"title": "ENTRY", "function": "entryVue"}, {"title": "FILE", "function": "fileVue"}, {"title": "APPROVALS", "function": "approvalsVue"}]
 				} else if (button.innerHTML == "TERRITORY") {
 					this.displayDropdown = false
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
+					allPublishersVue.correspondence = false
 					if (currentUser.currentProfile == 'Territory Map' || currentUser.currentProfile == 'Territory Servant') {
 						this.buttons = []
 					} else {
@@ -1124,6 +1151,7 @@ function processNavigation() {
 					this.displayDropdown = false
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
+					allPublishersVue.correspondence = false
 					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
 				}
 
@@ -1151,6 +1179,16 @@ function processNavigation() {
 					if (selectedTransferPublishers.length !== 0) {
 						redoSelection(selectedTransferPublishers.shift())
 					}
+				} else if (button.innerHTML == "MAIL") {
+					allPublishersVue.preview = false
+					allPublishersVue.display = false
+					await shortWait()
+					auto_grow(document.getElementById("publisherRequest").Address);
+					auto_grow(document.getElementById("publisherRequest").LetterOfIntroduction);
+					auto_grow(document.getElementById("publisherRequest").LetterTitle);
+					if (selectedTransferPublishers.length !== 0) {
+						redoSelection(selectedTransferPublishers.shift())
+					}
 				} else if (button.innerHTML == "ALL" || button.innerHTML == "ACTIVE") {
 					fieldServiceGroupsVue.inactive()
 				} else {
@@ -1168,7 +1206,7 @@ function processNavigation() {
 					navigationVue.buttons[groupCount].title = 'GROUPS'
 				}
 
-				if (allPublishersVue.transfer == true || scheduleVue.display == true || fileVue.display == true) {
+				if (allPublishersVue.transfer == true || allPublishersVue.correspondence == true || scheduleVue.display == true || fileVue.display == true) {
 					selectedTransferPublishers.length = 0
 					var i = 0
 					document.querySelectorAll('#publisherRequest select').forEach(elem=>{
@@ -1193,6 +1231,7 @@ function processNavigation() {
 
 				allPublishersVue.request = false
 				allPublishersVue.transfer = false
+				allPublishersVue.correspondence = false
 				navigationVue.displayDropdown = false
 				
 				if (currentUser.currentProfile == 'Secretary') {
@@ -1237,6 +1276,7 @@ processNavigation()
 var selectedTransferPublishers = []
 
 async function redoSelection(selection) {
+	if (!selection) { return }
 	await shortWait()
 	await shortWait()
 	document.querySelectorAll('#publisherRequest select')[document.querySelectorAll('.fa-plus').length - 1].value = selection.name
@@ -1251,7 +1291,7 @@ async function redoSelection(selection) {
 
 document.querySelector('#mySidebar').innerHTML = `<template>
 	<a href="javascript:void(0)" onclick="w3_close()" class="w3-bar-item w3-button w3-large w3-padding-16">Close ×</a>
-    <a v-for="(button) in buttons()" v-if="button.title !== 'ACTIVE' && button.title !== 'ALL' && button.title !== 'REQUEST' && button.title !== 'TRANSFER'" @click="openButton($event.target)" class="w3-bar-item w3-button">{{ button.title }}</a>
+    <a v-for="(button) in buttons()" v-if="button.title !== 'ACTIVE' && button.title !== 'ALL' && button.title !== 'REQUEST' && button.title !== 'TRANSFER' && button.title !== 'MAIL'" @click="openButton($event.target)" class="w3-bar-item w3-button">{{ button.title }}</a>
     <a v-else @click="openButton($event.target)" :class="mode()">{{ button.title }}</a>
 	<a v-if="logged() == true && displayDropdown == true && showDownloadButton()" class="w3-bar-item w3-button" @click="downloadContent()"><i title="Download" class="fa fa-download"></i> Download</a>
 	<a v-if="logged() == true" class="w3-bar-item w3-button" @click="openSettings()"><i class="fa fa-cog"></i> Settings</a>
@@ -1359,7 +1399,7 @@ function processNavigation2() {
                 //console.log(button)
 				currentView = button.innerHTML
 				w3_close()
-				if (allPublishersVue.transfer == true || scheduleVue.display == true || fileVue.display == true) {
+				if (allPublishersVue.transfer == true || allPublishersVue.correspondence == true || scheduleVue.display == true || fileVue.display == true) {
 					selectedTransferPublishers.length = 0
 					var i = 0
 					document.querySelectorAll('#publisherRequest select').forEach(elem=>{
@@ -1388,26 +1428,31 @@ function processNavigation2() {
 					navigationVue.displayDropdown = true
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
+					allPublishersVue.correspondence = false
 					navigationVue.buttons = [{"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH", "function": "branchReportVue"}, {"title": "CONG", "function": "congregationVue"}]
 				} else if (button.innerHTML == "CURRENT") {
 					navigationVue.displayDropdown = true
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
+					allPublishersVue.correspondence = false
 					navigationVue.buttons = [{"title": "REPORTS", "function": "missingReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "BRANCH", "function": "branchReportVue"}, {"title": "CONG", "function": "congregationVue"}]
 				} else if (button.innerHTML == "ATTENDANCE") {
 					navigationVue.displayDropdown = false
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
+					allPublishersVue.correspondence = false
 					navigationVue.buttons = [{"title": "REPORTS", "function": "missingReportVue"}, {"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "BRANCH", "function": "branchReportVue"}, {"title": "CONG", "function": "congregationVue"}]
 				} else if (button.innerHTML == "BRANCH") {
 					navigationVue.displayDropdown = false
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
+					allPublishersVue.correspondence = false
 					navigationVue.buttons = [{"title": "REPORTS", "function": "missingReportVue"}, {"title": "CURRENT", "function": "monthlyReportVue"}, {"title": "ATTENDANCE", "function": "attendanceVue"}, {"title": "CONG", "function": "congregationVue"}]
 				} else if (button.innerHTML == "CONG") {
 					navigationVue.displayDropdown = false
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
+					allPublishersVue.correspondence = false
 					if (currentUser.currentProfile == 'Service Overseer') {
 						navigationVue.buttons = [{"title": "TERRITORY", "function": "territoryVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}]
 					} else {
@@ -1417,6 +1462,7 @@ function processNavigation2() {
 					navigationVue.displayDropdown = true
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
+					allPublishersVue.correspondence = false
 					if (currentUser.currentProfile == 'Life and Ministry Overseer' || currentUser.currentProfile == 'Life and Ministry Assistant') {
 						navigationVue.buttons = [{"title": "ASSIGNMENTS", "function": "allAssignmentsVue"}, {"title": "SCHEDULE", "function": "scheduleVue"}, {"title": "PARTICIPANTS", "function": "allParticipantsVue"}]
 					} else {
@@ -1426,72 +1472,92 @@ function processNavigation2() {
 					navigationVue.displayDropdown = true
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
-					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "REQUEST", "function": "allPublishersVue"}, {"title": "TRANSFER", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+					allPublishersVue.correspondence = false
+					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "REQUEST", "function": "allPublishersVue"}, {"title": "TRANSFER", "function": "allPublishersVue"}, {"title": "MAIL", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
 				} else if (button.innerHTML == "REQUEST") {
 					navigationVue.displayDropdown = false
 					allPublishersVue.request = true
 					allPublishersVue.transfer = false
-					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "TRANSFER", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+					allPublishersVue.correspondence = false
+					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "TRANSFER", "function": "allPublishersVue"}, {"title": "MAIL", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
 				} else if (button.innerHTML == "TRANSFER") {
 					navigationVue.displayDropdown = false
 					allPublishersVue.request = false
 					allPublishersVue.transfer = true
-					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "REQUEST", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+					allPublishersVue.correspondence = false
+					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "REQUEST", "function": "allPublishersVue"}, {"title": "MAIL", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+				} else if (button.innerHTML == "MAIL") {
+					navigationVue.displayDropdown = false
+					allPublishersVue.request = false
+					allPublishersVue.transfer = false
+					allPublishersVue.correspondence = true
+					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "REQUEST", "function": "allPublishersVue"}, {"title": "TRANSFER", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
 				} else if (button.innerHTML == "GROUPS") {
 					navigationVue.displayDropdown = true
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
+					allPublishersVue.correspondence = false
 					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "ACTIVE", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
 				} else if (button.innerHTML == "ACTIVE") {
 					navigationVue.displayDropdown = true
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
+					allPublishersVue.correspondence = false
 					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "ALL", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
 				} else if (button.innerHTML == "ALL") {
 					navigationVue.displayDropdown = true
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
+					allPublishersVue.correspondence = false
 					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "ACTIVE", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
 				} else if (button.innerHTML == "PARTICIPANTS") {
 					navigationVue.displayDropdown = true
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
+					allPublishersVue.correspondence = false
 					navigationVue.buttons = [{"title": "ASSIGNMENTS", "function": "allAssignmentsVue"}, {"title": "SCHEDULE", "function": "scheduleVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}]
 				} else if (button.innerHTML == "ASSIGNMENTS") {
 					navigationVue.displayDropdown = false
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
+					allPublishersVue.correspondence = false
 					navigationVue.buttons = [{"title": "SCHEDULE", "function": "scheduleVue"}, {"title": "PARTICIPANTS", "function": "allParticipantsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}]
 				} else if (button.innerHTML == "SCHEDULE") {
 					navigationVue.displayDropdown = false
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
+					allPublishersVue.correspondence = false
 					navigationVue.buttons = [{"title": "ASSIGNMENTS", "function": "allAssignmentsVue"}, {"title": "PARTICIPANTS", "function": "allParticipantsVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}]
 				} else if (button.innerHTML == "FILE") {
 					navigationVue.displayDropdown = false
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
+					allPublishersVue.correspondence = false
 					navigationVue.buttons = [{"title": "ENTRY", "function": "entryVue"}, {"title": "APPROVALS", "function": "approvalsVue"}, {"title": "ARCHIVE", "function": "archiveVue"}]
 					//fillAccountSheet()
 				} else if (button.innerHTML == "ENTRY") {
 					navigationVue.displayDropdown = false
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
+					allPublishersVue.correspondence = false
 					navigationVue.buttons = [{"title": "FILE", "function": "fileVue"}, {"title": "APPROVALS", "function": "approvalsVue"}, {"title": "ARCHIVE", "function": "archiveVue"}]
 				} else if (button.innerHTML == "APPROVALS") {
 					navigationVue.displayDropdown = false
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
+					allPublishersVue.correspondence = false
 					navigationVue.buttons = [{"title": "ENTRY", "function": "entryVue"}, {"title": "FILE", "function": "fileVue"}, {"title": "ARCHIVE", "function": "archiveVue"}]
 				} else if (button.innerHTML == "ARCHIVE") {
 					navigationVue.displayDropdown = false
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
+					allPublishersVue.correspondence = false
 					navigationVue.buttons = [{"title": "ENTRY", "function": "entryVue"}, {"title": "FILE", "function": "fileVue"}, {"title": "APPROVALS", "function": "approvalsVue"}]
 				} else if (button.innerHTML == "TERRITORY") {
 					navigationVue.displayDropdown = false
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
+					allPublishersVue.correspondence = false
 					if (currentUser.currentProfile == 'Territory Map' || currentUser.currentProfile == 'Territory Servant') {
 						navigationVue.buttons = []
 					} else {
@@ -1501,6 +1567,7 @@ function processNavigation2() {
 					navigationVue.displayDropdown = false
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
+					allPublishersVue.correspondence = false
 					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
 				}
 
@@ -1528,6 +1595,16 @@ function processNavigation2() {
 					if (selectedTransferPublishers.length !== 0) {
 						redoSelection(selectedTransferPublishers.shift())
 					}
+				} else if (button.innerHTML == "MAIL") {
+					allPublishersVue.preview = false
+					allPublishersVue.display = false
+					await shortWait()
+					auto_grow(document.getElementById("publisherRequest").Address);
+					auto_grow(document.getElementById("publisherRequest").LetterOfIntroduction);
+					auto_grow(document.getElementById("publisherRequest").LetterTitle);
+					if (selectedTransferPublishers.length !== 0) {
+						redoSelection(selectedTransferPublishers.shift())
+					}
 				} else if (button.innerHTML == "ALL" || button.innerHTML == "ACTIVE") {
 					fieldServiceGroupsVue.inactive()
 				} else {
@@ -1548,7 +1625,7 @@ function processNavigation2() {
 					navigationVue.buttons[groupCount].title = 'GROUPS'
 				}
 
-				if (allPublishersVue.transfer == true || scheduleVue.display == true || fileVue.display == true) {
+				if (allPublishersVue.transfer == true || allPublishersVue.correspondence == true || scheduleVue.display == true || fileVue.display == true) {
 					selectedTransferPublishers.length = 0
 					var i = 0
 					document.querySelectorAll('#publisherRequest select').forEach(elem=>{
@@ -1573,6 +1650,7 @@ function processNavigation2() {
 
 				allPublishersVue.request = false
 				allPublishersVue.transfer = false
+				allPublishersVue.correspondence = false
 				navigationVue.displayDropdown = false
 				
 				if (currentUser.currentProfile == 'Secretary') {
@@ -3047,6 +3125,64 @@ document.querySelector('#allPublishers').innerHTML = `<template>
 		</div>
 		
     </div>
+	<div v-if="correspondence == true">
+		<h2 class="w3-center">MAIL</h2>
+		<form action="javascript:void(0)" id="publisherRequest">
+			<p><input :class="inputMode('w3-input w3-border')" v-model="email" type="text" placeholder="Congregation Email" required name="Email"></p>
+			<p><textarea :class="inputMode('w3-input w3-border')" v-model="congregationAddress" type="text" placeholder="Congregation Address" required name="Address"></textarea></p>
+			<p><textarea :class="inputMode('w3-input w3-border')" v-model="letterTitle" placeholder="Title of Letter" required name="LetterTitle"></textarea></p>
+			<p><textarea :class="inputMode('w3-input w3-border')" v-model="letterOfIntroduction" placeholder="Letter of Introduction body" required name="LetterOfIntroduction"></textarea></p>
+			<p><input :class="inputMode('w3-input w3-border')" v-model="closing" type="text" placeholder="Closing" name="Closing"></p>
+			<p><input :class="inputMode('w3-input w3-border')" v-model="closing1" type="text" placeholder="Closing 1" name="Closing1"></p>
+			<p><input :class="inputMode('w3-input w3-border')" v-model="closing1Value" type="text" placeholder="Closing 1 Value" name="Closing1Value"></p>
+			<p><input :class="inputMode('w3-input w3-border')" v-model="closing2" type="text" placeholder="Closing 2" name="Closing2"></p>
+			<p><input :class="inputMode('w3-input w3-border')" v-model="closing2Value" type="text" placeholder="Closing 2 Value" name="Closing2Value"></p>
+			<p><input :class="inputMode('w3-input w3-border')" v-model="closing3" type="text" placeholder="Closing 3" name="Closing3"></p>
+			<p><input :class="inputMode('w3-input w3-border')" v-model="closing3Value" type="text" placeholder="Closing 3 Value" name="Closing3Value"></p>
+			<p><textarea :class="inputMode('w3-input w3-border')" v-model="mailSubject" @keyup="auto_grow" placeholder="Subject" required name="Subject"></textarea></p>
+			<p>
+				<button @click="previewRecord()" class="w3-button w3-black" type="submit">
+					PREVIEW
+				</button>
+				<button @click="sendMail()" class="w3-button w3-black" type="submit">
+					<i class="fa fa-paper-plane"></i> SEND
+				</button>
+				<button @click="cancelMail()" class="w3-button w3-black" type="submit">
+					CANCEL
+				</button>
+			</p>
+		</form>
+		<div v-if="preview == true" class="zoom-container" id="zoomContainer">
+			<div class="zoom-content" id="zoomContent">
+				<div id="content">
+					<h1 align="center">{{ congregation.congregationName.toUpperCase() }} CONGREGATION</h1>
+					<h3 align="center">{{ congregation.address.toUpperCase() }} {{ congregation.email.toUpperCase() }}</h3>
+					<p align="right">{{ formatDateToFull() }}</p>
+
+					<p contenteditable="true" id="address" class="edit-content"></p>
+										
+					<p>Dear Brothers,</p>
+					<p align="center" class="edit-content letterTitle" contenteditable="true">{{ letterTitle.toUpperCase() }}</p>
+					
+					<p class="closing">Your brothers,</p>
+					
+					<div class="container" style="margin-top:30px">
+						<p class="element" align="center">{{ closing1Value }}</p>
+						<p class="element" align="center">{{ closing2Value }}</p>
+						<p class="element" align="center">{{ closing3Value }}</p>
+					</div>
+
+					<div class="container" style="margin-top:0">
+						<p class="element" align="center">{{ closing1 }}</p>
+						<p class="element" align="center">{{ closing2 }}</p>
+						<p class="element" align="center">{{ closing3 }}</p>
+					</div>    
+
+				</div>
+			</div>
+		</div>
+		
+    </div>
 </template>`
 //(group == 'Pioneers' && publisher.privilege.some(item => privileges.slice(-3).includes(item)))
 function processAllPublishers() {
@@ -3061,11 +3197,21 @@ function processAllPublishers() {
 			pdfFile: '',
             request: false,
             transfer: false,
+            correspondence: false,
             preview: false,
             publisherName: '',
 			congregationAddress: '',
 			email: '',
+			letterTitle: '',
 			letterOfIntroduction: '',
+			closing: '',
+			closing1: '',
+			closing1Value: '',
+            closing2: '',
+			closing2Value: '',
+            closing3: '',
+			closing3Value: '',
+			mailSubject: '',
             categories: [],
             hopes: ['Anointed', 'Other Sheep', 'Unbaptized Publisher'],
             privileges: ['Elder', 'Ministerial Servant', 'Regular Pioneer', 'Special Pioneer', 'Field Missionary'],
@@ -3114,7 +3260,8 @@ function processAllPublishers() {
 		watch: {
 			//publisherName: 'addPublisher',
 			congregationAddress: 'updateAddress',
-			letterOfIntroduction: 'updateLetterBody'
+			letterOfIntroduction: 'updateLetterBody',
+			letterTitle: 'updateLetterBody'
 		},
         methods: {
 			/*addPublisher(event) {
@@ -3123,7 +3270,7 @@ function processAllPublishers() {
 				}
 			},*/
 			async previewRecord() {
-				if (this.publisherName == '') { return }
+				if (this.publisherName == '' && this.correspondence == false) { return }
 				downloadsArray = []
 				this.preview = true
 				await shortWait()
@@ -3136,9 +3283,11 @@ function processAllPublishers() {
 				document.getElementById("publisherRequest").LetterOfIntroduction.value.replaceAll('\n\n','\n').split('\n').reverse().forEach(elem=>{
 					document.querySelector('.letterTitle').insertAdjacentHTML('afterend', `<p class="indented-paragraph edit-content letterBody" contenteditable="true">${elem}</p>`);
 				})
+				if (this.closing == '') {
+					this.closing = this.congregation.congregationName + ' Congregation'
+				}
 				document.querySelector('.closing').innerText += '\n'
-				document.querySelector('.closing').innerText += this.congregation.congregationName
-				document.querySelector('.closing').innerText += ' Congregation'
+				document.querySelector('.closing').innerText += this.closing
 				await shortWait()
 				await shortWait()
 				await shortWait()
@@ -3162,6 +3311,26 @@ function processAllPublishers() {
 				this.congregationAddress = ''
 				this.email = ''
 				this.letterOfIntroduction = ''
+				await shortWait()
+				await shortWait()
+				this.transfer = true
+				await shortWait()
+				await shortWait()
+				document.querySelector('#content').innerHTML = ''
+				document.querySelector('#content').style.display = 'none'
+			},
+			async cancelMail() {
+				console.log('Cancel')
+				document.querySelectorAll('iframe').forEach(elem=>{
+					elem.parentNode.remove()
+				})
+				await shortWait()
+				await shortWait()
+				this.transfer = false
+				this.congregationAddress = ''
+				this.email = ''
+				this.letterOfIntroduction = ''
+				this.letterTitle = ''
 				await shortWait()
 				await shortWait()
 				this.transfer = true
@@ -3201,6 +3370,7 @@ function processAllPublishers() {
 			auto_grow() {
 				auto_grow(document.getElementById("publisherRequest").Address);
 				auto_grow(document.getElementById("publisherRequest").LetterOfIntroduction);
+				auto_grow(document.getElementById("publisherRequest").LetterTitle);
 			},
 			async sendMessage() {
 				console.log('Message')
@@ -3250,6 +3420,25 @@ function processAllPublishers() {
 
 				window.location.href = mailtoLink;
 			},
+			async sendMail() {
+				if (this.mailSubject == '') { 
+					alert('Please enter a Subject for the mail')
+					return 
+				}
+				
+				var mailtoLink = 'mailto:' + encodeURIComponent(document.getElementById("publisherRequest").Email.value) +
+								'?cc=' + encodeURIComponent(congregationVue.congregation.email) +
+								'&subject=' + encodeURIComponent(this.mailSubject) +
+								'&body=' + encodeURIComponent(this.mailMessage());
+
+				await shortWait()
+
+				await shortWait()
+
+				this.auto_grow()
+
+				window.location.href = mailtoLink;
+			},
 			message() {
 				return `Dear Brothers,
 
@@ -3285,6 +3474,17 @@ ${congregationVue.congregation.congregationName} Congregation
 
 
 `.replace('[Publisher]', publisher)
+			},
+			mailMessage() {
+				return `Dear Brothers,
+
+Please find attached letter regarding ${this.letterTitle}.
+
+Your brothers,
+${this.closing}
+
+
+`
 			},
 			publisherNameValue() {
 				//var publisher
