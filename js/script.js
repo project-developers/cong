@@ -7221,14 +7221,20 @@ document.querySelector("#configuration").innerHTML = `<template>
 							</div>
 						</div>
 						<p>
-							<div v-if="reportEntry == 'secretary' || reportEntry == 'lmo'" id="export">
+							<div v-if="reportEntry == 'secretary' || reportEntry == 'lmo' || reportEntry == 'so'" id="export">
 								<label><input type="radio" name="exportGroup" value="all" style="margin-right: 5px;" checked>All</label>
-								<br v-if="reportEntry !== 'lmo'">
-								<label v-if="reportEntry !== 'lmo'"><input type="radio" name="exportGroup" value="accounts" style="margin-right: 5px;">Accounts</label>
-								<br v-if="reportEntry !== 'lmo'">
-								<label v-if="reportEntry !== 'lmo'"><input type="radio" name="exportGroup" value="reportEntry" style="margin-right: 5px;">Report Entry</label>
-								<br>
-								<label><input type="radio" name="exportGroup" value="lifeAndMinistry" style="margin-right: 5px;">Life and Ministry</label>
+								<br v-if="reportEntry == 'secretary'">
+								<label v-if="reportEntry == 'secretary'"><input type="radio" name="exportGroup" value="accounts" style="margin-right: 5px;">Accounts</label>
+								<br v-if="reportEntry == 'secretary'">
+								<label v-if="reportEntry == 'secretary'"><input type="radio" name="exportGroup" value="reportEntry" style="margin-right: 5px;">Report Entry</label>
+								<br v-if="reportEntry == 'secretary'">
+								<label v-if="reportEntry == 'secretary'"><input type="radio" name="exportGroup" value="lifeAndMinistry" style="margin-right: 5px;">Life and Ministry</label>
+								<br v-if="reportEntry == 'lmo'">
+								<label v-if="reportEntry == 'lmo'"><input type="radio" name="exportGroup" value="lifeAndMinistryAssistant" style="margin-right: 5px;">Life and Ministry</label>
+								<br v-if="reportEntry == 'secretary'">
+								<label v-if="reportEntry == 'secretary'"><input type="radio" name="exportGroup" value="serviceOverseer" style="margin-right: 5px;">Service Overseer</label>
+								<br v-if="reportEntry == 'so'">
+								<label v-if="reportEntry == 'so'"><input type="radio" name="exportGroup" value="territoryServant" style="margin-right: 5px;">Territory Servant</label>
 							</div>
 							<button :class="buttonMode('w3-button w3-dark-grey')" @click="exportData()">Export</button>
 							<button :class="buttonMode('w3-button w3-dark-grey')" @click="importData()">Import</button>
@@ -7454,12 +7460,13 @@ Thanks a lot
                 var a = document.createElement("a");
 				var file;
 				const options = { year: 'numeric', month: 'long', day: 'numeric' };
+				const access = getSelectedOption(document.getElementsByName("exportGroup")) || 'update'
 
-				if (getSelectedOption(document.getElementsByName("exportGroup")) == 'all') {
+				if (access == 'all') {
 					file = new Blob([JSON.stringify({"exportType":"all", "configuration":configurationVue.configuration, "data":allPublishersVue.publishers, "territory":territoryVue.savedPolygons, "lifeAndMinistryEnrolments":allParticipantsVue.enrolments, "lifeAndMinistryAssignments":allAssignmentsVue.allAssignments, "attendance": [attendanceVue.currentMonth, attendanceVue.meetingAttendanceRecord], "account": entryVue.allEntries})], {type: 'text/plain'});
 					await shortWait()
 					await shortWait()
-				} else if (getSelectedOption(document.getElementsByName("exportGroup")) == 'reportEntry') {
+				} else if (access == 'reportEntry') {
 					var currentConfiguration = JSON.parse(JSON.stringify(configurationVue.configuration))
 					await shortWait()
 					await shortWait()
@@ -7488,18 +7495,34 @@ Thanks a lot
 					await shortWait()
 
 					file = new Blob([JSON.stringify({"exportType":"reportEntry", "configuration":currentConfiguration, "data":currentData, "attendance": [attendanceVue.currentMonth, attendanceVue.meetingAttendanceRecord]})], {type: 'text/plain'});
-					await shortWait()
-					await shortWait()
+					//await shortWait()
+					//await shortWait()
 	
-					a.href = URL.createObjectURL(file);
+					//a.href = URL.createObjectURL(file);
 					
 					
 					
-					a.download = 'report-' + new Date().toLocaleDateString('en-US', options) + '.txt';
-					a.click();
+					//a.download = 'report-' + new Date().toLocaleDateString('en-US', options) + '.txt';
+					//a.click();
 
-					return
-				} else if (getSelectedOption(document.getElementsByName("exportGroup")) == 'lifeAndMinistry') {
+					//return
+				} else if (access == 'accounts') {
+					var currentConfiguration = JSON.parse(JSON.stringify(configurationVue.configuration))
+					await shortWait()
+					await shortWait()
+
+					delete currentConfiguration.address
+					delete currentConfiguration.email
+					delete currentConfiguration.cboe
+					delete currentConfiguration.sec
+					delete currentConfiguration.assistantSec
+					delete currentConfiguration.so
+
+					await shortWait()
+					await shortWait()
+
+					file = new Blob([JSON.stringify({"exportType":"account", "configuration":currentConfiguration, "account": entryVue.allEntries})], {type: 'text/plain'});
+				} else if (access == 'lifeAndMinistry') {
 					var currentConfiguration = JSON.parse(JSON.stringify(configurationVue.configuration))
 					await shortWait()
 					await shortWait()
@@ -7533,7 +7556,7 @@ Thanks a lot
 					await shortWait()
 
 					file = new Blob([JSON.stringify({"exportType":"lifeAndMinistry", "configuration":currentConfiguration, "data":currentData, "lifeAndMinistryEnrolments":currentEnrolments, "lifeAndMinistryAssignments":currentAssignments})], {type: 'text/plain'});
-				} else if (getSelectedOption(document.getElementsByName("exportGroup")) == 'accounts') {
+				} else if (access == 'lifeAndMinistryAssistant') {
 					var currentConfiguration = JSON.parse(JSON.stringify(configurationVue.configuration))
 					await shortWait()
 					await shortWait()
@@ -7544,11 +7567,97 @@ Thanks a lot
 					delete currentConfiguration.sec
 					delete currentConfiguration.assistantSec
 					delete currentConfiguration.so
-
+					var currentData = JSON.parse(JSON.stringify(allPublishersVue.publishers.filter(elem=>elem.active == true)))
 					await shortWait()
 					await shortWait()
 
-					file = new Blob([JSON.stringify({"exportType":"account", "configuration":currentConfiguration, "account": entryVue.allEntries})], {type: 'text/plain'});
+					var currentEnrolments = JSON.parse(JSON.stringify(allParticipantsVue.enrolments))
+
+					var currentAssignments = JSON.parse(JSON.stringify(allAssignmentsVue.allAssignments))
+
+					//currentLifeAndMinistry.assignments = currentLifeAndMinistry.assignments
+
+					currentData.forEach(elem=>{
+						delete elem.hope
+						delete elem.report
+						delete elem.dateOfBaptism
+						delete elem.dateOfBirth
+						delete elem.emergencyContactInformation
+					})
+					await shortWait()
+					await shortWait()
+					await shortWait()
+					await shortWait()
+
+					file = new Blob([JSON.stringify({"exportType":"lifeAndMinistryAssistant", "configuration":currentConfiguration, "data":currentData, "lifeAndMinistryEnrolments":currentEnrolments, "lifeAndMinistryAssignments":currentAssignments})], {type: 'text/plain'});
+				} else if (access == 'serviceOverseer') {
+					var currentConfiguration = JSON.parse(JSON.stringify(configurationVue.configuration))
+					await shortWait()
+					await shortWait()
+
+					delete currentConfiguration.address
+					delete currentConfiguration.email
+					delete currentConfiguration.cboe
+					delete currentConfiguration.sec
+					delete currentConfiguration.assistantSec
+					delete currentConfiguration.so
+					var currentData = JSON.parse(JSON.stringify(allPublishersVue.publishers.filter(elem=>elem.active == true)))
+					await shortWait()
+					await shortWait()
+
+					var currentEnrolments = JSON.parse(JSON.stringify(allParticipantsVue.enrolments))
+
+					var currentAssignments = JSON.parse(JSON.stringify(allAssignmentsVue.allAssignments))
+
+					//currentLifeAndMinistry.assignments = currentLifeAndMinistry.assignments
+
+					currentData.forEach(elem=>{
+						delete elem.hope
+						delete elem.report
+						delete elem.dateOfBaptism
+						delete elem.dateOfBirth
+						delete elem.emergencyContactInformation
+					})
+					await shortWait()
+					await shortWait()
+					await shortWait()
+					await shortWait()
+
+					file = new Blob([JSON.stringify({"exportType":"serviceOverseer", "configuration":currentConfiguration, "data":currentData, "lifeAndMinistryEnrolments":currentEnrolments, "lifeAndMinistryAssignments":currentAssignments})], {type: 'text/plain'});
+				} else if (access == 'territoryServant') {
+					var currentConfiguration = JSON.parse(JSON.stringify(configurationVue.configuration))
+					await shortWait()
+					await shortWait()
+
+					delete currentConfiguration.address
+					delete currentConfiguration.email
+					delete currentConfiguration.cboe
+					delete currentConfiguration.sec
+					delete currentConfiguration.assistantSec
+					delete currentConfiguration.so
+					var currentData = JSON.parse(JSON.stringify(allPublishersVue.publishers.filter(elem=>elem.active == true)))
+					await shortWait()
+					await shortWait()
+
+					var currentEnrolments = JSON.parse(JSON.stringify(allParticipantsVue.enrolments))
+
+					var currentAssignments = JSON.parse(JSON.stringify(allAssignmentsVue.allAssignments))
+
+					//currentLifeAndMinistry.assignments = currentLifeAndMinistry.assignments
+
+					currentData.forEach(elem=>{
+						delete elem.hope
+						delete elem.report
+						delete elem.dateOfBaptism
+						delete elem.dateOfBirth
+						delete elem.emergencyContactInformation
+					})
+					await shortWait()
+					await shortWait()
+					await shortWait()
+					await shortWait()
+
+					file = new Blob([JSON.stringify({"exportType":"territoryServant", "configuration":currentConfiguration, "data":currentData, "lifeAndMinistryEnrolments":currentEnrolments, "lifeAndMinistryAssignments":currentAssignments})], {type: 'text/plain'});
 				} else {
 					file = new Blob([JSON.stringify({"exportType":"update", "configuration":configurationVue.configuration, "data":allPublishersVue.publishers, "lifeAndMinistryEnrolments":allParticipantsVue.enrolments, "lifeAndMinistryAssignments":allAssignmentsVue.allAssignments, "attendance": [attendanceVue.currentMonth, attendanceVue.meetingAttendanceRecord], "account": entryVue.allEntries})], {type: 'text/plain'});
 					await shortWait()
@@ -7557,7 +7666,7 @@ Thanks a lot
 					//return
 				}
 
-				this.downloadZip(file, 'congData-' + new Date().toLocaleDateString('en-US', options) + '.txt')
+				this.downloadZip(file, access.replace('update','congData') + '-' + new Date().toLocaleDateString('en-US', options) + '.txt', access)
 /*
 				await shortWait()
 				await shortWait()
@@ -7568,12 +7677,12 @@ Thanks a lot
 				a.click();*/
 				//window.indexedDB.deleteDatabase('congRec');
             },
-			downloadZip(file, name) {
+			downloadZip(file, name, access) {
 				//console.log('Download')
 				// Create a new instance of JSZip
 				var zip = new JSZip();
 
-				if (currentUser.accesses.includes('acct')) {
+				if (access == 'account' || access == 'all' || (access == 'update' && currentUser.accesses.includes('acct'))) {
 					const currentFiles = fileVue.allFiles().filter((elem) => {
 						return fileVue.months().findIndex(ele=>elem.name.endsWith(fileVue.cleanMonth(ele))) !== -1
 					});
@@ -7783,6 +7892,21 @@ Thanks a lot
 					
 					gotoView('missingReportVue')
 
+				} else if (exportType == 'account') {
+
+					entryVue.allEntries = result.account
+					
+					await shortWait()
+					await shortWait()
+
+					DBWorker.postMessage({ storeName: 'account', action: "save", value: result.account});
+
+					await shortWait()
+						
+					configured = true
+					
+					gotoView('entryVue')
+
 				} else if (exportType == 'lifeAndMinistry') {
 					var cleanupPublishersDataBase = allPublishersVue.publishers.filter((elem) => {
 						return result.data.findIndex(ele=>ele.name === elem.name) == -1
@@ -7835,7 +7959,59 @@ Thanks a lot
 
 					configured = true
 					gotoView('allAssignmentsVue')
-				} else if (exportType == 'territoryMap') {
+				} else if (exportType == 'lifeAndMinistryAssistant') {
+					var cleanupPublishersDataBase = allPublishersVue.publishers.filter((elem) => {
+						return result.data.findIndex(ele=>ele.name === elem.name) == -1
+					});
+
+					var cleanupEnrolmentsDataBase = allParticipantsVue.enrolments.filter((elem) => {
+						return result.lifeAndMinistryEnrolments.findIndex(ele=>ele.name === elem.name) == -1
+					});
+
+					var cleanupAssignmentsDataBase = allAssignmentsVue.allAssignments.filter((elem) => {
+						return result.lifeAndMinistryAssignments.findIndex(ele=>ele.week === elem.week) == -1
+					});
+
+					await shortWait()
+					await shortWait()
+
+					configurationVue.configuration = result.configuration
+					configurationVue.midweekMeetingDay = result.configuration.midweekMeetingDay
+					configurationVue.midweekMeetingTime = result.configuration.midweekMeetingTime
+					navigationVue.allGroups = result.configuration.fieldServiceGroups
+					allPublishersVue.publishers = result.data
+					allParticipantsVue.enrolments = result.lifeAndMinistryEnrolments
+					allAssignmentsVue.allAssignments = result.lifeAndMinistryAssignments
+
+					await shortWait()
+					await shortWait()
+
+					DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [result.configuration]});
+					DBWorker.postMessage({ storeName: 'data', action: "save", value: result.data});
+					DBWorker.postMessage({ storeName: 'lifeAndMinistryEnrolments', action: "save", value: result.lifeAndMinistryEnrolments});
+					DBWorker.postMessage({ storeName: 'lifeAndMinistryAssignments', action: "save", value: result.lifeAndMinistryAssignments});
+
+					await shortWait()
+					await shortWait()
+					await shortWait()
+					await shortWait()
+
+
+					cleanupPublishersDataBase.forEach(item=>{
+						DBWorker.postMessage({ storeName: 'data', action: "deleteItem", value: item.name});
+					})
+
+					cleanupEnrolmentsDataBase.forEach(item=>{
+						DBWorker.postMessage({ storeName: 'lifeAndMinistryEnrolments', action: "deleteItem", value: item.name});
+					})
+
+					cleanupAssignmentsDataBase.forEach(item=>{
+						DBWorker.postMessage({ storeName: 'lifeAndMinistryAssignments', action: "deleteItem", value: item.name});
+					})
+
+					configured = true
+					gotoView('allAssignmentsVue')
+				} else if (exportType == 'serviceOverseer') {
 
 					territoryVue.savedPolygons = result.territory
 					console.log(result.territory)
@@ -7852,20 +8028,39 @@ Thanks a lot
 					
 					gotoView('territoryVue')
 
-				} else if (exportType == 'account') {
+				} else if (exportType == 'territoryServant') {
 
-					entryVue.allEntries = result.account
+					territoryVue.savedPolygons = result.territory
+					console.log(result.territory)
 					
 					await shortWait()
 					await shortWait()
 
-					DBWorker.postMessage({ storeName: 'account', action: "save", value: result.account});
+					DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [{"name":"Congregation","congregationName":"","address":""}]});						
+					DBWorker.postMessage({ storeName: 'territory', action: "save", value: [{"name": "FeatureCollection", "value": territoryVue.savedPolygons}]});
 
 					await shortWait()
 						
 					configured = true
 					
-					gotoView('entryVue')
+					gotoView('territoryVue')
+
+				} else if (exportType == 'territoryMap') {
+
+					territoryVue.savedPolygons = result.territory
+					console.log(result.territory)
+					
+					await shortWait()
+					await shortWait()
+
+					DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [{"name":"Congregation","congregationName":"","address":""}]});						
+					DBWorker.postMessage({ storeName: 'territory', action: "save", value: [{"name": "FeatureCollection", "value": territoryVue.savedPolygons}]});
+
+					await shortWait()
+						
+					configured = true
+					
+					gotoView('territoryVue')
 
 				} else if (exportType == 'update') {
 
