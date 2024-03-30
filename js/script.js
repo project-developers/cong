@@ -44,12 +44,10 @@ function createRadioButtons(containerId, options) {
 }
 
 function getSelectedOption(radioButtons) {
-	//var radioButtons = document.getElementsByName("securityGroup");
 
 	for (var i = 0; i < radioButtons.length; i++) {
 		if (radioButtons[i].checked) {
 			var selectedOption = radioButtons[i].value;
-			//console.log("Selected Option: " + selectedOption);
 			return selectedOption;
 		}
 	}
@@ -2722,10 +2720,11 @@ function processTerritory() {
 					await shortWait()
 					await shortWait()
 
-					a.href = URL.createObjectURL(file);
+					//a.href = URL.createObjectURL(file);
 				
-					a.download = 'Territory-' + territory.number + '-' + territory.locality + '.txt';
-					a.click();
+					//a.download = 'Territory-' + territory.number + '-' + territory.locality + '.txt';
+					//a.click();
+					configurationVue.downloadZip(file, 'Territory-' + territory.number + '-' + territory.locality + '.txt', "territoryMap")
 
 					DBWorker.postMessage({ storeName: 'territory', action: "save", value: [{"name": "FeatureCollection", "value": territoryVue.savedPolygons}]});
 
@@ -7001,7 +7000,6 @@ function branchReportDetails() {
 				// Remove the temporary textarea
 				document.body.removeChild(tempTextArea);
 				await shortWait()
-				//console.log(event.parentNode.querySelector('span').innerHTML)
 				event.className = "fas fa-copy"
 			}
         }
@@ -7315,7 +7313,6 @@ function processConfiguration() {
 			},
 			setProfile(event) {
 				currentUser.currentProfile = event.value
-				//this.selectedProfile = event.value
 				DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [{"name": "Current Profile", "value": event.value}]});
 				if (currentUser.currentProfile == 'Secretary') {
 					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "GROUPS", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
@@ -7359,18 +7356,15 @@ function processConfiguration() {
 				return currentClass + ' ' + mode.replace('w3-card ','').replace('white','light-grey').replace('black','dark-grey')
 			},
 			displayMode(event) {
-				//console.log(event.value)
 				var selectedMode
 				if (event.value !== 'System') {
 					selectedMode = event.value
-					//console.log(selectedMode)
 				} else {
 					if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
 						selectedMode = 'Dark'
 					} else {
 						selectedMode = 'Light'
 					}
-					//console.log(selectedMode)
 				}
 
 				currentMode = event.value
@@ -7379,8 +7373,6 @@ function processConfiguration() {
 					DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [{"name": "Display", "value": currentMode}]});
 				}
 			
-				//console.log(selectedMode)
-
 				if ((mode == 'w3-card w3-black' && selectedMode == 'Dark') || (mode == 'w3-card w3-white' && selectedMode == 'Light')) {
 					return
 				} else if (mode == 'w3-card w3-black') {
@@ -7441,7 +7433,7 @@ function processConfiguration() {
 			},
 			async backupData() {
 				await this.exportData()
-				var recipient = ''//group.OverseerMail//'someone@example.com';
+				var recipient = ''
 				var subject = 'Congregation Data Backup - ' + new Date();
 				var body = `Dear Brothers:
 Please find attached Congregation Data Backup.
@@ -7474,8 +7466,6 @@ Thanks a lot
 					delete currentConfiguration.address
 					delete currentConfiguration.email
 					delete currentConfiguration.cboe
-					//delete currentConfiguration.sec
-					//delete currentConfiguration.assistantSec
 					delete currentConfiguration.so
 					var currentData = JSON.parse(JSON.stringify(allPublishersVue.publishers.filter(elem=>elem.active == true || elem.reactivated == true)))
 					await shortWait()
@@ -7495,17 +7485,7 @@ Thanks a lot
 					await shortWait()
 
 					file = new Blob([JSON.stringify({"exportType":"reportEntry", "configuration":currentConfiguration, "data":currentData, "attendance": [attendanceVue.currentMonth, attendanceVue.meetingAttendanceRecord]})], {type: 'text/plain'});
-					//await shortWait()
-					//await shortWait()
-	
-					//a.href = URL.createObjectURL(file);
-					
-					
-					
-					//a.download = 'report-' + new Date().toLocaleDateString('en-US', options) + '.txt';
-					//a.click();
 
-					//return
 				} else if (access == 'accounts') {
 					var currentConfiguration = JSON.parse(JSON.stringify(configurationVue.configuration))
 					await shortWait()
@@ -7541,8 +7521,6 @@ Thanks a lot
 
 					var currentAssignments = JSON.parse(JSON.stringify(allAssignmentsVue.allAssignments))
 
-					//currentLifeAndMinistry.assignments = currentLifeAndMinistry.assignments
-
 					currentData.forEach(elem=>{
 						delete elem.hope
 						delete elem.report
@@ -7574,8 +7552,6 @@ Thanks a lot
 					var currentEnrolments = JSON.parse(JSON.stringify(allParticipantsVue.enrolments))
 
 					var currentAssignments = JSON.parse(JSON.stringify(allAssignmentsVue.allAssignments))
-
-					//currentLifeAndMinistry.assignments = currentLifeAndMinistry.assignments
 
 					currentData.forEach(elem=>{
 						delete elem.hope
@@ -7609,8 +7585,6 @@ Thanks a lot
 
 					var currentAssignments = JSON.parse(JSON.stringify(allAssignmentsVue.allAssignments))
 
-					//currentLifeAndMinistry.assignments = currentLifeAndMinistry.assignments
-
 					currentData.forEach(elem=>{
 						delete elem.hope
 						delete elem.report
@@ -7643,8 +7617,6 @@ Thanks a lot
 
 					var currentAssignments = JSON.parse(JSON.stringify(allAssignmentsVue.allAssignments))
 
-					//currentLifeAndMinistry.assignments = currentLifeAndMinistry.assignments
-
 					currentData.forEach(elem=>{
 						delete elem.hope
 						delete elem.report
@@ -7662,23 +7634,12 @@ Thanks a lot
 					file = new Blob([JSON.stringify({"exportType":"update", "configuration":configurationVue.configuration, "data":allPublishersVue.publishers, "lifeAndMinistryEnrolments":allParticipantsVue.enrolments, "lifeAndMinistryAssignments":allAssignmentsVue.allAssignments, "attendance": [attendanceVue.currentMonth, attendanceVue.meetingAttendanceRecord], "account": entryVue.allEntries})], {type: 'text/plain'});
 					await shortWait()
 					await shortWait()
-					//this.downloadZip(file, 'congData-' + new Date().toLocaleDateString('en-US', options) + '.txt')
-					//return
 				}
 
 				this.downloadZip(file, access.replace('update','congData') + '-' + new Date().toLocaleDateString('en-US', options) + '.txt', access)
-/*
-				await shortWait()
-				await shortWait()
 
-				a.href = URL.createObjectURL(file);
-				
-				a.download = 'congData-' + new Date().toLocaleDateString('en-US', options) + '.txt';
-				a.click();*/
-				//window.indexedDB.deleteDatabase('congRec');
             },
 			downloadZip(file, name, access) {
-				//console.log('Download')
 				// Create a new instance of JSZip
 				var zip = new JSZip();
 
@@ -7706,13 +7667,6 @@ Thanks a lot
 						zip.file(`Archive/${elem.month.split('-')[0]}/${entryVue.cleanMonth(elem.month)}/${elem.name}.${elem.value.name ? elem.value.name.split('.')[1] : 'pdf'}`, elem.value);
 					})
 				}
-/*
-				if (currentUser.accesses.includes('sendReport')) {
-					fileVue.allFiles().forEach(elem=>{
-						// Add Blobs to the zip folder
-						zip.file(`${entryVue.cleanMonth(elem.month)}/${elem.name}.${elem.value.name ? elem.value.name.split('.')[1] : 'pdf'}`, elem.value);
-					})
-				}*/
 
 				zip.file(`${name}`, file);
 
@@ -7739,8 +7693,6 @@ Thanks a lot
 							// Read the file content as ArrayBuffer
 							if (file.name.endsWith('.txt')) {
 								file.async("text").then(function (content) {
-									//console.log("File name: " + file.name);
-									//console.log("File content: " + content);
 									var result = JSON.parse(content)
 
 									var exportType = result.exportType
@@ -7772,9 +7724,6 @@ Thanks a lot
 									console.log("File name: " + file.name.split('/').pop());
 									console.log("Blob object:", blob);
 									DBWorker.postMessage({ storeName: 'files', action: "save", value: [{name: file.name.split('/').pop().split('.')[0], value: blob}]});
-									//await shortWait()
-									//await shortWait()
-									//DBWorker.postMessage({ storeName: 'files', action: "readAll"});
 								});
 							}
 								
@@ -8121,9 +8070,6 @@ Thanks a lot
 				
             },
 			saveConfiguration() {
-                /*if (configured = true) {
-                    DBWorker.postMessage({ storeName: 'configuration', action: "deleteItem", value: this.configuration.name});
-                }*/
                 
                 var allGroups = []
                 document.querySelectorAll('.fieldServiceGroups').forEach(elem=>{
@@ -8149,22 +8095,9 @@ Thanks a lot
 					this.fieldServiceGroupDetails[i] = {name: this.configuration.fieldServiceGroups[i], overseer: overseers[i], assistant: assistants[i]}
 				}
 
-				/*
-				this.configuration.fieldServiceGroups.forEach(elem=>{
-					detail.push(elem.value)
-				})*/
-
 				var currentConfiguration = {}
-				/*
-				if (this.currentProfile() == 'Accounts Servant') {
-					currentConfiguration = this.configuration
-					currentConfiguration.name = "Congregation"
-					currentConfiguration.congregationName = document.querySelector('.name').value
-					currentConfiguration.city = document.querySelector('.city').value
-					currentConfiguration.province = document.querySelector('.province').value
-				} else {*/
-					currentConfiguration = { "name": "Congregation", "congregationName": document.querySelector('.name').value, "address": document.querySelector('.address').value, "city": document.querySelector('.city').value, "province": document.querySelector('.province').value, "email": document.querySelector('.email').value, "fieldServiceGroups": allGroups, "fieldServiceGroupDetails": this.fieldServiceGroupDetails, "cboe": document.querySelector('.cboe') ? document.querySelector('.cboe').value : '', "sec": document.querySelector('.sec') ? document.querySelector('.sec').value : '', "assistantSec": document.querySelector('.assistantSec') ? document.querySelector('.assistantSec').value : '', "so":  document.querySelector('.so') ? document.querySelector('.so').value : '', "acct":  document.querySelector('.acct') ? document.querySelector('.acct').value : '', "currentProfile": currentUser.currentProfile }
-				//}
+
+				currentConfiguration = { "name": "Congregation", "congregationName": document.querySelector('.name').value, "address": document.querySelector('.address').value, "city": document.querySelector('.city').value, "province": document.querySelector('.province').value, "email": document.querySelector('.email').value, "fieldServiceGroups": allGroups, "fieldServiceGroupDetails": this.fieldServiceGroupDetails, "cboe": document.querySelector('.cboe') ? document.querySelector('.cboe').value : '', "sec": document.querySelector('.sec') ? document.querySelector('.sec').value : '', "assistantSec": document.querySelector('.assistantSec') ? document.querySelector('.assistantSec').value : '', "so":  document.querySelector('.so') ? document.querySelector('.so').value : '', "acct":  document.querySelector('.acct') ? document.querySelector('.acct').value : '', "currentProfile": currentUser.currentProfile }
 
                 DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [currentConfiguration]});
                 configured = true
@@ -8182,40 +8115,6 @@ Thanks a lot
                     DBWorker.postMessage({ storeName: 'lifeAndMinistryAssignments', action: "readAll"});
                     DBWorker.postMessage({ storeName: 'territory', action: "readAll"});
                     DBWorker.postMessage({ storeName: 'account', action: "account"});
-
-					// Open a connection to the database
-					/*var request = indexedDB.open('congRec');
-
-					// Handle the success event
-					request.onsuccess = function(event) {
-						var db = event.target.result;
-						console.log('Database deleted successfully');
-
-						// Close the database connection before deleting it
-						db.close();
-
-						// Delete the database
-						var deleteRequest = indexedDB.deleteDatabase('congRec');
-						console.log('Database deleted successfully');
-						alert('Reset completed')
-						//location.reload()
-
-						// Handle the success event for deleting the database
-						deleteRequest.onsuccess = function() {
-							console.log('Database deleted successfully');
-							
-						};
-
-						// Handle the error event for deleting the database
-						deleteRequest.onerror = function(event) {
-							console.error('Error deleting database:', event.target.error);
-						};
-					};
-
-					// Handle the error event for opening the database
-					request.onerror = function(event) {
-						console.error('Error opening database:', event.target.error);
-					};*/
 				}
             },
             addGroup() {
@@ -8425,201 +8324,6 @@ function signOut() {
 	};
 
 }
-
-/*
-// Initialize the map
-var mymap = L.map('map').setView([
-    8.468872, -13.239936
-], 19);
-
-// Add the OpenStreetMap tile layer
-L.tileLayer('new/{z}/{x}/{y}.png', {
-  attribution: '&copy; OpenStreetMap contributors'
-}).addTo(mymap);
-
-// Initialize the draw control
-var drawControl = new L.Control.Draw({
-  draw: {
-    polygon: true,
-    polyline: true,
-    rectangle: true,
-    circle: true,
-    marker: true
-  },
-  edit: {
-    featureGroup: new L.FeatureGroup()
-  }
-});
-
-// Add the draw control to the map
-mymap.addControl(drawControl);
-
-// Array to store drawn layers
-var drawnLayers = [];
-var drawnFeaturesLayer;
-
-// Event listener for drawing completion
-mymap.on('draw:created', function (e) {
-    var layer = e.layer;
-    mymap.addLayer(layer);
-    drawnLayers.push(layer);
-    updateDrawnFeaturesLayer(myData);
-});
-
-// Add a marker for the current location
-var marker = L.marker([0, 0]).addTo(mymap);
-
-
-var myData = [
-    {
-        "type": "Feature",
-        "properties": {},
-        "geometry": {
-            "type": "Polygon",
-            "coordinates": [
-                [
-                    [
-                        -13.239824,
-                        8.468292
-                    ],
-                    [
-                        -13.239673,
-                        8.467926
-                    ],
-                    [
-                        -13.239464,
-                        8.467602
-                    ],
-                    [
-                        -13.23925,
-                        8.467629
-                    ],
-                    [
-                        -13.239046,
-                        8.467613
-                    ],
-                    [
-                        -13.23889,
-                        8.467576
-                    ],
-                    [
-                        -13.238735,
-                        8.467523
-                    ],
-                    [
-                        -13.238584,
-                        8.467432
-                    ],
-                    [
-                        -13.238456,
-                        8.467273
-                    ],
-                    [
-                        -13.238322,
-                        8.467135
-                    ],
-                    [
-                        -13.238246,
-                        8.467098
-                    ],
-                    [
-                        -13.238381,
-                        8.467639
-                    ],
-                    [
-                        -13.238402,
-                        8.46774
-                    ],
-                    [
-                        -13.238681,
-                        8.467894
-                    ],
-                    [
-                        -13.238917,
-                        8.468053
-                    ],
-                    [
-                        -13.239582,
-                        8.468255
-                    ],
-                    [
-                        -13.239824,
-                        8.468292
-                    ]
-                ]
-            ]
-        }
-    }
-]
-
-
-
-
-// Function to update GeoJSON layer on the map
-function updateDrawnFeaturesLayer(geoJsonData) {
-  if (drawnFeaturesLayer) {
-    mymap.removeLayer(drawnFeaturesLayer);
-  }
-
-  // Convert drawnLayers to GeoJSON format
-  /*var geoJsonData = {
-    type: 'FeatureCollection',
-    features: []
-  };*/
-/*
-  drawnLayers.forEach(function (layer) {
-    // Convert Leaflet layer to GeoJSON format
-    var geoJsonFeature = layer.toGeoJSON();
-    myData.features.push(geoJsonFeature);
-  });
-
-  // Create a new GeoJSON layer and add it to the map
-  drawnFeaturesLayer = L.geoJSON(myData).addTo(mymap);
-}
-
-// Get the user's current location
-navigator.geolocation.getCurrentPosition(function (position) {
-  var lat = position.coords.latitude;
-  var lon = position.coords.longitude;
-
-  // Update the map and marker with the current location
-  mymap.setView([
-    8.468872, -13.239936
-], 14);
-  marker.setLatLng([
-    8.468872, -13.239936
-]).bindPopup('You are here!').openPopup();
-});
-
-var geoJsonData = [];
-
-// Save button click event
-document.getElementById('saveButton').addEventListener('click', function () {
-  // Serialize drawn layers to GeoJSON
-  //var geoJsonData = [];
-  
-  drawnLayers.forEach(function (layer) {
-    // Convert Leaflet layer to GeoJSON format
-    var geoJsonFeature = layer.toGeoJSON();
-    geoJsonData.push(geoJsonFeature);
-  });
-
-  // Log or send GeoJSON data to a server
-  console.log('GeoJSON data:', geoJsonData);
-});
-*/
-//updateDrawnFeaturesLayer(myData)
-
-/*
-// Get the user's current location
-navigator.geolocation.getCurrentPosition(function (position) {
-    var lat = position.coords.latitude;
-    var lon = position.coords.longitude;
-  
-    // Update the map and marker with the current location
-    mymap.setView([lat, lon], 13);
-    marker.setLatLng([lat, lon]).bindPopup('You are here!').openPopup();
-});*/
 
 
 configurationVue.displayMode({"value": "System"})
@@ -9663,23 +9367,7 @@ async function assignmentSlip(data, count) {
 
 		assignmentSlip(assignmentsToSend.splice(0, 4), count)
 	}
-
-    //download(modifiedPdfBytes, publisher.name + ".pdf", "application/pdf");
 }
-
-/**
- * // Save the modified PDF
-const modifiedPdfBytes = await pdfDoc.save();
-
-// Create a Blob from the modified PDF bytes
-const blob = new Blob([modifiedPdfBytes], { type: 'application/pdf' });
-
-// Create a data URL from the Blob
-const dataUrl = URL.createObjectURL(blob);
-
-// Set the new data URL as the source for the iframe
-iframe.src = dataUrl;
- */
 
 function updatePublisherRecord(publisher) {
     publisher.gender = "Male"
@@ -9869,8 +9557,6 @@ async function fillFundTransfer() {
 var s21, s89, s26, s30, to62;
 
 async function getFieldByName(file, variable) {
-    //const fileInput = document.getElementById('pdfFile');
-    //const file = fileInput.files[0];
 
     if (file) {
         const reader = new FileReader();
@@ -9892,31 +9578,10 @@ async function getFieldByName(file, variable) {
 				const font = await s89.embedFont("Helvetica", { subset: true, unicode: true });
 
 			}
-            //s21 = await PDFLib.PDFDocument.load(pdfData);
-            //s21past = await PDFLib.PDFDocument.load(pdfData);
         };
 
         reader.readAsArrayBuffer(file);
-    }/* else {
-		const fileInput = document.getElementById('pdfFile');
-    	const file = fileInput.files[0];
-		
-		const reader = new FileReader();
-
-        reader.onload = async function (e) {
-            const pdfData = new Uint8Array(e.target.result);
-
-            // Using pdf-lib to load the PDF document
-            if (variable == s21) {
-				s21 = await PDFLib.PDFDocument.load(pdfData);
-			} else if (variable == s89) {
-				s89 = await PDFLib.PDFDocument.load(pdfData);
-			}
-            //s21past = await PDFLib.PDFDocument.load(pdfData);
-        };
-
-        reader.readAsArrayBuffer(file);
-	}*/
+    }
 }
 
 function generatePDF(element, fileName, orientation) {
@@ -9962,7 +9627,6 @@ async function convertToImage(content) {
 	  //return image
 
 	  // Append the image to the body or any desired location
-	  //document.body.appendChild(image);
 	});
 }
 
@@ -9994,11 +9658,6 @@ async function convertToPdf(element) {
 	});
 
 	// Save the PDF
-	//const pdfBytes = await pdfDoc.save();
-	//const pdfBytes = await response.arrayBuffer();
-
-    // Load the PDF with pdf-lib
-    //const pdfDoc = await PDFLib.PDFDocument.load(pdfBytes);
 
 	if (scheduleVue.display !== true) {
 		document.querySelector('#content').innerHTML = ''
@@ -10092,10 +9751,6 @@ async function createPDF(content) {
 	const { width, height } = page.getSize();
 	const titleText = content.title;
 
-	//const fontBytes = await fetch('fonts/Helvetica Roman.ttf').then(response => response.arrayBuffer());
-    //const titleFont = await pdfDoc.embedFont(fontBytes);
-	//const font = await pdfDoc.embedFont(PDFLib.PDFDocument.Font['Courier']);
-
 	page.drawText(titleText, {
 		x: 50,
 		y: height - 100,
@@ -10105,9 +9760,6 @@ async function createPDF(content) {
 	});
 
 	// Add content to the page
-
-	// Embed font for the content
-	//const contentFont = await pdfDoc.embedFont(fontBytes);
 
 	const contentText = content.content;
 	page.drawText(contentText, {
@@ -10127,11 +9779,4 @@ async function createPDF(content) {
 
 	// Set the new data URL as the source for the iframe
 	document.getElementById('letter').src = dataUrl;
-	//await allPublishersVue.previewLetter(pdfBlob)
-
-	// Create a download link and trigger download
-	//const link = document.createElement('a');
-	//link.href = URL.createObjectURL(pdfBlob);
-	//link.download = 'sample.pdf';
-	//link.click();
 }
