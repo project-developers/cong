@@ -3796,7 +3796,7 @@ document.querySelector('#entry').innerHTML = `<template>
 			<div class="w3-container main">
 				<input type="date" v-model="currentDate"><input v-model="transactionCode" style="margin:5px; width: 60px;" placeholder="Code">
 				<span style="display:none" @click="deleteItem()" class="w3-button w3-light-grey" id="delete"><i class="fas fa-trash-alt"></i></span>
-				<textarea type="text" style="width: 250px; margin-top:5px" placeholder="Transaction Description" v-model="transactionDescription"></textarea>
+				<textarea type="text" style="width: 320px; margin-top:5px" placeholder="Transaction Description" v-model="transactionDescription"></textarea>
 				<select v-if="showAccount" v-model="account" class="w3-input" style="margin-buttom:10px;">
 					<option value="RECEIPTS">RECEIPTS</option>
 					<option value="PRIMARY ACCOUNT">PRIMARY ACCOUNT</option>
