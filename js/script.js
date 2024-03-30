@@ -3660,12 +3660,15 @@ ${this.closing}
 				const formattedDate = new Date().toLocaleDateString('en-US', options);
 				return formattedDate
             },
-            removePublisher(count, name, item) {
+            async removePublisher(count, name, item) {
                 if (confirm('Are you sure you want to delete "' + name + '" records?\nPress "OK" to Delete')) {
 					item.parentNode.parentNode.parentNode.querySelector('.detail').style.display = 'none'
 					item.parentNode.parentNode.parentNode.querySelector('.main').style.display = ''
-					this.publishers.splice(count, 1)
+					//this.publishers.splice(count, 1)
 					DBWorker.postMessage({ storeName: 'data', action: "deleteItem", value: name});
+					await shortWait()
+					await shortWait()
+					DBWorker.postMessage({ storeName: 'data', action: "readAll"});
 				}
             },
             sumHours(publisher) {
@@ -6155,10 +6158,13 @@ function processAllAssignments() {
 			allAssignTo() {
 				return getUniqueElementsByProperty(this.assignments.map(elem=>elem.parts).reduce((result, currentArray) => result.concat(currentArray), []).filter(elem=>elem.assignTo),['assignTo'])
             },
-			deleteAssignment(week) {
+			async deleteAssignment(week) {
 				if (confirm('Are you sure you want to Delete Assignment?\nPress "Yes" to Delete')) {
-					this.allAssignments.splice(this.allAssignments.findIndex(elem=>elem.count == week.count), 1)
+					//this.allAssignments.splice(this.allAssignments.findIndex(elem=>elem.count == week.count), 1)
 					DBWorker.postMessage({ storeName: 'lifeAndMinistryAssignments', action: "deleteItem", value: week.week});
+					await shortWait()
+					await shortWait()
+					DBWorker.postMessage({ storeName: 'lifeAndMinistryAssignments', action: "readAll"});
 				}
 			},
 			addAssignment() {
