@@ -3795,7 +3795,7 @@ document.querySelector('#entry').innerHTML = `<template>
 		<div :class="mode()" style="margin:5px 0; width: 100%; max-width: 360px; padding:10px 0">
 			<div class="w3-container main">
 				<input type="date" v-model="currentDate"><input v-model="transactionCode" style="margin:5px; width: 60px;" placeholder="Code">
-				<span style="display:none" @click="deleteItem()" class="w3-button w3-light-grey" id="delete">DELETE</span>
+				<span style="display:none" @click="deleteItem()" class="w3-button w3-light-grey" id="delete"><i class="fas fa-trash-alt"></i></span>
 				<textarea type="text" style="width: 250px; margin-top:5px" placeholder="Transaction Description" v-model="transactionDescription"></textarea>
 				<select v-if="showAccount" v-model="account" class="w3-input" style="margin-buttom:10px;">
 					<option value="RECEIPTS">RECEIPTS</option>
@@ -3804,9 +3804,9 @@ document.querySelector('#entry').innerHTML = `<template>
 				</select>
 				<div style="margin-top:10px;display:flex">
 					<input type="number" style="width: 150px;margin-right:10px" placeholder="Amount" v-model="amount" class="w3-input">
-					<span @click="addTransaction($event.target)" class="w3-button w3-light-grey" id="add">ADD</span>
-					<span style="margin-right:5px;display:none" @click="saveEdit($event.target)" class="w3-button w3-light-grey" id="save">SAVE</span>
-					<span style="display:none" @click="cancelEdit()" class="w3-button w3-light-grey" id="cancel">CANCEL</span>
+					<span @click="addTransaction($event.target)" class="w3-button w3-light-grey" id="add"><i class="fas fa-save"></i></span>
+					<span style="margin-right:5px;display:none" @click="saveEdit($event.target)" class="w3-button w3-light-grey" id="save"><i class="fas fa-save"></i></span>
+					<span style="display:none" @click="cancelEdit()" class="w3-button w3-light-grey" id="cancel"><i class="fas fa-times"></i></span>
 				</div>
 			</div>
 		</div>
@@ -4490,7 +4490,7 @@ function processEntry() {
 				}
 			},
 			editTransaction(value) {
-				//console.log(value)
+				console.log(value)
 				if (undefined == value) { return }
 				document.querySelector('span#add').style.display = 'none'
 				document.querySelector('span#save').style.display = ''
@@ -4552,7 +4552,7 @@ function processEntry() {
 				await shortWait()
 				await shortWait()
 				//await shortWait()
-				element.parentNode.parentNode.querySelector('span#add').innerHTML = `ADD`
+				element.parentNode.parentNode.querySelector('span#add').innerHTML = `<i class="fas fa-save"></i>`
 				await shortWait()
 				await shortWait()
 				DBWorker.postMessage({ storeName: 'account', action: "readAll"});
@@ -4603,7 +4603,7 @@ function processEntry() {
 				await shortWait()
 				await shortWait()
 				//await shortWait()
-				element.parentNode.parentNode.querySelector('span#add').innerHTML = `ADD`
+				element.parentNode.parentNode.querySelector('span#add').innerHTML = `<i class="fas fa-save"></i>`
 				await shortWait()
 				await shortWait()
 				DBWorker.postMessage({ storeName: 'account', action: "readAll"});
