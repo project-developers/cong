@@ -4906,35 +4906,40 @@ function processApprovals() {
 document.querySelector('#archive').innerHTML = `<template>
 	<div v-if="display == true">
 		<h2 class="w3-center">ARCHIVE</h2>
-		<p style="margin:15px;display:flex">
-			<select v-model="currentMonth" class="w3-input" style="width:200px; margin-right:10px" @change="loadFile()">
+
+		<p style="margin:5px;display:flex;flex-wrap:wrap">
+			<select v-model="currentMonth" class="w3-input" style="width:200px; margin-right:10px; margin-bottom:10px" @change="loadFile()">
 				<option v-for="(entry, count) in months()" :value="cleanMonth(entry)">{{ entry }}</option>
 			</select>
-			<select v-model="currentFile" class="w3-input" style="width:300px" @change="loadFile()">
+			<select v-model="currentFile" class="w3-input" style="width:240px; margin-right:10px; margin-bottom:10px" @change="loadFile()">
 				<option v-for="(entry, count) in individualFiles()" :value="entry">{{ entry }}</option>
-			</select>
-			<button style="margin-left:10px;display:none" @click="updateRecord()" class="w3-button w3-light-grey" id="update">UPDATE</button>
+			</select>			
 		</p>
-		<p style="margin:15px;display:flex" id="upload">
-			<select v-model="selectedMonth"class="w3-input" style="width:150px">
+		<p style="margin:5px;display:flex;flex-wrap:wrap">
+			<select v-model="selectedMonth" class="w3-input" style="width:150px; margin-right:10px; margin-bottom:10px">
 				<option v-for="(month, count) in allMonths" :value="(count + 1).toString().padStart(2, '0')">{{ month }}</option>
 			</select>
-			<select v-model="selectedYear" style="margin-left:10px;width:90px" class="w3-input">
+			<select v-model="selectedYear" class="w3-input" style="width:90px; margin-right:10px; margin-bottom:10px">
 				<option v-for="(year, count) in currentYears" :value="year">{{ year }}</option>
-			</select>
-			<select v-model="selectedFile" style="margin-left:10px;width:300px" class="w3-input" style="width:250px" @change="loadFile()">
+			</select>	
+			<select v-model="selectedFile" class="w3-input" style="width:300px; margin-right:10px; margin-bottom:10px">
 				<option v-for="(entry, count) in allFileTypes()" :value="entry">{{ entry }}</option>
-			</select>
-			<button style="margin-left:10px;" @click="uploadRecord()" class="w3-button w3-light-grey">UPLOAD</button>
+			</select>			
 		</p>
-		<div v-if="allFiles().filter(elem=>elem.name == currentFile + ' - ' + currentMonth).length !== 0" style="margin: 15px;">
-			<button class="w3-button w3-black download-button" style="margin: 10px 0;">
+		<div style="margin:0 5px 10px;">
+			<button v-if="allFiles().filter(elem=>elem.name == currentFile + ' - ' + currentMonth).length !== 0" class="w3-button w3-black download-button" style="margin: 10px 2px;">
 				<a :href="currentPath" style="text-decoration:none" :download="currentFile + ' - ' + currentMonth">
 					<i class="fas fa-download"></i>
 				</a>
 			</button>
-			<iframe v-if="allFiles().filter(elem=>elem.name == currentFile + ' - ' + currentMonth)[0].value.type.toLowerCase().endsWith('/pdf')" height="600px" width="100%" :src="currentPath" class="fileViewer"></iframe>
-			<img v-if="!allFiles().filter(elem=>elem.name == currentFile + ' - ' + currentMonth)[0].value.type.toLowerCase().endsWith('/pdf')" width="100%" :src="currentPath" class="fileViewer">
+			<button v-if="selectedMonth !== '' && selectedYear !== '' && selectedFile !== ''" @click="uploadRecord()" class="w3-button w3-black download-button" style="margin:10px 2px;transform: rotate(180deg)" id="upload">
+				<i class="fas fa-download"></i>
+			</button>
+			<button v-if="currentFile !== '' && currentMonth !== '' && allFiles().filter(elem=>elem.name == currentFile + ' - ' + currentMonth).length !== 0" @click="uploadRecord()" class="w3-button w3-black download-button" style="margin:10px 2px;" id="update">
+				<i class="fas fa-sync"></i>
+			</button>
+			<iframe v-if="allFiles().filter(elem=>elem.name == currentFile + ' - ' + currentMonth).length !== 0 && allFiles().filter(elem=>elem.name == currentFile + ' - ' + currentMonth)[0].value.type.toLowerCase().endsWith('/pdf')" height="600px" width="100%" :src="currentPath" class="fileViewer"></iframe>
+			<img v-if="allFiles().filter(elem=>elem.name == currentFile + ' - ' + currentMonth).length !== 0 && !allFiles().filter(elem=>elem.name == currentFile + ' - ' + currentMonth)[0].value.type.toLowerCase().endsWith('/pdf')" width="100%" :src="currentPath" class="fileViewer">
 		</div>
 		<input @change="saveFile()" type="file" id="pdfFile" accept=".pdf,.jpg,.jpeg,.png" style="display:none">
 	</div>
@@ -5017,15 +5022,9 @@ function processArchive() {
 				const currentFile = this.allFiles().filter(elem=>elem.name == `${this.currentFile} - ${this.currentMonth}`)
 				if (currentFile.length !== 0) {
 					this.currentPath = URL.createObjectURL(currentFile[0].value);
-					document.querySelector('#update').style.display = ''
-					//document.querySelector('#upload').style.display = 'none'
-				} else {
-					document.querySelector('#update').style.display = 'none'
-					//document.querySelector('#upload').style.display = ''
 				}				
 			},
 			months() {
-				//this.populateMonthYearDropdowns()
 				return getUniqueElementsByProperty(this.allFiles(), ['month']).map(elem=>entryVue.cleanMonth(elem.month))
 			},
 			uploadRecord() {
@@ -5070,31 +5069,6 @@ function processArchive() {
 					downloadPreparedFiles([URL.createObjectURL(content), `Audit Files ${fileVue.months().slice(0, 3)[0]} - ${fileVue.months().slice(0, 3)[2]}`])
 				});
 			},
-			populateMonthYearDropdowns() {
-				var monthDropdown = document.getElementById("month");
-				var yearDropdown = document.getElementById("year");
-	
-				// Populate months
-				var months = [
-					"January", "February", "March", "April", "May", "June", 
-					"July", "August", "September", "October", "November", "December"
-				];
-				months.forEach(function(month, index) {
-					var option = document.createElement("option");
-					option.value = index + 1;
-					option.text = month;
-					monthDropdown.add(option);
-				});
-	
-				// Populate years (adjust range as needed)
-				var currentYear = new Date().getFullYear();
-				for (var year = currentYear - 10; year <= currentYear + 10; year++) {
-					var option = document.createElement("option");
-					option.value = year;
-					option.text = year;
-					yearDropdown.add(option);
-				}
-			}
         }
     })
 }
