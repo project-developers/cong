@@ -18,8 +18,8 @@
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
         <link rel="stylesheet" href="css/style.css">
-        <script type='module' src="pwabuilder-sw-register.js"></script>
-		<script type='module' src="pwabuilder-sw.js"></script>
+        <!--script type='module' src="pwabuilder-sw-register.js"></script>
+		<script type='module' src="pwabuilder-sw.js"></script-->
         <script src="js/vue.js"></script>
         <script src="js/jszip.min.js"></script>
         <script src="js/mammoth.browser.min.js"></script>
@@ -27,8 +27,6 @@
         <script src="js/html2pdf.bundle.js"></script>
         <script src="https://html2canvas.hertzen.com/dist/html2canvas.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
-        <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-        <link rel="stylesheet" href="https://unpkg.com/leaflet-draw/dist/leaflet.draw.css" />
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v8.2.0/ol.css">
                 
     </head>
@@ -81,23 +79,40 @@
         <div class="w3-container" id="allParticipants" style="padding:48px 16px 0 16px;display:none"></div>
         <div class="w3-container" id="contactInformation" style="padding:16px 16px 0 16px;display:none"></div>
         <div class="w3-container" id="fieldServiceGroups" style="padding:64px 16px 0 16px; margin-top:-64px;display:none"></div>
+        <div class="w3-container" id="cards" style="padding:64px 16px 0 16px; margin-top:-64px;display:none"></div>
         <div class="w3-container" id="monthlyReport" style="padding:16px 16px 0 16px;display:none"></div>
         <div class="w3-container" id="missingReport" style="padding:16px 16px 0 16px;margin-top:-32px;display:none"></div>
         <div class="w3-container" id="allAssignments" style="padding:16px 16px 0 16px;margin-top:-32px;display:none"></div>
         <div class="w3-container" id="schedule" style="padding:16px 16px 0 16px;margin-top:-32px;display:none"></div>
         <div class="w3-container" id="attendance" style="padding:0 16px 0 16px;margin-top:-32px;display:none"></div>
         <div class="w3-container" id="branchReport" style="padding:0 16px 0 16px;display:none"></div>
+        <div class="w3-container" id="entry" style="padding:0 16px 0 16px;"></div>
+        <div class="w3-container" id="file" style="padding:0 16px 0 16px;"></div>
+        <div class="w3-container" id="approvals" style="padding:0 16px 0 16px;"></div>
+        <div class="w3-container" id="archive" style="padding:0 16px 0 16px;"></div>
         <div class="w3-container" id="configuration" style="padding:0 16px 0 16px;display:none"></div>
         <div class="w3-container" id="territory" style="padding:0 16px 0 16px;margin-top:-100px;display:none"></div>
         <div id="pdfViewer">
             
         </div>
         
-        <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-        <script src="https://unpkg.com/leaflet-draw/dist/leaflet.draw.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/ol@v8.2.0/dist/ol.js"></script>
 
         <script src="js/script.js"></script>
+
+        <script>
+            // Check if the browser supports service workers
+            if ('serviceWorker' in navigator) {
+              // Register the service worker
+              navigator.serviceWorker.register('service-worker.js')
+                .then((registration) => {
+                  console.log('Service Worker registered with scope:', registration.scope);
+                })
+                .catch((error) => {
+                  console.error('Service Worker registration failed:', error);
+                });
+            }
+        </script>
         
     </body>
 
