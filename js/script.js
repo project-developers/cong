@@ -7,7 +7,7 @@ loginForm.confirmPassword.style.display = 'none';
 document.getElementById("securityQuestions").style.display = 'none';
 loginErrorMsg.style.opacity = 0;
 var logged = false, reportEntry = false;
-var hiddenElements = ["congregation", "allParticipants", "allPublishers", "allAssignments", "schedule", "contactInformation", "fieldServiceGroups", "monthlyReport", "missingReport", "attendance", "branchReport", "territory", "configuration"]
+var hiddenElements = ["congregation", "allParticipants", "allPublishers", "allAssignments", "schedule", "contactInformation", "fieldServiceGroups", "cards", "monthlyReport", "missingReport", "attendance", "branchReport", "territory", "configuration"]
 var securityQuestions = [
 	{value: "What was the name of your first CO?".replaceAll(' ',''), label: "What was the name of your first CO?"},
 	{value: "In which city did you start preaching?".replaceAll(' ',''), label: "In which city did you start preaching?"},
@@ -460,7 +460,7 @@ loginButton.addEventListener("click", (e) => {
 var currentUser = { "name": "currentUser", "username": null, "password": null, "accesses": [], "selectedQuestion": null, "answer": null }
 var allUsers;
 
-var navigationVue, navigationVue2, allPublishersVue, congregationVue, configurationVue, branchReportVue, contactInformationVue, fieldServiceGroupsVue, monthlyReportVue, missingReportVue, allAssignmentsVue, scheduleVue, territoryVue, entryVue, approvalsVue, fileVue, archiveVue;
+var navigationVue, navigationVue2, allPublishersVue, congregationVue, configurationVue, branchReportVue, contactInformationVue, fieldServiceGroupsVue, cardsVue, monthlyReportVue, missingReportVue, allAssignmentsVue, scheduleVue, territoryVue, entryVue, approvalsVue, fileVue, archiveVue;
 var allButtons = [
 	{"title": "CONG", "function": "congregationVue"}, 
 	{"title": "RECORDS", "function": "allPublishersVue"}, 
@@ -469,7 +469,8 @@ var allButtons = [
 	{"title": "MAIL", "function": "allPublishersVue"},
 	{"title": "GROUPS", "function": "fieldServiceGroupsVue"}, 
 	{"title": "ACTIVE", "function": "fieldServiceGroupsVue"}, 
-	{"title": "ALL", "function": "fieldServiceGroupsVue"}, 
+	{"title": "ALL", "function": "fieldServiceGroupsVue"},
+	{"title": "CARDS", "function": "cardsVue"},
 	{"title": "CONTACTS", "function": "contactInformationVue"}, 
 	{"title": "REPORTS", "function": "missingReportVue"}, 
 	{"title": "CURRENT", "function": "monthlyReportVue"}, 
@@ -683,33 +684,38 @@ DBWorker.onmessage = async function (msg) {
 							approvalsVue.loadFile()
 						}
 					}
+					if (cardsVue.display == true) {
+						if (cardsVue.allFiles().filter(elem=>elem.name == `${cardsVue.currentCard} Record Card - ${cardsVue.currentPublisher}`).length !== 0) {
+							cardsVue.loadFile()
+						}
+					}
 					if (msgData.value.filter(elem=>elem.name == 'S-21').length !== 0) {
 						//console.log(msgData.value.filter(elem=>elem.name == 'S-21_E.pdf')[0])
-						if (!s21) {
+						if (!s21Data) {
 							await getFieldByName(msgData.value.filter(elem=>elem.name == 'S-21')[0].value, 'S-21')
 						}
 					}
 					if (msgData.value.filter(elem=>elem.name == 'S-26').length !== 0) {
 						//console.log(msgData.value.filter(elem=>elem.name == 'S-21_E.pdf')[0])
-						if (!s26) {
+						if (!s26Data) {
 							await getFieldByName(msgData.value.filter(elem=>elem.name == 'S-26')[0].value, 'S-26')
 						}
 					}
 					if (msgData.value.filter(elem=>elem.name == 'S-30').length !== 0) {
 						//console.log(msgData.value.filter(elem=>elem.name == 'S-21_E.pdf')[0])
-						if (!s30) {
+						if (!s30Data) {
 							await getFieldByName(msgData.value.filter(elem=>elem.name == 'S-30')[0].value, 'S-30')
 						}
 					}
 					if (msgData.value.filter(elem=>elem.name == 'TO-62').length !== 0) {
 						//console.log(msgData.value.filter(elem=>elem.name == 'S-21_E.pdf')[0])
-						if (!to62) {
+						if (!to62Data) {
 							await getFieldByName(msgData.value.filter(elem=>elem.name == 'TO-62')[0].value, 'TO-62')
 						}
 					}
 					if (msgData.value.filter(elem=>elem.name == 'S-89').length !== 0) {
 						//console.log(msgData.value.filter(elem=>elem.name == 'S-21_E.pdf')[0])
-						if (!s89) {
+						if (!s89Data) {
 							await getFieldByName(msgData.value.filter(elem=>elem.name == 'S-89')[0].value, 'S-89')
 						}
 					}
@@ -870,9 +876,21 @@ function processNavigation() {
         },
         methods: {
 			showDownloadButton() {
-				return allPublishersVue.display == true ||	fieldServiceGroupsVue.display == true || contactInformationVue.display == true// || scheduleVue.display == true
+				return allPublishersVue.display == true ||	fieldServiceGroupsVue.display == true || contactInformationVue.display == true || cardsVue.display == true
 			},
 			async downloadContent() {
+				if (allButtons.filter(elem=>elem.title == currentView)[0].title == 'CARDS') {
+					document.querySelector('.fa-download').classList.add('fa-spinner')
+					document.querySelector('.fa-download').classList.add('fa-spin')
+					recordsToCreate = allPublishersVue.publishers.map(elem=>[elem, 'currentServiceYear'])
+					if (document.querySelector('#cardProcessStatus')) {
+						document.querySelector('#cardProcessStatus').style.display = ''
+						document.querySelector('#cardProcessStatus').innerHTML = `Processing cards. Please Wait . . .
+						<br>${recordsToCreate.length} Remaining.`
+					}
+					await fillPublisherRecord(recordsToCreate.shift())
+					return
+				}
 				console.log(currentView)
 				console.log(allButtons.filter(elem=>elem.title == currentView))
 				var allGroupsBackup = [].concat(allPublishersVue.allGroups)
@@ -1079,19 +1097,25 @@ function processNavigation() {
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
 					allPublishersVue.correspondence = false
-					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "ACTIVE", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "ACTIVE", "function": "fieldServiceGroupsVue"}, {"title": "CARDS", "function": "cardsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
 				} else if (button.innerHTML == "ACTIVE") {
 					this.displayDropdown = true
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
 					allPublishersVue.correspondence = false
-					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "ALL", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "ALL", "function": "fieldServiceGroupsVue"}, {"title": "CARDS", "function": "cardsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
 				} else if (button.innerHTML == "ALL") {
 					this.displayDropdown = true
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
 					allPublishersVue.correspondence = false
-					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "ACTIVE", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "ACTIVE", "function": "fieldServiceGroupsVue"}, {"title": "CARDS", "function": "cardsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+				} else if (button.innerHTML == "CARDS") {
+					this.displayDropdown = true
+					allPublishersVue.request = false
+					allPublishersVue.transfer = false
+					allPublishersVue.correspondence = false
+					this.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "ACTIVE", "function": "fieldServiceGroupsVue"}, {"title": "ALL", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
 				} else if (button.innerHTML == "PARTICIPANTS") {
 					this.displayDropdown = true
 					allPublishersVue.request = false
@@ -1189,17 +1213,21 @@ function processNavigation() {
 					}
 				} else if (button.innerHTML == "ALL" || button.innerHTML == "ACTIVE") {
 					fieldServiceGroupsVue.inactive()
+					if (document.querySelector('.fa-download')) {
+						document.querySelector('.fa-download').classList.remove('fa-spin')
+						document.querySelector('.fa-download').classList.remove('fa-spinner')
+						document.querySelector('.fa-download').classList.remove('fa-play')
+					}
 				} else {
 					gotoView(allButtons.filter(elem=>elem.title == button.innerHTML)[0].function)
-					
 				}
-				
 			},
 			logged() {
                 return logged
             },
 			openSettings() {
-				var groupCount = navigationVue.buttons.findIndex(elem=>elem.title == 'ALL' || elem.title == 'ACTIVE')
+				
+				var groupCount = navigationVue.buttons.findIndex(elem=>elem.title == 'ALL' || elem.title == 'ACTIVE' || elem.title == 'CARDS')
 				if (groupCount !== -1){
 					navigationVue.buttons[groupCount].title = 'GROUPS'
 				}
@@ -1289,7 +1317,7 @@ async function redoSelection(selection) {
 
 document.querySelector('#mySidebar').innerHTML = `<template>
 	<a href="javascript:void(0)" onclick="w3_close()" class="w3-bar-item w3-button w3-large w3-padding-16">Close ×</a>
-    <a v-for="(button) in buttons()" v-if="button.title !== 'ACTIVE' && button.title !== 'ALL' && button.title !== 'REQUEST' && button.title !== 'TRANSFER' && button.title !== 'MAIL'" @click="openButton($event.target)" class="w3-bar-item w3-button">{{ button.title }}</a>
+    <a v-for="(button) in buttons()" v-if="button.title !== 'ACTIVE' && button.title !== 'ALL'  && button.title !== 'CARDS' && button.title !== 'REQUEST' && button.title !== 'TRANSFER' && button.title !== 'MAIL'" @click="openButton($event.target)" class="w3-bar-item w3-button">{{ button.title }}</a>
     <a v-else @click="openButton($event.target)" :class="mode()">{{ button.title }}</a>
 	<a v-if="logged() == true && displayDropdown == true && showDownloadButton()" class="w3-bar-item w3-button" @click="downloadContent()"><i title="Download" class="fa fa-download"></i> Download</a>
 	<a v-if="logged() == true" class="w3-bar-item w3-button" @click="openSettings()"><i class="fa fa-cog"></i> Settings</a>
@@ -1313,9 +1341,21 @@ function processNavigation2() {
         },
         methods: {
 			showDownloadButton() {
-				return allPublishersVue.display == true ||	fieldServiceGroupsVue.display == true || contactInformationVue.display == true// || scheduleVue.display == true
+				return allPublishersVue.display == true ||	fieldServiceGroupsVue.display == true || contactInformationVue.display == true || cardsVue.display == true
 			},
 			async downloadContent() {
+				if (allButtons.filter(elem=>elem.title == currentView)[0].title == 'CARDS') {
+					document.querySelector('.fa-download').classList.add('fa-spinner')
+					document.querySelector('.fa-download').classList.add('fa-spin')
+					recordsToCreate = allPublishersVue.publishers.map(elem=>[elem, 'currentServiceYear'])
+					if (document.querySelector('#cardProcessStatus')) {
+						document.querySelector('#cardProcessStatus').style.display = ''
+						document.querySelector('#cardProcessStatus').innerHTML = `Processing cards. Please Wait . . .
+						<br>${recordsToCreate.length} Remaining.`
+					}
+					await fillPublisherRecord(recordsToCreate.shift())
+					return
+				}
 				console.log(currentView)
 				console.log(allButtons.filter(elem=>elem.title == currentView))
 				var allGroupsBackup = [].concat(allPublishersVue.allGroups)
@@ -1495,19 +1535,25 @@ function processNavigation2() {
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
 					allPublishersVue.correspondence = false
-					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "ACTIVE", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "ACTIVE", "function": "fieldServiceGroupsVue"}, {"title": "CARDS", "function": "cardsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
 				} else if (button.innerHTML == "ACTIVE") {
 					navigationVue.displayDropdown = true
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
 					allPublishersVue.correspondence = false
-					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "ALL", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "ALL", "function": "fieldServiceGroupsVue"}, {"title": "CARDS", "function": "cardsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
 				} else if (button.innerHTML == "ALL") {
 					navigationVue.displayDropdown = true
 					allPublishersVue.request = false
 					allPublishersVue.transfer = false
 					allPublishersVue.correspondence = false
-					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "ACTIVE", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "ACTIVE", "function": "fieldServiceGroupsVue"}, {"title": "CARDS", "function": "cardsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
+				} else if (button.innerHTML == "CARDS") {
+					navigationVue.displayDropdown = true
+					allPublishersVue.request = false
+					allPublishersVue.transfer = false
+					allPublishersVue.correspondence = false
+					navigationVue.buttons = [{"title": "CONG", "function": "congregationVue"}, {"title": "CONTACTS", "function": "contactInformationVue"}, {"title": "RECORDS", "function": "allPublishersVue"}, {"title": "ACTIVE", "function": "fieldServiceGroupsVue"}, {"title": "ALL", "function": "fieldServiceGroupsVue"}, {"title": "REPORTS", "function": "missingReportVue"}]
 				} else if (button.innerHTML == "PARTICIPANTS") {
 					navigationVue.displayDropdown = true
 					allPublishersVue.request = false
@@ -1605,6 +1651,11 @@ function processNavigation2() {
 					}
 				} else if (button.innerHTML == "ALL" || button.innerHTML == "ACTIVE") {
 					fieldServiceGroupsVue.inactive()
+					if (document.querySelector('.fa-download')) {
+						document.querySelector('.fa-download').classList.remove('fa-spin')
+						document.querySelector('.fa-download').classList.remove('fa-spinner')
+						document.querySelector('.fa-download').classList.remove('fa-play')
+					}
 				} else {
 					gotoView(allButtons.filter(elem=>elem.title == button.innerHTML)[0].function)
 					
@@ -1617,8 +1668,9 @@ function processNavigation2() {
 				return navigationVue.displayDropdown
 			},
 			openSettings() {
+				
 				w3_close()
-				var groupCount = navigationVue.buttons.findIndex(elem=>elem.title == 'ALL' || elem.title == 'ACTIVE')
+				var groupCount = navigationVue.buttons.findIndex(elem=>elem.title == 'ALL' || elem.title == 'ACTIVE' || elem.title == 'CARDS')
 				if (groupCount !== -1){
 					navigationVue.buttons[groupCount].title = 'GROUPS'
 				}
@@ -2305,12 +2357,24 @@ async function gotoView(button) {
 	fileVue.display = false
 	approvalsVue.display = false
 	archiveVue.display = false
+	cardsVue.display = false
 	if (button == "congregationVue" || button == "configurationVue") {
 		navigationVue.display = false
 	} else {
 		navigationVue.display = true
 	}
 	window[`${button}`].display = true
+	await shortWait()
+	//await shortWait()
+	if (button == "cardsVue") {
+		document.querySelector('.fa-download').classList.add('fa-play')
+	} else {
+		if (document.querySelector('.fa-download')) {
+			document.querySelector('.fa-download').classList.remove('fa-spin')
+			document.querySelector('.fa-download').classList.remove('fa-spinner')
+			document.querySelector('.fa-download').classList.remove('fa-play')
+		}
+	}
 	if (button == 'territoryVue') {
 		await shortWait()
 		await shortWait()
@@ -3369,7 +3433,9 @@ function processAllPublishers() {
 			auto_grow() {
 				auto_grow(document.getElementById("publisherRequest").Address);
 				auto_grow(document.getElementById("publisherRequest").LetterOfIntroduction);
-				auto_grow(document.getElementById("publisherRequest").LetterTitle);
+				if (document.getElementById("publisherRequest").LetterTitle) {
+					auto_grow(document.getElementById("publisherRequest").LetterTitle);
+				}
 			},
 			async sendMessage() {
 				console.log('Message')
@@ -3952,7 +4018,7 @@ function processFieldServiceGroups() {
             publishers: [],
             display: false,
             pdfFile: "",
-			active: true,
+            active: true,
 			selectedPublisher: {},
         },
         computed: {
@@ -3977,12 +4043,115 @@ function processFieldServiceGroups() {
 				this.selectedPublisher = publisher
                 //fillPublisherRecord(publisher)
 			},
-            updateRecord(publisher) {
-				updatePublisherRecord(publisher)
-			},
-			inactive() {
+            inactive() {
 				this.active = !this.active;
-			}
+			},
+        }
+    })
+}
+
+document.querySelector('#cards').innerHTML = `<template>
+	<div v-if="display == true" :class="mode()">
+		<h2 class="w3-center">CARDS</h2>
+		<p style="margin:5px;display:flex;flex-wrap:wrap">
+			<select v-model="currentCard" class="w3-input" style="width:150px; margin-right:10px; margin-bottom:10px" @change="loadFile()">
+				<option v-for="(period, count) in ['Current', 'Last']" :value="period">{{ period }}</option>
+			</select>
+			<select v-model="currentPublisher" class="w3-input" style="width:240px; margin-right:10px; margin-bottom:10px" @change="loadFile()">
+				<option v-for="(publisher, count) in allPublishers()" :value="publisher.name">{{ publisher.name }}</option>
+			</select>
+			<div style="margin:5px;display:none" id="cardProcessStatus"></div>
+		</p>
+		<div style="margin:0 5px 10px;">
+			<button v-if="allFiles().filter(elem=>elem.name == currentCard + ' Record Card - ' + currentPublisher).length !== 0" class="w3-button w3-black download-button" style="margin: 10px 2px;">
+				<a :href="currentPath" style="text-decoration:none" :download="currentCard + ' Record Card - ' + currentPublisher">
+					<i class="fas fa-download"></i>
+				</a>
+			</button>
+			<button v-if="currentPublisher !== '' && currentCard !== '' && allFiles().filter(elem=>elem.name == currentCard + ' Record Card - ' + currentPublisher).length == 0" @click="uploadRecord()" class="w3-button w3-black download-button" style="margin:10px 2px;transform: rotate(180deg)" id="upload">
+				<i class="fas fa-download"></i>
+			</button>
+			<button v-if="currentPublisher !== '' && currentCard !== '' && allFiles().filter(elem=>elem.name == currentCard + ' Record Card - ' + currentPublisher).length !== 0" @click="uploadRecord()" class="w3-button w3-black download-button" style="margin:10px 2px;" id="update">
+				<i class="fas fa-sync"></i>
+			</button>
+			<!--button v-if="(Number(currentCard.split('-')[1]) - 1 == 1 || Number(currentCard.split('-')[1]) - 1 == 4 || Number(currentCard.split('-')[1]) - 1 == 7 || Number(currentCard.split('-')[1]) - 1 == 10)" @click="downloadZip()" class="w3-button w3-black download-button" style="margin:10px 2px;" id="download">
+				<i class="fas fa-paper-plane"></i>
+			</button-->
+			<iframe v-if="allFiles().filter(elem=>elem.name == currentCard + ' Record Card - ' + currentPublisher).length !== 0 && allFiles().filter(elem=>elem.name == currentCard + ' Record Card - ' + currentPublisher)[0].value.type.toLowerCase().endsWith('/pdf')" height="600px" width="100%" :src="currentPath" class="fileViewer"></iframe>
+			<img v-if="allFiles().filter(elem=>elem.name == currentCard + ' Record Card - ' + currentPublisher).length !== 0 && !allFiles().filter(elem=>elem.name == currentCard + ' Record Card - ' + currentPublisher)[0].value.type.toLowerCase().endsWith('/pdf')" width="100%" :src="currentPath" class="fileViewer">
+		</div>
+		<input @change="saveFile()" type="file" id="pdfFile" accept=".pdf,.jpg,.jpeg,.png" style="display:none">
+	</div>
+</template>`
+
+function processCards() {
+
+    cardsVue = new Vue({
+        el: document.querySelector('#cards'),
+        data: {
+            publishers: [],
+            display: false,
+            pdfFile: "",
+            currentCard: "",
+            currentPublisher: "",
+            currentPath: "",
+			active: true,
+			card: false,
+			selectedPublisher: {},
+        },
+        computed: {
+            searchTerms() {
+                return navigationVue.searchTerms
+            },
+			allGroups() {
+                return allPublishersVue.allGroups
+            },
+			selectedGroup() {
+                return navigationVue.fieldServiceGroup
+            },
+        },
+        methods: {
+			mode() {
+				return mode.replace('w3-card ','')
+			},
+			allPublishers() {
+				return allPublishersVue.publishers.filter(elem=>(elem.fieldServiceGroup == this.selectedGroup || this.selectedGroup == 'All Groups') && elem.name.toLowerCase().includes(this.searchTerms.toLowerCase()))
+			},
+			groupPublishers(group) {
+                return allPublishersVue.publishers.filter(elem=>elem.fieldServiceGroup == group && (elem.active == true || this.active == true))
+            },
+			publisherDetail(publisher) {
+				this.selectedPublisher = publisher
+                //fillPublisherRecord(publisher)
+			},
+            inactive() {
+				this.active = !this.active;
+			},
+			loadFile() {
+				const currentFile = this.allFiles().filter(elem=>elem.name == `${this.currentCard} Record Card - ${this.currentPublisher}`)
+				if (currentFile.length !== 0) {
+					this.currentPath = URL.createObjectURL(currentFile[0].value);
+				}
+			},
+			allFiles() {
+				return myFiles.filter(elem=>elem.name.includes('Record Card - ')).map(obj => ({
+					...obj,
+					file: obj.name.split(' - ')[0],
+					month: obj.name.split(' - ')[1]
+				})
+				)
+			},
+			uploadRecord() {
+				document.querySelector('#pdfFile').click()
+			},
+			async saveFile() {
+				if (document.getElementById('pdfFile').files[0]) {
+					DBWorker.postMessage({ storeName: 'files', action: "save", value: [{name: `${this.currentCard} Record Card - ${this.currentPublisher}`, value: document.getElementById('pdfFile').files[0]}]});
+					await shortWait()
+					await shortWait()
+					DBWorker.postMessage({ storeName: 'files', action: "readAll"});
+				}
+			},
         }
     })
 }
@@ -4732,7 +4901,7 @@ function processEntry() {
 					alert('Please enter a Date')
 					return
 				}
-				element.parentNode.parentNode.querySelector('span#add').innerHTML = `<i class="fas fa-check"></i>`
+				document.querySelector('span#add').innerHTML = `<i class="fas fa-check"></i>`
 				var account = this.account
 				this.account = "RECEIPTS"
 				var transactionDate = this.currentDate
@@ -4754,7 +4923,7 @@ function processEntry() {
 				await shortWait()
 				await shortWait()
 				//await shortWait()
-				element.parentNode.parentNode.querySelector('span#add').innerHTML = `<i class="fas fa-save"></i>`
+				document.querySelector('span#add').innerHTML = `<i class="fas fa-save"></i>`
 				await shortWait()
 				await shortWait()
 				DBWorker.postMessage({ storeName: 'account', action: "readAll"});
@@ -4778,7 +4947,7 @@ function processEntry() {
 					alert('Please enter a Date')
 					return
 				}
-				element.parentNode.parentNode.querySelector('span#add').innerHTML = `<i class="fas fa-check"></i>`
+				document.querySelector('span#add').innerHTML = `<i class="fas fa-check"></i>`
 				var account = this.account
 				this.account = "RECEIPTS"
 				var transactionDate = this.currentDate
@@ -4805,7 +4974,7 @@ function processEntry() {
 				await shortWait()
 				await shortWait()
 				//await shortWait()
-				element.parentNode.parentNode.querySelector('span#add').innerHTML = `<i class="fas fa-save"></i>`
+				document.querySelector('span#add').innerHTML = `<i class="fas fa-save"></i>`
 				await shortWait()
 				await shortWait()
 				DBWorker.postMessage({ storeName: 'account', action: "readAll"});
@@ -4931,7 +5100,7 @@ function processFile() {
                 return files
             },
 			allFiles() {
-				return myFiles.filter(elem=>elem.name.split(' - ').length > 1).map(obj => ({
+				return myFiles.filter(elem=>elem.name.split(' - ').length > 1 && !elem.name.includes('Record Card - ')).map(obj => ({
 					...obj,
 					file: obj.name.split(' - ')[0],
 					month: obj.name.split(' - ')[1]
@@ -5066,7 +5235,7 @@ function processApprovals() {
                 return files
             },
 			allFiles() {
-				return myFiles.filter(elem=>['Payments', 'Balance', 'Approval', 'Resolution'].includes(elem.name))
+				return myFiles.filter(elem=>['Payments', 'Balance', 'Approval', 'Resolution'].includes(elem.name) && !elem.name.includes('Record Card - '))
 			},
 			cleanMonth(value) {
 				return `${value.split(' ')[1]}-${(Number(allMonths.indexOf(value.split(' ')[0])) + 1).toString().padStart(2, '0')}`
@@ -5200,7 +5369,7 @@ function processArchive() {
 				return getUniqueElementsByProperty(this.allFiles(), ['name']).map(elem=>elem.file)
             },
 			allFiles() {
-				const combinedFiles = myFiles.filter(elem=>elem.name.split(' - ').length > 1).map(obj => ({
+				const combinedFiles = myFiles.filter(elem=>elem.name.split(' - ').length > 1 && !elem.name.includes('Record Card - ')).map(obj => ({
 					...obj,
 					file: obj.name.split(' - ')[0],
 					month: obj.name.split(' - ')[1]
@@ -5385,9 +5554,6 @@ function contactInformation() {
 					item.parentNode.querySelector('.main').style.display = ''
                     item.parentNode.querySelector('.detail').style.display = 'none'
 				}
-			},
-            updateRecord(publisher) {
-				updatePublisherRecord(publisher)
 			},
             handleInputChange(event, publisher, property) {
 				if (configurationVue.reportEntry == 'lmo' || configurationVue.reportEntry == 'lma') {
@@ -5811,9 +5977,6 @@ function processMissingReport() {
 				//this.selectedPublisher = publisher
                 //fillPublisherRecord(publisher)
 			},
-            updateRecord(publisher) {
-				updatePublisherRecord(publisher)
-			},
             missingRecord(publisher) {
 				var publisherRecords = ''
 				monthlyReportVue.months.slice(0, monthlyReportVue.months.findIndex(elem=>elem.abbr == monthlyReportVue.month.abbr) + 1).forEach(elem=>{
@@ -6222,9 +6385,6 @@ function processAllAssignments() {
 				//this.selectedPublisher = publisher
                 //fillPublisherRecord(publisher)
 			},
-            updateRecord(publisher) {
-				updatePublisherRecord(publisher)
-			},
             missingRecord(publisher) {
 				var publisherRecords = ''
 				monthlyReportVue.months.slice(0, monthlyReportVue.months.findIndex(elem=>elem.abbr == monthlyReportVue.month.abbr) + 1).forEach(elem=>{
@@ -6564,22 +6724,12 @@ function processSchedule() {
 			allAssignTo() {
 				return getUniqueElementsByProperty(this.assignments.filter(elem=>elem.assignTo),['assignTo'])
             },
-			deleteAssignment(count) {
-				if (confirm('Are you sure you want to Delete Assignment?\nPress "Yes" to Delete')) {
-					//allParticipantsVue.lifeAndMinistry.assignments.splice(count, 1)
-					//DBWorker.postMessage({ storeName: 'lifeAndMInistry', action: "save", value: allParticipantsVue.lifeAndMinistry});
-				}
-			},
 			addAssignment() {
-				//console.log("New Assignment")
 				if (this.currentWeek == '') {
 					this.currentWeek = this.currentAssignment
 					this.currentAssignment = ''
 					return
 				}
-				//allParticipantsVue.lifeAndMinistry.assignments.push({ "week": this.currentWeek, "meetingPart": this.currentAssignment, "section": this.currentSection })
-				//this.currentAssignment = ''
-				//DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [allParticipantsVue.lifeAndMinistry]});
 			},
 			inputMode(currentClass) {
 				return currentClass + ' ' + mode.replace('w3-card ','')
@@ -6591,7 +6741,6 @@ function processSchedule() {
                 return allPublishersVue.publishers.filter(elem=>elem.fieldServiceGroup == group && (elem.active == true || (elem.active == false && elem.reactivated)))
             },
 			publisherDetail(event, week) {
-				//console.log(event, event.parentNode.querySelector('p'))
 				if (!event.parentNode.querySelector('.detail')) {
 					event = event.parentNode
 				}
@@ -6608,7 +6757,6 @@ function processSchedule() {
 					event.parentNode.querySelectorAll('.detail').forEach(elem=>{
 						elem.style.display = 'none'
 					})
-					//console.log(event.parentNode.querySelector('.assignedTo').value)
 					if (event.parentNode.querySelector('.assignedTo').value !== '') {
 						week.assignedTo = event.parentNode.querySelector('.assignedTo').value
 					} else {
@@ -6620,14 +6768,7 @@ function processSchedule() {
 					} else {
 						week.assistant = null
 					}
-					//console.log(event)
-					//DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [allParticipantsVue.lifeAndMinistry]});
 				}
-				//this.selectedPublisher = publisher
-                //fillPublisherRecord(publisher)
-			},
-            updateRecord(publisher) {
-				updatePublisherRecord(publisher)
 			},
             missingRecord(publisher) {
 				var publisherRecords = ''
@@ -6722,7 +6863,6 @@ function processAttendance() {
             },
 			month() {
 				return monthlyReportVue.months.slice(3).concat(monthlyReportVue.months.slice(0,3))[new Date().getMonth()]
-                ///return this.months[0].abbr
             },
 			year() {
 				var currentYear;
@@ -6731,8 +6871,6 @@ function processAttendance() {
 				} else {
 					currentYear = new Date().getFullYear()
 				}
-
-				//console.log(this.month)
 
 				if (attendanceVue.months.findIndex(elem=>elem.abbr == this.month.abbr) < 4) {
 					this.meetingAttendanceRecord.meetings[0].currentServiceYear.year = currentYear + 1
@@ -6774,8 +6912,6 @@ function processAttendance() {
 				} else {
 					return Number((total / count).toFixed(2))
 				}
-				//var average = meeting[`${serviceYear}`][`${month}`].totalAttendance / meeting[`${serviceYear}`][`${month}`].numberOfMeetings
-				//return average == 0 || average == undefined || average == Infinity ? '' : average
 			},
 			averageAttendance(attendance) {
 				const numbersArray = attendance.attendance.filter(elem=>elem.count !== null)
@@ -6900,7 +7036,6 @@ function branchReportDetails() {
     branchReportVue = new Vue({
         el: document.querySelector('#branchReport'),
         data: {
-            //processedGroups: [],
             display: false,
             pdfFile: "",
 			selectedPublisher: {},
@@ -6908,7 +7043,6 @@ function branchReportDetails() {
         computed: {
 			month() {
 				return monthlyReportVue.months.slice(3).concat(monthlyReportVue.months.slice(0,3))[new Date().getMonth()]
-                ///return this.months[0].abbr
             },
 			year() {
 				var currentYear;
@@ -7234,7 +7368,7 @@ document.querySelector("#configuration").innerHTML = `<template>
 								<br v-if="reportEntry == 'so'">
 								<label v-if="reportEntry == 'so'"><input type="radio" name="exportGroup" value="territoryServant" style="margin-right: 5px;">Territory Servant</label>
 							</div>
-							<button :class="buttonMode('w3-button w3-dark-grey')" @click="exportData()">Export</button>
+							<button v-if="reportEntry !== 'ter'" :class="buttonMode('w3-button w3-dark-grey')" @click="exportData()">Export</button>
 							<button :class="buttonMode('w3-button w3-dark-grey')" @click="importData()">Import</button>
 							<button :class="buttonMode('w3-button w3-dark-grey')" @click="reloadPage()"><i class="fas fa-sync"></i> Reload</button>
 							<hr>
@@ -7381,7 +7515,6 @@ function processConfiguration() {
 					mode = 'w3-card w3-black'
 				}
 
-				
 				document.body.querySelectorAll('.w3-white').forEach(elem=>{
 					elem.classList.toggle("w3-white");
 					elem.classList.toggle("w3-yellow");
@@ -7494,7 +7627,6 @@ Thanks a lot
 					delete currentConfiguration.address
 					delete currentConfiguration.email
 					delete currentConfiguration.cboe
-					delete currentConfiguration.sec
 					delete currentConfiguration.assistantSec
 					delete currentConfiguration.so
 
@@ -7571,19 +7703,10 @@ Thanks a lot
 					await shortWait()
 					await shortWait()
 
-					delete currentConfiguration.address
-					delete currentConfiguration.email
-					delete currentConfiguration.cboe
-					delete currentConfiguration.sec
 					delete currentConfiguration.assistantSec
-					delete currentConfiguration.so
 					var currentData = JSON.parse(JSON.stringify(allPublishersVue.publishers.filter(elem=>elem.active == true)))
 					await shortWait()
 					await shortWait()
-
-					var currentEnrolments = JSON.parse(JSON.stringify(allParticipantsVue.enrolments))
-
-					var currentAssignments = JSON.parse(JSON.stringify(allAssignmentsVue.allAssignments))
 
 					currentData.forEach(elem=>{
 						delete elem.hope
@@ -7597,7 +7720,7 @@ Thanks a lot
 					await shortWait()
 					await shortWait()
 
-					file = new Blob([JSON.stringify({"exportType":"serviceOverseer", "configuration":currentConfiguration, "data":currentData, "lifeAndMinistryEnrolments":currentEnrolments, "lifeAndMinistryAssignments":currentAssignments})], {type: 'text/plain'});
+					file = new Blob([JSON.stringify({"exportType":"serviceOverseer", "configuration":currentConfiguration, "data":currentData})], {type: 'text/plain'});
 				} else if (access == 'territoryServant') {
 					var currentConfiguration = JSON.parse(JSON.stringify(configurationVue.configuration))
 					await shortWait()
@@ -7608,14 +7731,9 @@ Thanks a lot
 					delete currentConfiguration.cboe
 					delete currentConfiguration.sec
 					delete currentConfiguration.assistantSec
-					delete currentConfiguration.so
 					var currentData = JSON.parse(JSON.stringify(allPublishersVue.publishers.filter(elem=>elem.active == true)))
 					await shortWait()
 					await shortWait()
-
-					var currentEnrolments = JSON.parse(JSON.stringify(allParticipantsVue.enrolments))
-
-					var currentAssignments = JSON.parse(JSON.stringify(allAssignmentsVue.allAssignments))
 
 					currentData.forEach(elem=>{
 						delete elem.hope
@@ -7629,7 +7747,7 @@ Thanks a lot
 					await shortWait()
 					await shortWait()
 
-					file = new Blob([JSON.stringify({"exportType":"territoryServant", "configuration":currentConfiguration, "data":currentData, "lifeAndMinistryEnrolments":currentEnrolments, "lifeAndMinistryAssignments":currentAssignments})], {type: 'text/plain'});
+					file = new Blob([JSON.stringify({"exportType":"territoryServant", "configuration":currentConfiguration, "data":currentData})], {type: 'text/plain'});
 				} else {
 					file = new Blob([JSON.stringify({"exportType":"update", "configuration":configurationVue.configuration, "data":allPublishersVue.publishers, "lifeAndMinistryEnrolments":allParticipantsVue.enrolments, "lifeAndMinistryAssignments":allAssignmentsVue.allAssignments, "attendance": [attendanceVue.currentMonth, attendanceVue.meetingAttendanceRecord], "account": entryVue.allEntries})], {type: 'text/plain'});
 					await shortWait()
@@ -7639,11 +7757,13 @@ Thanks a lot
 				this.downloadZip(file, access.replace('update','congData') + '-' + new Date().toLocaleDateString('en-US', options) + '.txt', access)
 
             },
-			downloadZip(file, name, access) {
+			async downloadZip(file, name, access) {
 				// Create a new instance of JSZip
 				var zip = new JSZip();
 
-				if (access == 'account' || access == 'all' || (access == 'update' && currentUser.accesses.includes('acct'))) {
+				//console.log(file, name, access)
+
+				if (access == 'accounts' || (access == 'update' && currentUser.accesses.includes('acct')) || (access == 'all' && currentUser.currentProfile == 'Secretary')) {
 					const currentFiles = fileVue.allFiles().filter((elem) => {
 						return fileVue.months().findIndex(ele=>elem.name.endsWith(fileVue.cleanMonth(ele))) !== -1
 					});
@@ -7657,7 +7777,7 @@ Thanks a lot
 						// Add Blobs to the zip folder
 						zip.file(`Standing Approvals/${elem.name}.${elem.value.name ? elem.value.name.split('.')[1] : 'pdf'}`, elem.value);
 					})
-
+					
 					const archiveFiles = fileVue.allFiles().filter((elem) => {
 						return fileVue.months().findIndex(ele=>elem.name.endsWith(fileVue.cleanMonth(ele))) == -1
 					});
@@ -7666,9 +7786,69 @@ Thanks a lot
 						// Add Blobs to the zip folder
 						zip.file(`Archive/${elem.month.split('-')[0]}/${entryVue.cleanMonth(elem.month)}/${elem.name}.${elem.value.name ? elem.value.name.split('.')[1] : 'pdf'}`, elem.value);
 					})
+
+					const forms = myFiles.filter(elem => elem.name == "S-26" || elem.name == "S-30" || elem.name == "TO-62");
+	
+					forms.forEach(elem=>{
+						// Add Blobs to the zip folder
+						zip.file(`Forms/${elem.name}.${elem.value.name ? elem.value.name.split('.')[1] : 'pdf'}`, elem.value);
+					})
+					await shortWait()
+					await shortWait()
+				}
+
+				if (access == 'all' && currentUser.currentProfile == 'Secretary') {
+					const pioneerFiles = cardsVue.allFiles().filter((elem) => {
+						return allPublishersVue.regularPioneers[0].value.findIndex(ele=>elem.name.includes(ele.name)) !== -1
+					});
+	
+					pioneerFiles.forEach(elem=>{
+						// Add Blobs to the zip folder
+						zip.file(`Regular Pioneers/${elem.name}.${elem.value.name ? elem.value.name.split('.')[1] : 'pdf'}`, elem.value);
+					})
+	
+					allPublishersVue.allGroups.forEach(group=>{
+						const currentGroup = cardsVue.allFiles().filter((elem) => {
+							return allPublishersVue.activePublishers.findIndex(ele=>elem.name.includes(ele.name) && ele.fieldServiceGroup == group) !== -1
+						});
+						currentGroup.forEach(elem=>{
+							// Add Blobs to the zip folder
+							zip.file(`${group}/${elem.name}.${elem.value.name ? elem.value.name.split('.')[1] : 'pdf'}`, elem.value);
+						})
+					})
+
+					const inactiveFiles = cardsVue.allFiles().filter((elem) => {
+						return allPublishersVue.inactivePublishers.findIndex(ele=>elem.name.includes(ele.name)) !== -1
+					});
+	
+					inactiveFiles.forEach(elem=>{
+						// Add Blobs to the zip folder
+						zip.file(`Inactive/${elem.name}.${elem.value.name ? elem.value.name.split('.')[1] : 'pdf'}`, elem.value);
+					})
+					const forms = myFiles.filter(elem => elem.name == "S-21");
+	
+					forms.forEach(elem=>{
+						// Add Blobs to the zip folder
+						zip.file(`Forms/${elem.name}.${elem.value.name ? elem.value.name.split('.')[1] : 'pdf'}`, elem.value);
+					})
+					await shortWait()
+					await shortWait()
+				}
+
+				if ((access == 'update' && currentUser.accesses.includes('lmo')) || (access == 'all' && currentUser.currentProfile == 'Secretary')) {
+					const forms = myFiles.filter(elem => elem.name == "S-89");
+	
+					forms.forEach(elem=>{
+						// Add Blobs to the zip folder
+						zip.file(`Forms/${elem.name}.${elem.value.name ? elem.value.name.split('.')[1] : 'pdf'}`, elem.value);
+					})
+					await shortWait()
+					await shortWait()
 				}
 
 				zip.file(`${name}`, file);
+				await shortWait()
+				await shortWait()
 
 				// Generate the zip file asynchronously
 				zip.generateAsync({ type: "blob" }).then(function (content) {
@@ -7721,8 +7901,8 @@ Thanks a lot
 									
 									// Do something with the Blob object
 									// For example, you can upload it, display it, or save it
-									console.log("File name: " + file.name.split('/').pop());
-									console.log("Blob object:", blob);
+									//console.log("File name: " + file.name.split('/').pop());
+									//console.log("Blob object:", blob);
 									DBWorker.postMessage({ storeName: 'files', action: "save", value: [{name: file.name.split('/').pop().split('.')[0], value: blob}]});
 								});
 							}
@@ -7736,6 +7916,55 @@ Thanks a lot
 			async handleDataInput(exportType, result) {
 				
 				console.log(exportType, result)
+
+				if (result.configuration.acct) {
+					configurationVue.configuration.acct = result.configuration.acct
+				}
+				if (result.configuration.address) {
+					configurationVue.configuration.address = result.configuration.address
+				}
+				if (result.configuration.assistantSec) {
+					configurationVue.configuration.assistantSec = result.configuration.assistantSec
+				}
+				if (result.configuration.cboe) {
+					configurationVue.configuration.cboe = result.configuration.cboe
+				}
+				if (result.configuration.city) {
+					configurationVue.configuration.city = result.configuration.city
+				}
+				if (result.configuration.congregationName) {
+					configurationVue.configuration.congregationName = result.configuration.congregationName
+				}
+				if (result.configuration.currentProfile) {
+					configurationVue.configuration.currentProfile = result.configuration.currentProfile
+				}
+				if (result.configuration.email) {
+					configurationVue.configuration.email = result.configuration.email
+				}
+				if (result.configuration.fieldServiceGroupDetails) {
+					configurationVue.configuration.fieldServiceGroupDetails = result.configuration.fieldServiceGroupDetails
+				}
+				if (result.configuration.fieldServiceGroups) {
+					configurationVue.configuration.fieldServiceGroups = result.configuration.fieldServiceGroups
+				}
+				if (result.configuration.midweekMeetingDay) {
+					configurationVue.configuration.midweekMeetingDay = result.configuration.midweekMeetingDay
+				}
+				if (result.configuration.midweekMeetingTime) {
+					configurationVue.configuration.midweekMeetingTime = result.configuration.midweekMeetingTime
+				}
+				if (result.configuration.name) {
+					configurationVue.configuration.name = result.configuration.name
+				}
+				if (result.configuration.province) {
+					configurationVue.configuration.province = result.configuration.province
+				}
+				if (result.configuration.sec) {
+					configurationVue.configuration.sec = result.configuration.sec
+				}
+				if (result.configuration.so) {
+					configurationVue.configuration.so = result.configuration.so
+				}
 
 				if (exportType == 'all') {
 					var cleanupPublishersDataBase = allPublishersVue.publishers.filter((elem) => {
@@ -7753,10 +7982,6 @@ Thanks a lot
 					await shortWait()
 					await shortWait()
 
-					configurationVue.configuration = result.configuration
-					configurationVue.fieldServiceGroupDetails = result.configuration.fieldServiceGroupDetails
-					configurationVue.midweekMeetingDay = result.configuration.midweekMeetingDay
-					configurationVue.midweekMeetingTime = result.configuration.midweekMeetingTime
 					navigationVue.allGroups = result.configuration.fieldServiceGroups
 					allPublishersVue.publishers = result.data
 					allParticipantsVue.enrolments = result.lifeAndMinistryEnrolments
@@ -7770,7 +7995,7 @@ Thanks a lot
 					attendanceVue.currentMonth = result.attendance[0]
 					attendanceVue.meetingAttendanceRecord = result.attendance[1]
 
-					DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [result.configuration]});
+					DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [configurationVue.configuration]});
 					DBWorker.postMessage({ storeName: 'data', action: "save", value: result.data});
 					DBWorker.postMessage({ storeName: 'attendance', action: "save", value: result.attendance});
 					DBWorker.postMessage({ storeName: 'lifeAndMinistryEnrolments', action: "save", value: result.lifeAndMinistryEnrolments});
@@ -7809,8 +8034,6 @@ Thanks a lot
 					await shortWait()
 					await shortWait()
 
-					configurationVue.configuration = result.configuration
-					configurationVue.fieldServiceGroupDetails = result.configuration.fieldServiceGroupDetails
 					navigationVue.allGroups = result.configuration.fieldServiceGroups
 					allPublishersVue.publishers = result.data
 					
@@ -7823,7 +8046,7 @@ Thanks a lot
 					attendanceVue.currentMonth = result.attendance[0]
 					attendanceVue.meetingAttendanceRecord = result.attendance[1]
 
-					DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [result.configuration]});
+					DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [configurationVue.configuration]});
 					DBWorker.postMessage({ storeName: 'data', action: "save", value: result.data});
 					DBWorker.postMessage({ storeName: 'attendance', action: "save", value: result.attendance});
 
@@ -7842,15 +8065,29 @@ Thanks a lot
 					gotoView('missingReportVue')
 
 				} else if (exportType == 'account') {
+					
+					var cleanupAccountDataBase = entryVue.allEntries.filter((elem) => {
+						return result.account.findIndex(ele=>ele.name === elem.name) == -1
+					});
 
+					await shortWait()
+					await shortWait()
+					
 					entryVue.allEntries = result.account
 					
 					await shortWait()
 					await shortWait()
 
 					DBWorker.postMessage({ storeName: 'account', action: "save", value: result.account});
+					DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [configurationVue.configuration]});
 
 					await shortWait()
+					await shortWait()
+					await shortWait()
+
+					cleanupAccountDataBase.forEach(item=>{
+						DBWorker.postMessage({ storeName: 'account', action: "deleteItem", value: item.name});
+					})
 						
 					configured = true
 					
@@ -7872,9 +8109,6 @@ Thanks a lot
 					await shortWait()
 					await shortWait()
 
-					configurationVue.configuration = result.configuration
-					configurationVue.midweekMeetingDay = result.configuration.midweekMeetingDay
-					configurationVue.midweekMeetingTime = result.configuration.midweekMeetingTime
 					navigationVue.allGroups = result.configuration.fieldServiceGroups
 					allPublishersVue.publishers = result.data
 					allParticipantsVue.enrolments = result.lifeAndMinistryEnrolments
@@ -7883,7 +8117,7 @@ Thanks a lot
 					await shortWait()
 					await shortWait()
 
-					DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [result.configuration]});
+					DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [configurationVue.configuration]});
 					DBWorker.postMessage({ storeName: 'data', action: "save", value: result.data});
 					DBWorker.postMessage({ storeName: 'lifeAndMinistryEnrolments', action: "save", value: result.lifeAndMinistryEnrolments});
 					DBWorker.postMessage({ storeName: 'lifeAndMinistryAssignments', action: "save", value: result.lifeAndMinistryAssignments});
@@ -7924,9 +8158,6 @@ Thanks a lot
 					await shortWait()
 					await shortWait()
 
-					configurationVue.configuration = result.configuration
-					configurationVue.midweekMeetingDay = result.configuration.midweekMeetingDay
-					configurationVue.midweekMeetingTime = result.configuration.midweekMeetingTime
 					navigationVue.allGroups = result.configuration.fieldServiceGroups
 					allPublishersVue.publishers = result.data
 					allParticipantsVue.enrolments = result.lifeAndMinistryEnrolments
@@ -7935,7 +8166,7 @@ Thanks a lot
 					await shortWait()
 					await shortWait()
 
-					DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [result.configuration]});
+					DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [configurationVue.configuration]});
 					DBWorker.postMessage({ storeName: 'data', action: "save", value: result.data});
 					DBWorker.postMessage({ storeName: 'lifeAndMinistryEnrolments', action: "save", value: result.lifeAndMinistryEnrolments});
 					DBWorker.postMessage({ storeName: 'lifeAndMinistryAssignments', action: "save", value: result.lifeAndMinistryAssignments});
@@ -7961,34 +8192,55 @@ Thanks a lot
 					configured = true
 					gotoView('allAssignmentsVue')
 				} else if (exportType == 'serviceOverseer') {
+					var cleanupPublishersDataBase = allPublishersVue.publishers.filter((elem) => {
+						return result.data.findIndex(ele=>ele.name === elem.name) == -1
+					});
 
 					territoryVue.savedPolygons = result.territory
+					navigationVue.allGroups = result.configuration.fieldServiceGroups
+					allPublishersVue.publishers = result.data
 					console.log(result.territory)
 					
 					await shortWait()
 					await shortWait()
 
-					DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [{"name":"Congregation","congregationName":"","address":""}]});						
+					DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [configurationVue.configuration]});
+					DBWorker.postMessage({ storeName: 'data', action: "save", value: result.data});
 					DBWorker.postMessage({ storeName: 'territory', action: "save", value: [{"name": "FeatureCollection", "value": territoryVue.savedPolygons}]});
 
 					await shortWait()
+					await shortWait()
+
+					cleanupPublishersDataBase.forEach(item=>{
+						DBWorker.postMessage({ storeName: 'data', action: "deleteItem", value: item.name});
+					})
 						
 					configured = true
 					
 					gotoView('territoryVue')
 
 				} else if (exportType == 'territoryServant') {
+					var cleanupPublishersDataBase = allPublishersVue.publishers.filter((elem) => {
+						return result.data.findIndex(ele=>ele.name === elem.name) == -1
+					});
 
 					territoryVue.savedPolygons = result.territory
+					allPublishersVue.publishers = result.data
 					console.log(result.territory)
 					
 					await shortWait()
 					await shortWait()
 
-					DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [{"name":"Congregation","congregationName":"","address":""}]});						
+					DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [configurationVue.configuration]});		
+					DBWorker.postMessage({ storeName: 'data', action: "save", value: result.data});				
 					DBWorker.postMessage({ storeName: 'territory', action: "save", value: [{"name": "FeatureCollection", "value": territoryVue.savedPolygons}]});
 
 					await shortWait()
+					await shortWait()
+
+					cleanupPublishersDataBase.forEach(item=>{
+						DBWorker.postMessage({ storeName: 'data', action: "deleteItem", value: item.name});
+					})
 						
 					configured = true
 					
@@ -7996,15 +8248,25 @@ Thanks a lot
 
 				} else if (exportType == 'territoryMap') {
 
-					territoryVue.savedPolygons = result.territory
+					const found = territoryVue.savedPolygons.findIndex(elem=>elem.number == result.territory[0].number && elem.locality == result.territory[0].locality)
+					if (found !== -1) {
+						territoryVue.savedPolygons[found] = result.territory[0].locality
+					} else {
+						territoryVue.savedPolygons.push(result.territory[0].locality)
+					}
+					
 					console.log(result.territory)
 					
 					await shortWait()
 					await shortWait()
 
-					DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [{"name":"Congregation","congregationName":"","address":""}]});						
+					if (!configurationVue.configuration.name) {
+						configurationVue.configuration = {"name":"Congregation","congregationName":"","address":""}
+					}
+					DBWorker.postMessage({ storeName: 'configuration', action: "save", value: [configurationVue.configuration]});						
 					DBWorker.postMessage({ storeName: 'territory', action: "save", value: [{"name": "FeatureCollection", "value": territoryVue.savedPolygons}]});
 
+					await shortWait()
 					await shortWait()
 						
 					configured = true
@@ -8088,10 +8350,7 @@ Thanks a lot
 					assistants.push(elem.value)
 				})
 
-				//var detail = []
-
 				for (let i = 0; i < this.configuration.fieldServiceGroups.length; i++) {
-					//console.log(i);
 					this.fieldServiceGroupDetails[i] = {name: this.configuration.fieldServiceGroups[i], overseer: overseers[i], assistant: assistants[i]}
 				}
 
@@ -8233,13 +8492,10 @@ Thanks a lot
                         } else {
                             publisher.report.currentServiceYear[elem.abbr].auxiliaryPioneer = null
                         }
-                        //console.log(currentItem.querySelector('.sharedInMinistry').checked)
-                        //console.log(currentItem.querySelector('.hours'))
                     })
 
 					allPublishersVue.publishers.push(publisher)
 
-                    //console.log(publisher)
                     
                     DBWorker.postMessage({ storeName: 'data', action: "save", value: [publisher]});
 					this.cancel(item)
@@ -8263,6 +8519,7 @@ processConfiguration()
 processCongregation()
 
 processFieldServiceGroups()
+processCards()
 processMonthlyReport()
 processMissingReport()
 processAllAssignments()
@@ -8282,8 +8539,7 @@ function signOut() {
 	const request = indexedDB.open(dbName);
 
 	// Open a connection to the database
-	//var request = indexedDB.open('myDatabase', 1);
-
+	
 	request.onsuccess = function(event) {
 	var db = event.target.result;
 	
@@ -8292,7 +8548,6 @@ function signOut() {
 	var objectStore = transaction.objectStore('settings');
 	
 	// Get the object you want to update
-	//var getRequest = objectStore.get('someKey');
 	var getRequest = objectStore.get(currentUser.name);
 	
 	getRequest.onsuccess = function(event) {
@@ -8886,23 +9141,11 @@ function getUniqueElementsByProperty(arr, propNames) {
     });
 }
 
-function download(content, fileName, contentType) {
-    var a = document.createElement("a");
-    var file = new Blob([content], {type: contentType});
-    allPublishersVue.pdfFile = URL.createObjectURL(file);
-    /*a.href = URL.createObjectURL(file);
-    
-    //a.download = fileName;
-    //a.click();*/
-};
-
-
-
 async function fillPublisherRecord(data) {
+	var s21 = await PDFLib.PDFDocument.load(s21Data);
 	const publisher = data[0]
 	const period = data[1]
     // Get the form field by name
-    //const fieldName = fieldNameInput.value;
     const name = s21.getForm().getTextField('900_1_Text_SanSerif');
     const dateOfBirth = s21.getForm().getTextField('900_2_Text_SanSerif');
     const dateOfBaptism = s21.getForm().getTextField('900_5_Text_SanSerif');
@@ -9218,12 +9461,8 @@ async function fillPublisherRecord(data) {
 	junHr.setText(`${publisher.report[`${period}`].jun.hours == null ? '' : publisher.report[`${period}`].jun.hours}`)
 	julHr.setText(`${publisher.report[`${period}`].jul.hours == null ? '' : publisher.report[`${period}`].jul.hours}`)
 	augHr.setText(`${publisher.report[`${period}`].aug.hours == null ? '' : publisher.report[`${period}`].aug.hours}`)
-
-    //name.setText(publisher.name)
-    //name.setText(publisher.name)
-    // Save the modified PDF
-    //const modifiedPdfBytes = await s21.save();
-	var newPdfholder = document.createElement('div')
+/*
+    var newPdfholder = document.createElement('div')
 	var newPdfbutton = document.createElement('button')
 	var newPdfViewer = document.createElement('iframe')
 	newPdfViewer.height = '600px'
@@ -9238,12 +9477,30 @@ async function fillPublisherRecord(data) {
 	document.getElementById("pdfViewer").appendChild(newPdfholder)
 
 	downloadsArray.push([newPdfViewer.src, `${toTitleCase(period.replace('ServiceYear', ''))} Record Card - ${publisher.name}`])
+*/
+	const recordcard = new Blob([await s21.save()], { type: 'application/pdf' })
+	DBWorker.postMessage({ storeName: 'files', action: "save", value: [{name: `${toTitleCase(period.replace('ServiceYear', ''))} Record Card - ${publisher.name}`, value: recordcard }]});
 
 	if (recordsToCreate.length !== 0) {
-		fillPublisherRecord(recordsToCreate.shift())
+		if (document.querySelector('#cardProcessStatus')) {
+			document.querySelector('#cardProcessStatus').style.display = ''
+			document.querySelector('#cardProcessStatus').innerHTML = `Processing cards. Please Wait . . .
+			<br>${recordsToCreate.length} Remaining.`
+		}
+		await fillPublisherRecord(recordsToCreate.shift())
+	} else {
+		if (document.querySelector('.fa-download')) {
+			document.querySelector('.fa-download').classList.remove('fa-spin')
+			document.querySelector('.fa-download').classList.remove('fa-spinner')
+		}
+		if (document.querySelector('#cardProcessStatus')) {
+			document.querySelector('#cardProcessStatus').style.display = 'none'
+		}
+		await shortWait()
+		await shortWait()
+		DBWorker.postMessage({ storeName: 'files', action: "readAll"});
 	}
 
-    //download(modifiedPdfBytes, publisher.name + ".pdf", "application/pdf");
 }
 
 async function assignmentSlip(data, count) {
@@ -9278,6 +9535,7 @@ async function assignmentSlip(data, count) {
 	const assist4 = data[3].assistant
 	const week4 = data[3].week
 	const no4 = data[3].meetingPart.split(' ')[0].replace('.', '')
+	var s89 = await PDFLib.PDFDocument.load(s89Data);
     // Get the form field by name
     //const fieldName = fieldNameInput.value;
     const name1 = s89.getForm().getTextField('900_1_Text_SanSerif');
@@ -9369,35 +9627,10 @@ async function assignmentSlip(data, count) {
 	}
 }
 
-function updatePublisherRecord(publisher) {
-    publisher.gender = "Male"
-    
-
-    const name = s21.getForm().getTextField('900_1_Text_SanSerif');
-    const dateOfBirth = s21.getForm().getTextField('900_2_Text_SanSerif');
-    const dateOfBaptism = s21.getForm().getTextField('900_5_Text_SanSerif');
-    const male = s21.getForm().getCheckBox('900_3_CheckBox');
-    const female = s21.getForm().getCheckBox('900_4_CheckBox');
-
-    console.log(name.getText(), dateOfBirth.getText(), dateOfBaptism.getText(), male.isChecked(), female.isChecked())
-return
-    
-
-    publisher.name = name.getText()
-    publisher.dateOfBirth = dateOfBirth.getText()
-    publisher.dateOfBaptism = dateOfBaptism.getText()
-    if (male.isChecked()) {
-        publisher.gender = "Male"
-    } else if (female.isChecked()) {
-        publisher.gender = "Female"
-    }
-    console.log(publisher)
-}
-
 var allMonths = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 
 async function fillAccountSheet() {
-	
+	var s26 = await PDFLib.PDFDocument.load(s26Data);
 	// Get the form field by name
 	s26.getForm().getTextField('900_1_Text_C').setText(configurationVue.configuration.congregationName)
     s26.getForm().getTextField('900_2_Text_C').setText(configurationVue.configuration.city)
@@ -9495,7 +9728,7 @@ async function fillAccountSheet() {
 }
 
 async function fillAccountsReport() {
-	
+	var s30 = await PDFLib.PDFDocument.load(s30Data);
 	// Get the form field by name
 	s30.getForm().getTextField('900_1_Text').setText(configurationVue.configuration.congregationName)
     s30.getForm().getTextField('900_2_Text').setText(`${entryVue.cleanMonth(entryVue.currentMonth)}`)
@@ -9534,7 +9767,7 @@ async function fillAccountsReport() {
 }
 
 async function fillFundTransfer() {
-	
+	var to62 = await PDFLib.PDFDocument.load(to62Data);
 	// Get the form field by name
     to62.getForm().getCheckBox('900_1_CheckBox').check()
 	to62.getForm().getTextField('900_3_Text').setText(configurationVue.configuration.congregationName)
@@ -9554,7 +9787,7 @@ async function fillFundTransfer() {
 	DBWorker.postMessage({ storeName: 'files', action: "readAll"});
 }
 
-var s21, s89, s26, s30, to62;
+var s21Data, s89Data, s26Data, s30Data, to62Data;
 
 async function getFieldByName(file, variable) {
 
@@ -9566,16 +9799,16 @@ async function getFieldByName(file, variable) {
 
             // Using pdf-lib to load the PDF document
 			if (variable == 'S-21') {
-				s21 = await PDFLib.PDFDocument.load(pdfData);
+				s21Data = new Uint8Array(e.target.result);
 			} else if (variable == 'S-26') {
-				s26 = await PDFLib.PDFDocument.load(pdfData);
+				s26Data = new Uint8Array(e.target.result);
 			} else if (variable == 'S-30') {
-				s30 = await PDFLib.PDFDocument.load(pdfData);
+				s30Data = new Uint8Array(e.target.result);
 			} else if (variable == 'TO-62') {
-				to62 = await PDFLib.PDFDocument.load(pdfData);
+				to62Data = new Uint8Array(e.target.result);
 			} else if (variable == 'S-89') {
-				s89 = await PDFLib.PDFDocument.load(pdfData);
-				const font = await s89.embedFont("Helvetica", { subset: true, unicode: true });
+				s89Data = new Uint8Array(e.target.result);
+				//const font = await s89.embedFont("Helvetica", { subset: true, unicode: true });
 
 			}
         };
@@ -9703,7 +9936,7 @@ async function convertToPdf(element) {
 	document.querySelectorAll('#publisherRequest select').forEach(elem=>{
 		if (elem !== '') {
 			recordsToCreate.push([allPublishersVue.publishers.filter(ele=>ele.name == elem.value)[0], 'currentServiceYear'])
-			recordsToCreate.push([allPublishersVue.publishers.filter(ele=>ele.name == elem.value)[0], 'lastServiceYear'])
+			//recordsToCreate.push([allPublishersVue.publishers.filter(ele=>ele.name == elem.value)[0], 'lastServiceYear'])
 		}
 	})
 
@@ -9712,7 +9945,7 @@ async function convertToPdf(element) {
 	await shortWait()
 
 	if (recordsToCreate.length !== 0) {
-		fillPublisherRecord(recordsToCreate.shift())
+		await fillPublisherRecord(recordsToCreate.shift())
 	}
 }
 
