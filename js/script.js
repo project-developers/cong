@@ -3928,6 +3928,7 @@ function processAllParticipants() {
 				return mode
 			},
             publisherDetail(publisher, item) {
+				//console.log(publisher, item)
 				if (item.parentNode.classList.value.includes('main')) {
                     item.parentNode.parentNode.querySelector('.main').style.display = 'none'
                     item.parentNode.parentNode.querySelector('.detail').style.display = ''
@@ -3937,7 +3938,7 @@ function processAllParticipants() {
 						return
 					}
 
-					if (publisher.hope) {
+					if (publisher.active) {
 						if (item.parentNode.parentNode.parentNode.querySelector('.exemplary')) {
 							if (item.parentNode.parentNode.parentNode.querySelector('.exemplary').checked) {
 								publisher.exemplary = true
@@ -3952,12 +3953,15 @@ function processAllParticipants() {
 						return
 					}
 					
+                    if (publisher.name !== item.parentNode.parentNode.querySelector('.name').innerHTML) {
+						DBWorker.postMessage({ storeName: 'lifeAndMinistryEnrolments', action: "deleteItem", value: publisher.name});
+					}
                     publisher.name = item.parentNode.parentNode.querySelector('.name').innerHTML
                     publisher.gender = item.parentNode.parentNode.querySelector('.gender').value
 					
                     item.parentNode.parentNode.parentNode.querySelector('.detail').style.display = 'none'
                     item.parentNode.parentNode.parentNode.querySelector('.main').style.display = ''
-                    DBWorker.postMessage({ storeName: 'lifeAndMInistry', action: "save", value: allParticipantsVue.enrolments});
+                    DBWorker.postMessage({ storeName: 'lifeAndMinistryEnrolments', action: "save", value: allParticipantsVue.enrolments});
                 }
 			},          
 			cleanDate(date) {
@@ -3977,7 +3981,7 @@ function processAllParticipants() {
 					item.parentNode.parentNode.parentNode.querySelector('.detail').style.display = 'none'
 					item.parentNode.parentNode.parentNode.querySelector('.main').style.display = ''
 					this.enrolments.splice(count, 1)
-					DBWorker.postMessage({ storeName: 'lifeAndMInistry', action: "save", value: allParticipantsVue.enrolments});
+					DBWorker.postMessage({ storeName: 'lifeAndMinistryEnrolments', action: "deleteItem", value: name});
 				}
             }
         }
@@ -5578,7 +5582,7 @@ function contactInformation() {
 					} else {
 						publisher[`${property}`] = event.value
 					}
-					DBWorker.postMessage({ storeName: 'lifeAndMInistry', action: "save", value: allParticipantsVue.enrolments});
+					DBWorker.postMessage({ storeName: 'lifeAndMinistryEnrolments', action: "save", value: allParticipantsVue.enrolments});
 					return
 				}
 
@@ -6354,7 +6358,7 @@ function processAllAssignments() {
 				}
 				//allAssignmentsVue.assignments.push({ "week": this.currentWeek, "meetingPart": this.currentAssignment, "section": this.currentSection })
 				//this.currentAssignment = ''
-				//DBWorker.postMessage({ storeName: 'lifeAndMInistry', action: "save", value: allParticipantsVue.allAssignments});
+				//DBWorker.postMessage({ storeName: 'lifeAndMinistryAssignments', action: "save", value: allParticipantsVue.allAssignments});
 			},
 			inputMode(currentClass) {
 				return currentClass + ' ' + mode.replace('w3-card ','')
@@ -10003,7 +10007,7 @@ async function convertImageToPdf(fileName) {
                 
                 // Create a Blob object from the PDF bytes
                 const pdfBlob = new Blob([pdfBytes], { type: 'application/pdf' });
-				console.log(pdfBlob)
+				//console.log(pdfBlob)
 				DBWorker.postMessage({ storeName: 'files', action: "save", value: [{name: fileName, value: pdfBlob}]});
 				await shortWait()
 				await shortWait()
