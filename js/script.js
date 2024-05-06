@@ -4146,10 +4146,14 @@ function processCards() {
 			},
 			async saveFile() {
 				if (document.getElementById('pdfFile').files[0]) {
-					DBWorker.postMessage({ storeName: 'files', action: "save", value: [{name: `${this.currentCard} Record Card - ${this.currentPublisher}`, value: document.getElementById('pdfFile').files[0]}]});
-					await shortWait()
-					await shortWait()
-					DBWorker.postMessage({ storeName: 'files', action: "readAll"});
+					if (document.getElementById('pdfFile').files[0].type !== "application/pdf") {
+						await convertImageToPdf(`${this.currentCard} Record Card - ${this.currentPublisher}`)
+					} else {
+						DBWorker.postMessage({ storeName: 'files', action: "save", value: [{name: `${this.currentCard} Record Card - ${this.currentPublisher}`, value: document.getElementById('pdfFile').files[0]}]});
+						await shortWait()
+						await shortWait()
+						DBWorker.postMessage({ storeName: 'files', action: "readAll"});
+					}
 				}
 			},
         }
@@ -5140,10 +5144,14 @@ function processFile() {
 			},
 			async saveFile() {
 				if (document.getElementById('pdfFile').files[0]) {
-					DBWorker.postMessage({ storeName: 'files', action: "save", value: [{name: `${this.currentFile} - ${this.currentMonth}`, value: document.getElementById('pdfFile').files[0]}]});
-					await shortWait()
-					await shortWait()
-					DBWorker.postMessage({ storeName: 'files', action: "readAll"});
+					if (document.getElementById('pdfFile').files[0].type !== "application/pdf") {
+						await convertImageToPdf(`${this.currentFile} - ${this.currentMonth}`)
+					} else {
+						DBWorker.postMessage({ storeName: 'files', action: "save", value: [{name: `${this.currentFile} - ${this.currentMonth}`, value: document.getElementById('pdfFile').files[0]}]});
+						await shortWait()
+						await shortWait()
+						DBWorker.postMessage({ storeName: 'files', action: "readAll"});
+					}
 				}
 			},
 			downloadZip() {
@@ -5264,10 +5272,14 @@ function processApprovals() {
 			},
 			async saveFile() {
 				if (document.getElementById('pdfFile').files[0]) {
-					DBWorker.postMessage({ storeName: 'files', action: "save", value: [{name: `${this.currentFile}`, value: document.getElementById('pdfFile').files[0]}]});
-					await shortWait()
-					await shortWait()
-					DBWorker.postMessage({ storeName: 'files', action: "readAll"});
+					if (document.getElementById('pdfFile').files[0].type !== "application/pdf") {
+						await convertImageToPdf(`${this.currentFile}`)
+					} else {
+						DBWorker.postMessage({ storeName: 'files', action: "save", value: [{name: `${this.currentFile}`, value: document.getElementById('pdfFile').files[0]}]});
+						await shortWait()
+						await shortWait()
+						DBWorker.postMessage({ storeName: 'files', action: "readAll"});
+					}
 				}
 			},
         }
@@ -5415,10 +5427,14 @@ function processArchive() {
 			},
 			async saveFile() {
 				if (document.getElementById('pdfFile').files[0]) {
-					DBWorker.postMessage({ storeName: 'files', action: "save", value: [{name: `${this.selectedFile} - ${this.selectedYear}-${this.selectedMonth}`, value: document.getElementById('pdfFile').files[0]}]});
-					await shortWait()
-					await shortWait()
-					DBWorker.postMessage({ storeName: 'files', action: "readAll"});
+					if (document.getElementById('pdfFile').files[0].type !== "application/pdf") {
+						await convertImageToPdf(`${this.selectedFile} - ${this.selectedYear}-${this.selectedMonth}`)
+					} else {
+						DBWorker.postMessage({ storeName: 'files', action: "save", value: [{name: `${this.selectedFile} - ${this.selectedYear}-${this.selectedMonth}`, value: document.getElementById('pdfFile').files[0]}]});
+						await shortWait()
+						await shortWait()
+						DBWorker.postMessage({ storeName: 'files', action: "readAll"});
+					}
 				}
 			},
 			downloadZip() {
@@ -7262,7 +7278,7 @@ document.querySelector("#configuration").innerHTML = `<template>
 							<option v-for="mode in ['System', 'Light', 'Dark'].filter(elem=>elem !== currentMode())" :value="mode">{{ mode }}</option>
 						</select></label>
 						<p v-if="reportEntry == 'secretary' || reportEntry == 'lmo' || reportEntry == 'acct'">
-							<input type="file" id="pdfFile" accept=".pdf,.jpg,.jpeg">
+							<input type="file" id="pdfFile" accept=".pdf,.jpg,.jpeg,.png">
 							<p v-if="reportEntry == 'secretary' || reportEntry == 'lmo' || reportEntry == 'acct'"><input :class="inputMode('fileName w3-input')" type="text" placeholder="File Name" @click="fileName($event.target)"></p>
 							<button :class="buttonMode('w3-button w3-dark-grey')" @click="saveFile()" v-if="reportEntry == 'secretary' || reportEntry == 'lmo' || reportEntry == 'acct'"><i class="fas fa-save"> </i> Save File</button>
 						</p>
@@ -8503,10 +8519,14 @@ Thanks a lot
 			},
 			async saveFile() {
 				if (document.getElementById('pdfFile').files[0]) {
-					DBWorker.postMessage({ storeName: 'files', action: "save", value: [{name: document.querySelector('.fileName').value, value: document.getElementById('pdfFile').files[0]}]});
-					await shortWait()
-					await shortWait()
-					DBWorker.postMessage({ storeName: 'files', action: "readAll"});
+					if (document.getElementById('pdfFile').files[0].type !== "application/pdf") {
+						await convertImageToPdf(document.querySelector('.fileName').value)
+					} else {
+						DBWorker.postMessage({ storeName: 'files', action: "save", value: [{name: document.querySelector('.fileName').value, value: document.getElementById('pdfFile').files[0]}]});
+						await shortWait()
+						await shortWait()
+						DBWorker.postMessage({ storeName: 'files', action: "readAll"});
+					}
 				}
 			}
         }
@@ -9948,6 +9968,53 @@ async function convertToPdf(element) {
 		await fillPublisherRecord(recordsToCreate.shift())
 	}
 }
+
+async function convertImageToPdf(fileName) {
+    const fileInput = document.getElementById('pdfFile');
+    const file = fileInput.files[0];
+
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = async function(event) {
+            const img = new Image();
+            img.onload = async function() {
+                const pdfDoc = await PDFLib.PDFDocument.create();
+                const page = pdfDoc.addPage([img.width, img.height]); // Set PDF page size to match image size
+              
+                // Embed the image in the PDF
+                const uint8Array = new Uint8Array(event.target.result);
+                let embeddedImage;
+                if (file.type === 'image/png') {
+                    embeddedImage = await pdfDoc.embedPng(uint8Array);
+                } else if (file.type === 'image/jpeg') {
+                    embeddedImage = await pdfDoc.embedJpg(uint8Array);
+                }
+
+                // Draw the image on the PDF page
+                page.drawImage(embeddedImage, {
+                    x: 0,
+                    y: 0,
+                    width: img.width,
+                    height: img.height,
+                });
+
+                // Save the PDF
+                const pdfBytes = await pdfDoc.save();
+                
+                // Create a Blob object from the PDF bytes
+                const pdfBlob = new Blob([pdfBytes], { type: 'application/pdf' });
+				console.log(pdfBlob)
+				DBWorker.postMessage({ storeName: 'files', action: "save", value: [{name: fileName, value: pdfBlob}]});
+				await shortWait()
+				await shortWait()
+				DBWorker.postMessage({ storeName: 'files', action: "readAll"});
+            };
+            img.src = URL.createObjectURL(file);
+        };
+        reader.readAsArrayBuffer(file);
+    }
+}
+
 
 async function downloadAll() {
 	document.querySelectorAll('.download-button a').forEach(async (elem)=>{
