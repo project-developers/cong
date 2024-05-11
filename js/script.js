@@ -6002,7 +6002,7 @@ function processMissingReport() {
 			},
             missingRecord(publisher) {
 				var publisherRecords = ''
-				monthlyReportVue.months.slice(0, monthlyReportVue.months.findIndex(elem=>elem.abbr == monthlyReportVue.month.abbr) + 1).forEach(elem=>{
+				monthlyReportVue.months.slice(0, monthlyReportVue.months.findIndex(elem=>elem.abbr == monthlyReportVue.month.abbr) + 1).reverse().forEach(elem=>{
 					if (publisher.report.currentServiceYear[`${elem.abbr}`].sharedInMinistry !== true) {
 						publisherRecords += '; ' + elem.fullName
 					}
