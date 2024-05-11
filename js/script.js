@@ -4834,7 +4834,6 @@ function processEntry() {
 			},
 			bankAccountReconcile(lastDay, remittanceDate) {
 				if (this.remittanceMonth(lastDay, remittanceDate)) {
-					console.log(true)
 					return this.endingBalance(0, this.bankAccountSum(), 0)
 				}
 				return this.endingBalance(0, this.bankAccountSum(), this.endingBalance(this.totalContributions('W'), this.singleAmount('RW'), 0, true))
