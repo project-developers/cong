@@ -5917,7 +5917,7 @@ document.querySelector('#missingReport').innerHTML = `<template>
 								<h5 style="margin:0">{{ lateReport }}</h5>
 								<p style="margin:0"><label>Shared in Ministry: <input style="margin-left:8px" :class="inputMode('sharedInMinistry')" type="checkbox"></label></p>
 								<p style="margin:0"><label>Bible Studies: <input :class="inputMode('bibleStudies w3-input')" type="number" min="0" max="999" style="width: 64px;"></label></p>
-								<p style="margin:0"><label>Auxiliary Pioneer: <input style="margin-left:8px" :class="inputMode('auxiliaryPioneer')" type="checkbox"></label></p>
+								<p style="margin:0"><label>Auxiliary Pioneer: <input style="margin-left:8px" :class="inputMode('auxiliaryPioneer')" :checked = "checkAuxiliaryPioneer(publisher, lateReport)" type="checkbox"></label></p>
 								<p style="margin:0"><label>Hours (If pioneer or ﬁeld missionary): <input :class="inputMode('hours w3-input')" type="number" min="0" max="999" style="width: 64px;"></label></p>
 								<p style="margin:0"><label>Remarks: <input :class="inputMode('remarks w3-input')" type="text" style="width: 200px"></label></p>
 								<hr style="margin:0; padding:0">
@@ -5964,6 +5964,9 @@ function processMissingReport() {
 			groupPublishers(group) {
                 return allPublishersVue.publishers.filter(elem=>elem.fieldServiceGroup == group && (elem.active == true || (elem.active == false && elem.reactivated)))
             },
+			checkAuxiliaryPioneer(publisher, lateReport) {
+				return publisher.report.currentServiceYear[attendanceVue.months.filter(elem=>elem.fullName == lateReport)[0].abbr].auxiliaryPioneer == true
+			},
 			publisherDetail(publisher, event) {
 				//console.log(publisher, event, event.parentNode.querySelector('p'))
 				if (!event.parentNode.querySelector('.detail')) {
