@@ -4317,7 +4317,7 @@ document.querySelector('#entry').innerHTML = `<template>
 								<td style="border:none"></td>
 								<td style="border:none; border-bottom: 1px solid brown; text-align:center">Amount</td>
 							</tr>
-							<tr>
+							<tr v-if="!remittanceMonth(lastDay(currentMonth), singleAmount('TD'))">
 								<td style="border:none"></td>
 								<td style="border:none; border-bottom: 1px solid brown;">To Branch Office - ({{ singleAmount('TD') }})</td>
 								<td style="border:none"></td>
@@ -4326,7 +4326,7 @@ document.querySelector('#entry').innerHTML = `<template>
 							<tr>
 								<td style="border:none">6.</td>
 								<td style="border:none;" colspan="3">Total of checks/electronic transfers not yet paid by <br>bank [Sum of amounts entered for line 5]:</td>
-								<td style="border:none; border-bottom: 1px solid brown; text-align:right">{{ endingBalance(totalContributions('W'), singleAmount('RW'), 0, true) }}</td>
+								<td v-if="!remittanceMonth(lastDay(currentMonth), singleAmount('TD'))" style="border:none; border-bottom: 1px solid brown; text-align:right">{{ endingBalance(totalContributions('W'), singleAmount('RW'), 0, true) }}</td>
 							</tr>
 							<tr>
 								<td style="border:none">7.</td>
@@ -4341,7 +4341,7 @@ document.querySelector('#entry').innerHTML = `<template>
 							<tr>
 								<td style="border:none">9.</td>
 								<td style="border:none" colspan="3">Reconciled bank balance [Subtract lines 6 through 8 <br>from line 4]: </td>
-								<td style="border:none; border-bottom: 2px solid brown; text-align:right">{{ bankAccountReconcile() }}</td>
+								<td style="border:none; border-bottom: 2px solid brown; text-align:right">{{ bankAccountReconcile(lastDay(currentMonth), singleAmount('TD')) }}</td>
 							</tr>
 						</table>
 						<p style="font-size:80%">(The amount on line 9 should equal the “Primary Account/Ending Balance”<br>figure in the “Accounts Sheet Summary” box.)<p>
@@ -4701,6 +4701,12 @@ function processEntry() {
 			date() {
                 return monthlyReportVue.cleanDate(new Date())
             },
+			remittanceMonth(lastDay, remittanceDate) {
+				return (
+					new Date(lastDay).getFullYear() === new Date(remittanceDate).getFullYear() &&
+					new Date(lastDay).getMonth() === new Date(remittanceDate).getMonth()
+				);
+			},
 			endingBalance(forwardAmount, inAmount, outAmount, balance) {
 				//console.log(forwardAmount, inAmount, outAmount, balance)
 				if (forwardAmount == '') {
@@ -4826,7 +4832,11 @@ function processEntry() {
 			bankAccountSum() {
 				return this.endingBalance(this.singleAmount('BS'), this.singleAmount('PD'), this.singleAmount('PC'), true)
 			},
-			bankAccountReconcile() {
+			bankAccountReconcile(lastDay, remittanceDate) {
+				if (this.remittanceMonth(lastDay, remittanceDate)) {
+					console.log(true)
+					return this.endingBalance(0, this.bankAccountSum(), 0)
+				}
 				return this.endingBalance(0, this.bankAccountSum(), this.endingBalance(this.totalContributions('W'), this.singleAmount('RW'), 0, true))
 			},
 			totalContributions(code) {
@@ -9694,8 +9704,10 @@ async function fillAccountSheet() {
 	})
 
 	s26.getForm().getTextField(`900_${i + 7}_Text_C`).setText(entryVue.lastDay(entryVue.currentMonth).split(' ')[1].replace(',',''))
+	
 	s26.getForm().getTextField(`900_${i + 59}_Text`).setText(`To Branch Office - (${entryVue.singleAmount('TD')})`)
 	s26.getForm().getTextField(`902_${i + 54}_S26Value`).setText(`${entryVue.endingBalance(entryVue.totalContributions('W'), entryVue.singleAmount('RW'), 0, true)}`)
+	
 	i++
 
 	if (entryVue.totalContributions('W') !== '') {
@@ -9730,10 +9742,12 @@ async function fillAccountSheet() {
 	s26.getForm().getTextField(`904_3_S26Amount`).setText(`${entryVue.singleAmount('PD')}`)
 	s26.getForm().getTextField(`904_4_S26Amount`).setText(`${entryVue.singleAmount('PC')}`)
 	s26.getForm().getTextField(`904_5_S26TotalAmount`).setText(`${entryVue.bankAccountSum()}`)
-	s26.getForm().getTextField(`904_6_Text`).setText(`To Branch Office - (${entryVue.singleAmount('TD')})`)
-	s26.getForm().getTextField(`904_7_S26Amount`).setText(`${entryVue.endingBalance(entryVue.totalContributions('W'), entryVue.singleAmount('RW'), 0, true)}`)
-	s26.getForm().getTextField(`904_20_S26TotalAmount`).setText(`${entryVue.endingBalance(entryVue.totalContributions('W'), entryVue.singleAmount('RW'), 0, true)}`)
-	s26.getForm().getTextField(`904_23_S26TotalAmount`).setText(`${entryVue.bankAccountReconcile()}`)
+	if (!entryVue.remittanceMonth(entryVue.lastDay(entryVue.currentMonth), entryVue.singleAmount('TD'))) {
+		s26.getForm().getTextField(`904_6_Text`).setText(`To Branch Office - (${entryVue.singleAmount('TD')})`)
+		s26.getForm().getTextField(`904_7_S26Amount`).setText(`${entryVue.endingBalance(entryVue.totalContributions('W'), entryVue.singleAmount('RW'), 0, true)}`)
+		s26.getForm().getTextField(`904_20_S26TotalAmount`).setText(`${entryVue.endingBalance(entryVue.totalContributions('W'), entryVue.singleAmount('RW'), 0, true)}`)
+	}
+	s26.getForm().getTextField(`904_23_S26TotalAmount`).setText(`${entryVue.bankAccountReconcile(entryVue.lastDay(entryVue.currentMonth), entryVue.singleAmount('TD'))}`)
 	s26.getForm().getTextField(`904_28_Text_C`).setText(`${entryVue.lastDay(entryVue.currentMonth)}`)
 	
 	s26.getForm().getTextField(`904_29_S26Amount`).setText(`${entryVue.openingBalance('RECEIPTS')}`)
