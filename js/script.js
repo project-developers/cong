@@ -2907,6 +2907,16 @@ document.querySelector('#allPublishers').innerHTML = `<template>
 							<h2 contenteditable="true" class="name">{{ publisher.name }}</h2>
 							<p>
 								<label>Date of Birth: <input v-if="publisher.dateOfBirth == null" type="date" :class="inputMode('dateOfBirth w3-input')"><input v-if="publisher.dateOfBirth !== null" type="date" :class="inputMode('dateOfBirth w3-input')" :value="cleanDate(publisher.dateOfBirth)"></label>
+								<div style="display: flex;">
+									<input :class="inputMode('birthDate w3-input')" type="number" min="1" max="31" style="width: 50px;">
+									<select :class="inputMode('birthMonth w3-input')" style="width: 68px;">
+										<option v-for="month in orderedMonths" :value="month.fullName">{{ month.abbr.toUpperCase() }}</option>
+									</select>
+									<input :class="inputMode('birthYear w3-input')" type="number" min="1900" max="2999" style="width: 68px;">
+								</div>
+								<div>
+									<span title="Set Date" class="w3-button w3-black" style="height: 40px; padding: 0px;"><i @click="setDate('birth', $event.target, publisher)" class="fas fa-check" style="color: rgb(43, 101, 73); padding: 13px;"></i></span>
+								</div>
 								<select :class="inputMode('gender w3-input')" :v-model="publisher.gender">
 									<option v-if="publisher.gender !== 'Male' && publisher.gender !== 'Female'" value="">Select Gender</option>
 									<option v-if="publisher.gender == 'Male' || publisher.gender == 'Female'" :value="publisher.gender">{{ publisher.gender }}</option>
@@ -2915,6 +2925,16 @@ document.querySelector('#allPublishers').innerHTML = `<template>
 							</p>
 							<p>
 								<label>Date of Baptism: <input v-if="publisher.dateOfBaptism == null" type="date" :class="inputMode('dateOfBaptism w3-input')"><input v-if="publisher.dateOfBaptism !== null" type="date" :class="inputMode('dateOfBaptism w3-input')" :value="cleanDate(publisher.dateOfBaptism)"></label>
+								<div style="display: flex;">
+									<input :class="inputMode('baptismDate w3-input')" type="number" min="1" max="31" style="width: 50px;">
+									<select :class="inputMode('baptismMonth w3-input')" style="width: 68px;">
+										<option v-for="month in orderedMonths" :value="month.fullName">{{ month.abbr.toUpperCase() }}</option>
+									</select>
+									<input :class="inputMode('baptismYear w3-input')" type="number" min="1900" max="2999" style="width: 68px;">
+								</div>
+								<div>
+									<span title="Set Date" class="w3-button w3-black" style="height: 40px; padding: 0px;"><i @click="setDate('baptism', $event.target, publisher)" class="fas fa-check" style="color: rgb(43, 101, 73); padding: 13px;"></i></span>
+								</div>
 								<select :class="inputMode('hope w3-input')" :v-model="publisher.hope">
 									<option :value="publisher.hope">{{ publisher.hope }}</option>
 									<option v-for="hope in hopes.filter(elem=>elem !== publisher.hope)" :value="hope">{{ hope }}</option>
@@ -2982,6 +3002,16 @@ document.querySelector('#allPublishers').innerHTML = `<template>
 							<h2 contenteditable="true" class="name">{{ publisher.name }}</h2>
 							<p>
 								<label>Date of Birth: <input v-if="publisher.dateOfBirth == null" type="date" :class="inputMode('dateOfBirth w3-input')"><input v-if="publisher.dateOfBirth !== null" type="date" :class="inputMode('dateOfBirth w3-input')" :value="cleanDate(publisher.dateOfBirth)"></label>
+								<div style="display: flex;">
+									<input :class="inputMode('birthDate w3-input')" type="number" min="1" max="31" style="width: 50px;">
+									<select :class="inputMode('birthMonth w3-input')" style="width: 68px;">
+										<option v-for="month in orderedMonths" :value="month.fullName">{{ month.abbr.toUpperCase() }}</option>
+									</select>
+									<input :class="inputMode('birthYear w3-input')" type="number" min="1900" max="2999" style="width: 68px;">
+								</div>
+								<div>
+									<span title="Set Date" class="w3-button w3-black" style="height: 40px; padding: 0px;"><i @click="setDate('birth', $event.target, publisher)" class="fas fa-check" style="color: rgb(43, 101, 73); padding: 13px;"></i></span>
+								</div>
 								<select :class="inputMode('gender w3-input')" :v-model="publisher.gender">
 									<option v-if="publisher.gender !== 'Male' && publisher.gender !== 'Female'" value="">Select Gender</option>
 									<option v-if="publisher.gender == 'Male' || publisher.gender == 'Female'" :value="publisher.gender">{{ publisher.gender }}</option>
@@ -2990,6 +3020,16 @@ document.querySelector('#allPublishers').innerHTML = `<template>
 							</p>
 							<p>
 								<label>Date of Baptism: <input v-if="publisher.dateOfBaptism == null" type="date" :class="inputMode('dateOfBaptism w3-input')"><input v-if="publisher.dateOfBaptism !== null" type="date" :class="inputMode('dateOfBaptism w3-input')" :value="cleanDate(publisher.dateOfBaptism)"></label>
+								<div style="display: flex;">
+									<input :class="inputMode('baptismDate w3-input')" type="number" min="1" max="31" style="width: 50px;">
+									<select :class="inputMode('baptismMonth w3-input')" style="width: 68px;">
+										<option v-for="month in orderedMonths" :value="month.fullName">{{ month.abbr.toUpperCase() }}</option>
+									</select>
+									<input :class="inputMode('baptismYear w3-input')" type="number" min="1900" max="2999" style="width: 68px;">
+								</div>
+								<div>
+									<span title="Set Date" class="w3-button w3-black" style="height: 40px; padding: 0px;"><i @click="setDate('baptism', $event.target, publisher)" class="fas fa-check" style="color: rgb(43, 101, 73); padding: 13px;"></i></span>
+								</div>
 								<select :class="inputMode('hope w3-input')" :v-model="publisher.hope">
 									<option :value="publisher.hope">{{ publisher.hope }}</option>
 									<option v-for="hope in hopes.filter(elem=>elem !== publisher.hope)" :value="hope">{{ hope }}</option>
@@ -3057,6 +3097,16 @@ document.querySelector('#allPublishers').innerHTML = `<template>
 						<p>
 						<label :class="inputMode('w3-input')"><input type="checkbox" name="reactivated" :class="inputMode('reactivated')" :checked=publisher.reactivated> Reactivated</label>
 							<label>Date of Birth: <input v-if="publisher.dateOfBirth == null" type="date" :class="inputMode('dateOfBirth w3-input')"><input v-if="publisher.dateOfBirth !== null" type="date" :class="inputMode('dateOfBirth w3-input')" :value="cleanDate(publisher.dateOfBirth)"></label>
+							<div style="display: flex;">
+								<input :class="inputMode('birthDate w3-input')" type="number" min="1" max="31" style="width: 50px;">
+								<select :class="inputMode('birthMonth w3-input')" style="width: 68px;">
+									<option v-for="month in orderedMonths" :value="month.fullName">{{ month.abbr.toUpperCase() }}</option>
+								</select>
+								<input :class="inputMode('birthYear w3-input')" type="number" min="1900" max="2999" style="width: 68px;">
+							</div>
+							<div>
+								<span title="Set Date" class="w3-button w3-black" style="height: 40px; padding: 0px;"><i @click="setDate('birth', $event.target, publisher)" class="fas fa-check" style="color: rgb(43, 101, 73); padding: 13px;"></i></span>
+							</div>
 							<select :class="inputMode('gender w3-input')" :v-model="publisher.gender">
 								<option v-if="publisher.gender !== 'Male' && publisher.gender !== 'Female'" value="">Select Gender</option>
 								<option v-if="publisher.gender == 'Male' || publisher.gender == 'Female'" :value="publisher.gender">{{ publisher.gender }}</option>
@@ -3065,6 +3115,16 @@ document.querySelector('#allPublishers').innerHTML = `<template>
 						</p>
 						<p>
 							<label>Date of Baptism: <input v-if="publisher.dateOfBaptism == null" type="date" :class="inputMode('dateOfBaptism w3-input')"><input v-if="publisher.dateOfBaptism !== null" type="date" :class="inputMode('dateOfBaptism w3-input')" :value="cleanDate(publisher.dateOfBaptism)"></label>
+							<div style="display: flex;">
+								<input :class="inputMode('baptismDate w3-input')" type="number" min="1" max="31" style="width: 50px;">
+								<select :class="inputMode('baptismMonth w3-input')" style="width: 68px;">
+									<option v-for="month in orderedMonths" :value="month.fullName">{{ month.abbr.toUpperCase() }}</option>
+								</select>
+								<input :class="inputMode('baptismYear w3-input')" type="number" min="1900" max="2999" style="width: 68px;">
+							</div>
+							<div>
+								<span title="Set Date" class="w3-button w3-black" style="height: 40px; padding: 0px;"><i @click="setDate('baptism', $event.target, publisher)" class="fas fa-check" style="color: rgb(43, 101, 73); padding: 13px;"></i></span>
+							</div>
 							<select :class="inputMode('hope w3-input')" :v-model="publisher.hope">
 								<option :value="publisher.hope">{{ publisher.hope }}</option>
 								<option v-for="hope in hopes.filter(elem=>elem !== publisher.hope)" :value="hope">{{ hope }}</option>
@@ -3224,10 +3284,10 @@ document.querySelector('#allPublishers').innerHTML = `<template>
 
 					<p contenteditable="true" id="address" class="edit-content"></p>
 										
-					<p>Dear Brothers,</p>
+					<!--p>Dear Brothers,</p-->
 					<p align="center" class="edit-content letterTitle" contenteditable="true">{{ letterTitle.toUpperCase() }}</p>
 					
-					<p class="closing">Your brothers,</p>
+					<p class="closing"></p>
 					
 					<div class="container" style="margin-top:30px">
 						<p class="element" align="center">{{ closing1Value }}</p>
@@ -3319,6 +3379,9 @@ function processAllPublishers() {
 			inactivePublishers() {
 				return this.publishers.filter(elem=>elem.active !== true)
 			},
+			orderedMonths() {
+				return this.months.slice(4).concat(this.months.slice(0, 4))
+			},
         },
 		watch: {
 			//publisherName: 'addPublisher',
@@ -3327,11 +3390,20 @@ function processAllPublishers() {
 			letterTitle: 'updateLetterBody'
 		},
         methods: {
-			/*addPublisher(event) {
-				if (event !== '') {
-					this.selectedTransferPublishers.push(event)
+			setDate(type, element, publisher) {
+				var selectedPublisher = element.parentNode.parentNode.parentNode
+				var selectedDate = selectedPublisher.querySelector(`.${type}Date`).value
+				var selectedMonth = selectedPublisher.querySelector(`.${type}Month`).value
+				var selectedYear = selectedPublisher.querySelector(`.${type}Year`).value
+				var selectedFullDate = `${selectedYear}-${(this.orderedMonths.findIndex(elem=>elem.fullName == selectedMonth) + 1).toString().padStart(2, '0')}-${selectedDate.toString().padStart(2, '0')}`
+				if (new Date(selectedFullDate)) {
+					if (type == 'birth') {
+						publisher.dateOfBirth = selectedFullDate
+					} else {
+						publisher.dateOfBaptism = selectedFullDate
+					}
 				}
-			},*/
+			},
 			async previewRecord() {
 				if (this.publisherName == '' && this.correspondence == false) { return }
 				downloadsArray = []
