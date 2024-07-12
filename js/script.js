@@ -713,6 +713,12 @@ DBWorker.onmessage = async function (msg) {
 							await getFieldByName(msgData.value.filter(elem=>elem.name == 'TO-62')[0].value, 'TO-62')
 						}
 					}
+					if (msgData.value.filter(elem=>elem.name == 'S-88').length !== 0) {
+						//console.log(msgData.value.filter(elem=>elem.name == 'S-21_E.pdf')[0])
+						if (!s88Data) {
+							await getFieldByName(msgData.value.filter(elem=>elem.name == 'S-88')[0].value, 'S-88')
+						}
+					}
 					if (msgData.value.filter(elem=>elem.name == 'S-89').length !== 0) {
 						//console.log(msgData.value.filter(elem=>elem.name == 'S-21_E.pdf')[0])
 						if (!s89Data) {
@@ -821,7 +827,7 @@ document.querySelector('#navigation').innerHTML = `<template>
 	<!-- Right-sided navbar links -->
 	<div class="w3-right w3-hide-small">
 		<a v-for="(button, count) in buttons.slice(1)" class="w3-bar-item w3-button" @click="openButton($event.target)">{{ button.title }}</a>
-		<a v-if="logged() == true && displayDropdown == true && showDownloadButton()" class="w3-bar-item w3-button" @click="downloadContent()"><i title="Download" class="fa fa-download"></i></a>
+		<a v-if="logged() == true && showDownloadButton()" class="w3-bar-item w3-button" @click="downloadContent()"><i title="Download" class="fa fa-download"></i></a>
 		<a v-if="logged() == true" class="w3-bar-item w3-button" @click="openSettings()"><i class="fa fa-cog"></i></a>
 		<a v-if="logged() == true" class="w3-bar-item w3-button" @click="signOut()"><i class="fa fa-sign-out-alt"></i></a>
 		<div v-if="logged() == true && displayDropdown == true">
@@ -876,9 +882,13 @@ function processNavigation() {
         },
         methods: {
 			showDownloadButton() {
-				return allPublishersVue.display == true ||	fieldServiceGroupsVue.display == true || contactInformationVue.display == true || cardsVue.display == true
+				return allPublishersVue.display == true ||	fieldServiceGroupsVue.display == true || contactInformationVue.display == true || cardsVue.display == true || (attendanceVue.display == true && currentUser.currentProfile == 'Secretary')
 			},
 			async downloadContent() {
+				if (attendanceVue.display == true) {
+					fillAttendanceRecord()
+					return
+				}
 				if (allButtons.filter(elem=>elem.title == currentView)[0].title == 'CARDS') {
 					document.querySelector('.fa-download').classList.add('fa-spinner')
 					document.querySelector('.fa-download').classList.add('fa-spin')
@@ -1319,7 +1329,7 @@ document.querySelector('#mySidebar').innerHTML = `<template>
 	<a href="javascript:void(0)" onclick="w3_close()" class="w3-bar-item w3-button w3-large w3-padding-16">Close ×</a>
     <a v-for="(button) in buttons()" v-if="button.title !== 'ACTIVE' && button.title !== 'ALL'  && button.title !== 'CARDS' && button.title !== 'REQUEST' && button.title !== 'TRANSFER' && button.title !== 'MAIL'" @click="openButton($event.target)" class="w3-bar-item w3-button">{{ button.title }}</a>
     <a v-else @click="openButton($event.target)" :class="mode()">{{ button.title }}</a>
-	<a v-if="logged() == true && displayDropdown == true && showDownloadButton()" class="w3-bar-item w3-button" @click="downloadContent()"><i title="Download" class="fa fa-download"></i> Download</a>
+	<a v-if="logged() == true && showDownloadButton()" class="w3-bar-item w3-button" @click="downloadContent()"><i title="Download" class="fa fa-download"></i> Download</a>
 	<a v-if="logged() == true" class="w3-bar-item w3-button" @click="openSettings()"><i class="fa fa-cog"></i> Settings</a>
 	<a v-if="logged() == true" class="w3-bar-item w3-button" @click="signOut()"><i class="fa fa-sign-out-alt"></i> Sign Out</a>
 </template>`
@@ -1341,9 +1351,13 @@ function processNavigation2() {
         },
         methods: {
 			showDownloadButton() {
-				return allPublishersVue.display == true ||	fieldServiceGroupsVue.display == true || contactInformationVue.display == true || cardsVue.display == true
+				return allPublishersVue.display == true ||	fieldServiceGroupsVue.display == true || contactInformationVue.display == true || cardsVue.display == true || (attendanceVue.display == true && currentUser.currentProfile == 'Secretary')
 			},
 			async downloadContent() {
+				if (attendanceVue.display == true) {
+					fillAttendanceRecord()
+					return
+				}
 				if (allButtons.filter(elem=>elem.title == currentView)[0].title == 'CARDS') {
 					document.querySelector('.fa-download').classList.add('fa-spinner')
 					document.querySelector('.fa-download').classList.add('fa-spin')
@@ -7929,7 +7943,7 @@ Thanks a lot
 						// Add Blobs to the zip folder
 						zip.file(`Inactive/${elem.name}.${elem.value.name ? elem.value.name.split('.')[1] : 'pdf'}`, elem.value);
 					})
-					const forms = myFiles.filter(elem => elem.name == "S-21");
+					const forms = myFiles.filter(elem => elem.name == "S-21" || elem.name == "S-88");
 	
 					forms.forEach(elem=>{
 						// Add Blobs to the zip folder
@@ -9611,6 +9625,56 @@ async function fillPublisherRecord(data) {
 
 }
 
+async function fillAttendanceRecord() {
+	var s88 = await PDFLib.PDFDocument.load(s88Data);
+	// Get the form field by name
+	var i = 0, j = 2;
+	attendanceVue.meetingAttendanceRecord.meetings.forEach(meeting=>{
+		Object.entries(meeting).forEach(([key, value]) => {
+			if (key == 'name') return;
+			Object.entries(value).forEach(([key2, value2]) => {
+				if (i == 0) {
+					s88.getForm().getTextField(`Service Year_${j}`).setText(`${value2}`)
+				} else if (i == 13 && value2) {
+					s88.getForm().getTextField(`${j}-Average_Total`).setText(`${value2}`)
+				} else if (value2 && value2.numberOfMeetings) {
+					s88.getForm().getTextField(`${j}-Meeting_${i}`).setText(`${value2.numberOfMeetings}`)
+					s88.getForm().getTextField(`${j}-Attendance_${i}`).setText(`${value2.totalAttendance}`)
+					s88.getForm().getTextField(`${j}-Average_${i}`).setText(`${value2.averageAttendanceEachWeek}`)
+				};
+				if (i == 0) {
+					i = 5
+				} else if (i == 12) {
+					i = 1
+				} else if (i == 4) {
+					i = 13
+				} else {
+					i++
+				}
+			});
+			
+			i = 0;
+			if (j == 2) {
+				j = 1
+			} else if (j == 1) {
+				j = 4
+			} else if (j == 4) {
+				j = 3
+			}
+		});
+		
+	})
+	const attendanceRecord = new Blob([await s88.save()], { type: 'application/pdf' })
+	DBWorker.postMessage({ storeName: 'files', action: "save", value: [{name: "Attendance Record", value: attendanceRecord }]});
+	const a = document.createElement('a');
+	a.href = URL.createObjectURL(attendanceRecord);
+	a.download = "Attendance Record";
+	a.click();
+	await shortWait()
+	await shortWait()
+	await shortWait()
+}
+
 async function assignmentSlip(data, count) {
 	if (!count) {
 		count = 1
@@ -9899,7 +9963,7 @@ async function fillFundTransfer() {
 	DBWorker.postMessage({ storeName: 'files', action: "readAll"});
 }
 
-var s21Data, s89Data, s26Data, s30Data, to62Data;
+var s21Data, s88Data, s89Data, s26Data, s30Data, to62Data;
 
 async function getFieldByName(file, variable) {
 
@@ -9918,10 +9982,10 @@ async function getFieldByName(file, variable) {
 				s30Data = new Uint8Array(e.target.result);
 			} else if (variable == 'TO-62') {
 				to62Data = new Uint8Array(e.target.result);
+			} else if (variable == 'S-88') {
+				s88Data = new Uint8Array(e.target.result);
 			} else if (variable == 'S-89') {
 				s89Data = new Uint8Array(e.target.result);
-				//const font = await s89.embedFont("Helvetica", { subset: true, unicode: true });
-
 			}
         };
 
