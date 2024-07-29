@@ -4761,7 +4761,11 @@ function processEntry() {
 				{"name": "Total Funds", "code": "TF", "description": "Total Funds at Beginning of Month"},
 				{"name": "S", "code": "S", "description": "Funds Reserved for Special Purpose"},
 				{"name": "Pending Deposits", "code": "PD", "description": "All deposits recorded on Accounts Sheet but not shown on statement"},
-				{"name": "Pending Charges", "code": "PC", "description": "Any bank charges not recorded on Accounts Sheet"}
+				{"name": "Pending Charges", "code": "PC", "description": "Any bank charges not recorded on Accounts Sheet"},
+				{"name": "COT", "code": "E", "description": "COT"},
+				{"name": "GST on COT", "code": "E", "description": "GST on COT"},
+				{"name": "Statement", "code": "E", "description": "Account Statement Fee"},
+				{"name": "GST on Statement", "code": "E", "description": "GST on Account Statement"},
 			],
 			currentMonth: "",
 			currentDate: monthlyReportVue.cleanDate(new Date()),
@@ -4961,6 +4965,11 @@ function processEntry() {
 				this.transactionDescription = description
 				if (code == 'E' || code == 'BF') {
 					this.showAccount = true
+				}
+				if (description == 'COT' || description == 'GST on COT' || description == 'Account Statement Fee' || description == 'GST on Account Statement') {
+					this.account = 'PRIMARY ACCOUNT'
+				} else {
+					this.account = 'RECEIPTS'
 				}
 			},
 			editTransaction(value) {
