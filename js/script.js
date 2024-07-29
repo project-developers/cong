@@ -5486,7 +5486,7 @@ function processArchive() {
                 return monthlyReportVue.cleanDate(new Date())
             },
 			individualFiles() {
-				return getUniqueElementsByProperty(this.allFiles(), ['name']).map(elem=>elem.file)
+				return getUniqueElementsByProperty(this.allFiles(), ['file']).map(elem=>elem.file)
             },
 			allFiles() {
 				const combinedFiles = myFiles.filter(elem=>elem.name.split(' - ').length > 1 && !elem.name.includes('Record Card - ')).map(obj => ({
