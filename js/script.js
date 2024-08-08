@@ -4941,7 +4941,7 @@ function processEntry() {
 				return this.endingBalance(this.singleAmount('TF'), this.endingBalance(0, this.endingBalance(this.totalContributions('C'), this.totalContributions('CE'), this.totalContributions('W'), true), this.endingBalance(this.endingBalance(this.totalContributions('E'), this.singleAmount('RW'), this.bankCharge(), true), this.totalContributions('W'), 0, true)), 0)
 			},
 			endOfMonth2() {
-				const value = this.endingBalance(this.singleAmount('TF'), this.endingBalance(0, this.endingBalance(this.totalContributions('C'), this.totalContributions('CE'), this.totalContributions('W'), true), this.endingBalance(this.endingBalance(this.totalContributions('E'), this.singleAmount('RW'), this.bankCharge(), true), this.totalContributions('W'), 0, true)), 0)
+				var value = this.endingBalance(this.singleAmount('TF'), this.endingBalance(0, this.endingBalance(this.totalContributions('C'), this.totalContributions('CE'), this.totalContributions('W'), true), this.endingBalance(this.endingBalance(this.totalContributions('E'), this.singleAmount('RW'), this.bankCharge(), true), this.totalContributions('W'), 0, true)), 0)
 				const nextMonth = getNextMonthFromDate(new Date(this.currentMonth))
 				if (value !== '') {
 					if (value.toString().startsWith('(')) {
