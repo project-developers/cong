@@ -871,8 +871,14 @@ async function updateServiceYear(publisher) {
 	publisher.report.currentServiceYear.year = currentServiceYear
 
 	//console.log(publisher)
+	await shortWait()
+	await shortWait()
 
 	await fillPublisherRecord([publisher, 'lastServiceYear'])
+
+	await shortWait()
+	await shortWait()
+	
 	await fillPublisherRecord([publisher, 'currentServiceYear'])
 	DBWorker.postMessage({ storeName: 'data', action: "save", value: [publisher]});
 	allPublishersVue.publishers.push(publisher)
