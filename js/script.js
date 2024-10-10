@@ -512,6 +512,21 @@ var currentMode = 'System';
 var mode = 'w3-card w3-white';
 var xmlDoc;
 
+var progressBar = document.createElement('div');
+progressBar.id = 'progressBar';
+progressBar.innerHTML = `<div style="background:#f0f0ef;margin:5px 0;border-radius: 25px;"><div id="myBar" style="background:#155d27;height:4px;width:0%;border-radius: 25px;">
+    </div></div>
+    <p id="myP"></p>`
+var barElem, initialCount = 0, oldRecords = []
+progressBar.className = 'w3-center'
+var loadPublishers = 0;
+
+const currentDate = new Date()
+var currentServiceYear = currentDate.getFullYear()
+if (currentDate.getMonth() > 8) {
+	currentServiceYear++
+}
+
 DBWorker.onmessage = async function (msg) {
     var msgData = msg.data;
     //console.log(msgData)
@@ -665,7 +680,22 @@ DBWorker.onmessage = async function (msg) {
 				break;
 			case "data":
 				{
-					allPublishersVue.publishers = msgData.value
+					oldRecords = msgData.value.filter(elem=>elem.report.currentServiceYear.year !== currentServiceYear)
+					const currentRecords = msgData.value.filter(elem=>elem.report.currentServiceYear.year === currentServiceYear)
+					allPublishersVue.publishers = currentRecords
+					loadPublishers++
+					if (oldRecords.length !== 0 && loadPublishers == 2) {
+						const loadingBar = document.createElement('div')
+						loadingBar.id = 'loadingBar'
+						loadingBar.className = 'w3-center w3-large'
+						document.querySelector('div#congregation.w3-container').appendChild(loadingBar)
+						document.querySelector('div#congregation.w3-container').appendChild(progressBar)
+						loadingBar.innerHTML = 'Updating Service Year'
+						initialCount = oldRecords.length
+						barElem = document.getElementById("myBar");
+						updateServiceYear(oldRecords.shift())
+					}
+					//console.log(msgData.value, currentDate.getMonth(), currentServiceYear, oldRecords, currentRecords)
 				}
 				break;
 			case "files":
@@ -690,9 +720,21 @@ DBWorker.onmessage = async function (msg) {
 						}
 					}
 					if (msgData.value.filter(elem=>elem.name == 'S-21').length !== 0) {
-						//console.log(msgData.value.filter(elem=>elem.name == 'S-21_E.pdf')[0])
+						//console.log(msgData.value.filter(elem=>elem.name == 'S-21')[0], oldRecords)
 						if (!s21Data) {
 							await getFieldByName(msgData.value.filter(elem=>elem.name == 'S-21')[0].value, 'S-21')
+							loadPublishers++
+							if (oldRecords.length !== 0 && loadPublishers == 2) {
+								const loadingBar = document.createElement('div')
+								loadingBar.id = 'loadingBar'
+								loadingBar.className = 'w3-center w3-large'
+								document.querySelector('div#congregation.w3-container').appendChild(loadingBar)
+								document.querySelector('div#congregation.w3-container').appendChild(progressBar)
+								loadingBar.innerHTML = 'Updating Service Year'
+								initialCount = oldRecords.length
+								barElem = document.getElementById("myBar");
+								updateServiceYear(oldRecords.shift())
+							}
 						}
 					}
 					if (msgData.value.filter(elem=>elem.name == 'S-26').length !== 0) {
@@ -818,6 +860,31 @@ DBWorker.onmessage = async function (msg) {
 }
 
 var myFiles = [], myTerritory;
+
+async function updateServiceYear(publisher) {
+	barElem.style.width = ((initialCount - oldRecords.length) / initialCount) * 100 + '%';
+	document.getElementById("myP").innerHTML = `Processing Records for ${publisher.name}. Please wait . . .`;
+
+	//console.log(JSON.parse(JSON.stringify(publisher.report.currentServiceYear)))
+	publisher.report.lastServiceYear = JSON.parse(JSON.stringify(publisher.report.currentServiceYear))
+	publisher.report.currentServiceYear = JSON.parse(JSON.stringify(newPublisherRecord.report.currentServiceYear))
+	publisher.report.currentServiceYear.year = currentServiceYear
+
+	//console.log(publisher)
+
+	await fillPublisherRecord([publisher, 'lastServiceYear'])
+	await fillPublisherRecord([publisher, 'currentServiceYear'])
+	DBWorker.postMessage({ storeName: 'data', action: "save", value: [publisher]});
+	allPublishersVue.publishers.push(publisher)
+
+	if (oldRecords.length !== 0) {
+		updateServiceYear(oldRecords.shift())
+	} else {
+		document.getElementById("myP").innerHTML = `Update Completed. Reloading in 1 minute. Please wait . . .`;
+		await oneMinuteWait()
+		location.reload()
+	}
+}
 
 // style="padding:16px 0 0 2px; margin-top:1px"  style="margin-top:2px"
 
@@ -2967,7 +3034,7 @@ document.querySelector('#allPublishers').innerHTML = `<template>
 								<table>
 									<thead>
 									<tr>
-										<th>Service Year 2024</th>
+										<th>Service Year {{ publisher.report.currentServiceYear.year }}</th>
 										<th>Shared in Ministry</th>
 										<th>Bible Studies</th>
 										<th>Auxiliary Pioneer</th>
@@ -3062,7 +3129,7 @@ document.querySelector('#allPublishers').innerHTML = `<template>
 								<table>
 									<thead>
 									<tr>
-										<th>Service Year 2024</th>
+										<th>Service Year {{ publisher.report.currentServiceYear.year }}</th>
 										<th>Shared in Ministry</th>
 										<th>Bible Studies</th>
 										<th>Auxiliary Pioneer</th>
@@ -3157,7 +3224,7 @@ document.querySelector('#allPublishers').innerHTML = `<template>
 							<table>
 								<thead>
 								<tr>
-									<th>Service Year 2024</th>
+									<th>Service Year {{ publisher.report.currentServiceYear.year }}</th>
 									<th>Shared in Ministry</th>
 									<th>Bible Studies</th>
 									<th>Auxiliary Pioneer</th>
@@ -7271,6 +7338,10 @@ async function shortWait() {
     await new Promise((e) => setTimeout(e, 50));
 }
 
+async function oneMinuteWait() {
+    await new Promise((e) => setTimeout(e, 60000));
+}
+
 function saveConfiguration() {
 	configurationVue.saveConfiguration()
 }
@@ -7435,7 +7506,7 @@ document.querySelector("#configuration").innerHTML = `<template>
 									<table>
 										<thead>
 										<tr>
-											<th>Service Year 2024</th>
+											<th>Service Year {{ publisher.report.currentServiceYear.year }}</th>
 											<th>Shared in Ministry</th>
 											<th>Bible Studies</th>
 											<th>Auxiliary Pioneer</th>
