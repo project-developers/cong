@@ -795,8 +795,19 @@ DBWorker.onmessage = async function (msg) {
 					}
 
 					if (msgData.value.filter(elem=>elem.name == "Meeting Attendance Record").length !== 0) {
-						//console.log(msgData.value)
-						attendanceVue.meetingAttendanceRecord = msgData.value.filter(elem=>elem.name == "Meeting Attendance Record")[0]
+						var currentAttendance = msgData.value.filter(elem=>elem.name == "Meeting Attendance Record")[0]
+						if (currentAttendance.meetings[0].currentServiceYear.year === currentServiceYear) {
+							attendanceVue.meetingAttendanceRecord = currentAttendance
+						} else {
+							currentAttendance.meetings.forEach(meeting=>{
+								meeting.lastServiceYear = JSON.parse(JSON.stringify(meeting.currentServiceYear))
+								meeting.currentServiceYear = JSON.parse(JSON.stringify(meetingAttendanceRecord.meetings[0].currentServiceYear))
+								meeting.currentServiceYear.year = currentServiceYear
+							})
+							attendanceVue.meetingAttendanceRecord = currentAttendance
+							DBWorker.postMessage({ storeName: 'attendance', action: "save", value: [currentAttendance]});
+						}
+							
 					} else {
 						attendanceVue.meetingAttendanceRecord = meetingAttendanceRecord
 						DBWorker.postMessage({ storeName: 'attendance', action: "save", value: [attendanceVue.meetingAttendanceRecord]});
@@ -878,7 +889,7 @@ async function updateServiceYear(publisher) {
 
 	await shortWait()
 	await shortWait()
-	
+
 	await fillPublisherRecord([publisher, 'currentServiceYear'])
 	DBWorker.postMessage({ storeName: 'data', action: "save", value: [publisher]});
 	allPublishersVue.publishers.push(publisher)
