@@ -680,6 +680,10 @@ DBWorker.onmessage = async function (msg) {
 				break;
 			case "data":
 				{
+					if (!msgData.value[0].report) {
+						allPublishersVue.publishers = msgData.value
+						return
+					}
 					oldRecords = msgData.value.filter(elem=>elem.report.currentServiceYear.year !== currentServiceYear)
 					const currentRecords = msgData.value.filter(elem=>elem.report.currentServiceYear.year === currentServiceYear)
 					allPublishersVue.publishers = currentRecords
