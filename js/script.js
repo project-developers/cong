@@ -6279,6 +6279,8 @@ function convertClipboardToHTML() {
 
 			// Display the HTML content in the result div
 			document.getElementById('result').innerHTML = htmlContent;
+
+			//console.log(htmlContent)
 			await shortWait()
 			await shortWait()
 			allAssignmentsVue.assignDetails = document.getElementById('result').innerText.split('\n')
@@ -6289,6 +6291,7 @@ function convertClipboardToHTML() {
 			const firstAssignment = allAssignmentsVue.assignDetails.shift().trim()
 			await shortWait()
 			await shortWait()
+			//console.log(firstAssignment)
 			//console.log(allAssignmentsVue.assignDetails)
 			//return
 
@@ -6296,10 +6299,12 @@ function convertClipboardToHTML() {
 			newAssignments.push({ "meetingPart": firstAssignment, "section": allAssignmentsVue.currentSection, "assignTo": "exemplary" })
 			const song = allAssignmentsVue.assignDetails.findIndex(elem=>elem.trim().split(' ')[0] == firstAssignment.split(' ')[0])
 			//console.log(allAssignmentsVue.assignDetails[found])
+			//console.log(song)
 			await shortWait()
 			await shortWait()
 			//allParticipantsVue.lifeAndMinistry.assignments.push({ "week": allAssignmentsVue.currentWeek, "meetingPart": allAssignmentsVue.assignDetails.splice(song, 1)[0].trim(), "section": allAssignmentsVue.assignDetails[song - 1].trim() })
 			const secondSong = allAssignmentsVue.assignDetails.splice(song, 1)[0].trim()
+			//console.log(secondSong)
 			await shortWait()
 			await shortWait()
 			//allParticipantsVue.lifeAndMinistry.assignments.push({ "week": allAssignmentsVue.currentWeek, "meetingPart": allAssignmentsVue.assignDetails.pop().trim(), "section": allAssignmentsVue.currentSection })
@@ -6308,7 +6313,7 @@ function convertClipboardToHTML() {
 			var i = 1, j = 0, assignTo
 			while (j < allAssignmentsVue.assignDetails.length) {
 				//console.log(i, j)
-				const found = allAssignmentsVue.assignDetails.findIndex(elem=>elem.startsWith(i + '. '))
+				const found = allAssignmentsVue.assignDetails.findIndex(elem=>elem.trim().startsWith(i + '. '))
 				
 				if (found !== -1) {
 					const newPart = `${allAssignmentsVue.assignDetails[found]} ${allAssignmentsVue.assignDetails[found + 1]}`
