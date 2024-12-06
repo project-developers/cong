@@ -3891,7 +3891,7 @@ ${this.closing}
                 const currentDate = new Date(date);
 
                 const formattedDate = `${currentDate.getFullYear()}-${(currentDate.getMonth() + 1).toString().padStart(2, '0')}-${currentDate.getDate().toString().padStart(2, '0')}`;
-
+				
                 return formattedDate
             },
 			formatDateToFull() {
@@ -4142,7 +4142,7 @@ function processAllParticipants() {
                 const currentDate = new Date(date);
 
                 const formattedDate = `${currentDate.getFullYear()}-${(currentDate.getMonth() + 1).toString().padStart(2, '0')}-${currentDate.getDate().toString().padStart(2, '0')}`;
-
+				
                 return formattedDate
             },
 			formatDateToFull() {
@@ -5989,7 +5989,7 @@ function processMonthlyReport() {
                 const currentDate = new Date(date);
 
                 const formattedDate = `${currentDate.getFullYear()}-${(currentDate.getMonth() + 1).toString().padStart(2, '0')}-${currentDate.getDate().toString().padStart(2, '0')}`;
-
+				
                 return formattedDate
             },
             handleCheckboxChange(record, event, publisher) {
@@ -6178,7 +6178,21 @@ function processMissingReport() {
 						const currentMonth = configurationVue.months.filter(ele=>ele.fullName == elem.querySelector('h5').innerHTML)[0].abbr
 						//console.log(elem.querySelector('h5').innerHTML)
 						//console.log(currentMonth)
-						elem.querySelector('.sharedInMinistry').checked ? publisher.report.currentServiceYear[`${currentMonth}`].sharedInMinistry = true : publisher.report.currentServiceYear[`${currentMonth}`].sharedInMinistry = null
+						if (elem.querySelector('.sharedInMinistry').checked) {
+							publisher.report.currentServiceYear[`${currentMonth}`].sharedInMinistry = true
+							if (!publisher.report.currentServiceYear[`${currentMonth}`].created) {
+								publisher.report.currentServiceYear[`${currentMonth}`].created = this.cleanDate(new Date())
+								publisher.report.currentServiceYear[`${currentMonth}`].modified = this.cleanDate(new Date())
+							} else {
+								publisher.report.currentServiceYear[`${currentMonth}`].modified = this.cleanDate(new Date())
+							}
+						} else {
+							publisher.report.currentServiceYear[`${currentMonth}`].sharedInMinistry = null
+							if (!publisher.report.currentServiceYear[`${currentMonth}`].created) {
+								publisher.report.currentServiceYear[`${currentMonth}`].created = null
+								publisher.report.currentServiceYear[`${currentMonth}`].modified = null
+							}
+						}
 						//console.log(elem.querySelector('.sharedInMinistry').checked)
 						elem.querySelector('.bibleStudies').value !== '' ? publisher.report.currentServiceYear[`${currentMonth}`].bibleStudies = elem.querySelector('.bibleStudies').value : publisher.report.currentServiceYear[`${currentMonth}`].bibleStudies = null
 						elem.querySelector('.auxiliaryPioneer').checked ? publisher.report.currentServiceYear[`${currentMonth}`].auxiliaryPioneer = true : publisher.report.currentServiceYear[`${currentMonth}`].auxiliaryPioneer = null
@@ -6192,6 +6206,13 @@ function processMissingReport() {
 				//this.selectedPublisher = publisher
                 //fillPublisherRecord(publisher)
 			},
+			cleanDate(date) {
+                const currentDate = new Date(date);
+
+                const formattedDate = `${currentDate.getFullYear()}-${(currentDate.getMonth() + 1).toString().padStart(2, '0')}-${currentDate.getDate().toString().padStart(2, '0')}`;
+				
+                return formattedDate
+            },
             missingRecord(publisher) {
 				var publisherRecords = ''
 				monthlyReportVue.months.slice(0, monthlyReportVue.months.findIndex(elem=>elem.abbr == monthlyReportVue.month.abbr) + 1).reverse().forEach(elem=>{
@@ -7121,7 +7142,7 @@ function processAttendance() {
                 const currentDate = new Date(date);
 
                 const formattedDate = `${currentDate.getFullYear()}-${(currentDate.getMonth() + 1).toString().padStart(2, '0')}-${currentDate.getDate().toString().padStart(2, '0')}`;
-
+				
                 return formattedDate
             },
 			averageMonthlyAttendance(meeting, serviceYear, month) {
